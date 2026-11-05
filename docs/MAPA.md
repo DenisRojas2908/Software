@@ -62,6 +62,7 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `HttpException(…, 402)` | Error que Nest convierte en una respuesta HTTP con ese código | `raise HTTPException(status_code=402)` en FastAPI |
 | `StreamableFile` | Respuesta que envía un archivo (el PDF) por partes | `FileResponse` en FastAPI |
 | `setInterval` en `onModuleInit` | Tarea que Nest ejecuta cada minuto mientras corre la API (job de abandonos) | Un hilo con `schedule`/`APScheduler` |
+| Recharts (`<BarChart>`) | Componentes de React para gráficos | matplotlib / seaborn, pero dentro de la página |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -162,3 +163,12 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/api/src/integracion/notificador/*` | Puerto `Notificador` + `NotificadorSimulado` (guarda lo «enviado» para el buzón; la demo puede forzar la falla) | D-06, RNF-15 |
 | `apps/web/src/pages/panel-asesor/ColaSeguimiento.tsx` | Cola con intentos hechos/restantes, registro de intentos solo por el canal preferido, cierre con motivo, reenvío | CU-04 |
 | `apps/web/src/pages/retomar/Retomar.tsx` | Retomar la compra desde el enlace (vigente) o volver a cotizar (vencido) | RN-12, CU-04 7b |
+
+### F7 · Administración y reportes (CU-05)
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/administracion/dominio/reportes.ts` | `agruparVentas()`: pólizas y prima total por canal, aseguradora o plan | RF-30 |
+| `apps/api/src/administracion/dominio/parametros.ts` | `validarParametros()`: % entre 0 y 100, enteros > 0, cuotas ≥ 2 | RF-29 |
+| `apps/api/src/administracion/administracion.service.ts` | Catálogo, campos y valores (incluye campos nuevos, D-11), reglas de inspección, parámetros, actividad, reporte. `cambio()` guarda el cambio y su RegistroActividad en la misma transacción | RF-27…RF-30, RNF-12, RNF-13, RN-16 |
+| `apps/api/src/administracion/administracion.controller.ts` | `/api/admin/*` solo para ADMINISTRADOR | RF-32 |
+| `apps/web/src/pages/panel-admin/*` | Pestañas: Reportes (Recharts + tabla), Aseguradoras y planes, Campos, Inspección, Parámetros, Usuarios, Actividad | CU-05 |
