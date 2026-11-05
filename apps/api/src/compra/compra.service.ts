@@ -149,6 +149,12 @@ export class CompraService {
     primaCotizadaId: string,
     tokenRetoma?: string,
   ) {
+    // Lectura de reglas fuera de la transacción (no ocupa una segunda conexión del pool)
+    const vehiculo = await this.prisma.vehiculo.findFirst({
+      where: { cotizaciones: { some: { id: cotizacionId } } },
+    });
+    if (!vehiculo) throw new NotFoundException('Cotización no encontrada');
+    const inspeccion = await this.catalogo.aseguradorasConInspeccion(vehiculo.uso);
     const ordenId = await this.prisma.$transaction(async (tx) => {
       await this.asociar(tx, cotizacionId, usuario);
       const c = await tx.cotizacion.findUniqueOrThrow({
@@ -168,7 +174,6 @@ export class CompraService {
         throw new ConflictException('Esta cotización ya fue comprada');
 
       // CU-02 1a: ¿se puede comprar este plan?
-      const inspeccion = await this.catalogo.aseguradorasConInspeccion(c.vehiculo.uso);
 
       try {
         verificarCompraHabilitada({
