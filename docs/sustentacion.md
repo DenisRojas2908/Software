@@ -155,3 +155,18 @@ La demo adelanta el puerto `Reloj`: todas las reglas de tiempo (abandono, intent
 **¿Cómo saben que el guion funciona de punta a punta?**
 Un script de Playwright recorre los 10 pasos de la guía como lo haría una persona: verifica cada resultado (5 %, 8 % negociado, canales, enlace vencido, rollback…) y toma capturas a 360 y 1366 px. Última corrida: 0 fallas en 54 s.
 → `scripts/guion-demo.cjs`, `docs/GUIA_DEMO.md`.
+
+## F9 · Pruebas, calidad y documentación
+**¿Qué tanto está probado?**
+api: 324 pruebas (unitarias de dominio + integración HTTP contra PostgreSQL), 97,8 % de líneas; las reglas de dominio tienen 100 % de líneas. web: 41 pruebas, 85,6 % de líneas. El CI exige lint, pruebas y build en Ubuntu y Windows antes de cada merge.
+→ `npm run test:cobertura`, `.github/workflows/ci.yml`.
+
+**¿Cumplen RNF-01 (comparativo ≤ 3 s)?**
+Prueba de carga corta (autocannon, 15 s): consultar el comparativo con 50 conexiones → p97,5 de 235 ms; cotizar (escribe en BD) con 20 conexiones → 96 por segundo, p97,5 de 450 ms, sin errores.
+La prueba encontró un cuello de botella real (lecturas del catálogo dentro de la transacción agotaban el pool: 2 por segundo y errores) que se corrigió. → commit `perf(cotizacion)`.
+
+**¿Cómo controlaron la calidad además de las pruebas?**
+Un subagente auditor de solo lectura revisó el código contra la especificación al cerrar F4, F7 y F9 (pruebas tautológicas, valores escritos a mano, dinero sin redondeo, fechas fuera del Reloj, permisos). Se corrigieron todos sus hallazgos bloqueantes y "a corregir" (D-48…D-54).
+
+**¿Dónde están los manuales?**
+`docs/manual-usuario.md` (cliente y asesor) y `docs/manual-administrador.md`, con capturas reales del sistema; guion en `docs/GUIA_DEMO.md`.

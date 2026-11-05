@@ -23,6 +23,7 @@ npm run db:reset                                   # migraciones + datos de demo
 |---|---|
 | `npm run dev` | API en http://localhost:3000/api y web en http://localhost:5173 (con recarga automática) |
 | `npm test` | Pruebas de api y web |
+| `npm run test:cobertura` | Pruebas con reporte de cobertura (umbral ≥ 70 %) |
 | `npm run lint` | Revisión de estilo |
 | `npm run build` y luego `npm start` | Versión de demo: un solo proceso en http://localhost:3000 |
 | `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` | Base de datos |
@@ -31,3 +32,4 @@ npm run db:reset                                   # migraciones + datos de demo
 - `CLAUDE.md`: reglas del proyecto · `docs/ESTADO.md`: dónde vamos · `docs/MAPA.md`: el código explicado
 - `docs/02-especificacion.md`: requisitos y reglas · `docs/04-decisiones.md`: decisiones
 - `docs/trazabilidad.md` · `docs/sustentacion.md` · `docs/COMO_CAMBIAR.md`
+- `docs/GUIA_DEMO.md` (guion de la sustentación) · `docs/manual-usuario.md` · `docs/manual-administrador.md`

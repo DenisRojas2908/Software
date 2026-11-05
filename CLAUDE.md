@@ -90,7 +90,7 @@ La memoria del proyecto vive en el repo (en la nube la auto memory no sobrevive 
 - Cambios pedidos por Denis: `/cambio <pedido>`. Auditoría al cerrar F4 y F7: subagente `auditor`. Ensayo de demo: skill `demo` (desde F7).
 
 ## Comandos (los crea la fase 0; mantén esta sección actualizada)
-`npm install` · `npm run dev` · `npm test` · `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` · `npm run build` · `npm start`
+`npm install` · `npm run dev` · `npm test` · `npm run test:cobertura` · `npm run lint` · `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` · `npm run build` · `npm start` · ensayo de demo: `node scripts/guion-demo.cjs <carpeta>` (con la app corriendo y `DEMO_MODE=true`)
 
 ## Usuarios demo (seed)
 - `admin@svas.demo` / `Admin123!` — ADMINISTRADOR
