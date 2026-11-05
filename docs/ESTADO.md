@@ -1,25 +1,27 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 21:55 (Lima) · rama `feat/f8-demo` · último commit `269c589`
+2026-11-04 22:16 (Lima) · rama `feat/f9-pruebas-manuales` · último commit `fa39109`
 
 ## Fase y paso actual
-**F8 · Modo demo**: listo; en `cerrar-fase` (PR #9 + CI). F0–F7 mergeadas (#1–#8). Sigue F9 (cobertura, tests de web, manuales con capturas, auditor final).
+**F9 · Pruebas, calidad y manuales**: lista y auditada (auditor final: 0 bloquea, 3 corregir y 10 menores, todo corregido). En `cerrar-fase` (PR #10 + CI). F0–F8 mergeadas (#1–#9). **Alcance de la sesión (F0–F9) cumplido**; F10 (despliegue) queda para la laptop de Denis.
 
 ## Qué funciona y cómo verlo
-- `DEMO_MODE=true` en `apps/api/.env` → admin@svas.demo/Admin123! → menú **Demo**: reloj, fallos, procesar abandonos, buzón, reiniciar BD. Con `DEMO_MODE=false` no existe (404).
-- Guion: `docs/GUIA_DEMO.md`. Ensayo automático: app corriendo + `node scripts/guion-demo.cjs capturas-demo` → última corrida: 0 fallas, 58 verificaciones, 33 pantallas, 54 s.
-- `npm test`: api 324 · web 33.
+- `npm install` → copiar `apps/api/.env.example` a `.env` → `npm run db:reset` → `npm run dev` (http://localhost:5173) o `npm run build` + `npm start` (http://localhost:3000).
+- Usuarios: admin@svas.demo/Admin123! · asesor1@svas.demo/Asesor123! · cliente@svas.demo/Cliente123!
+- Guion de la sustentación: `docs/GUIA_DEMO.md` (ensayado: 0 fallas, 59 verificaciones). Manuales: `docs/manual-usuario.md`, `docs/manual-administrador.md`.
+- `npm test`: api 327 · web 43. `npm run test:cobertura`: api 97,8 % (dominio 100 %), web 85,6 %. Carga: comparativo p97,5 235 ms (c=50); cotizar 96/s, p97,5 450 ms (c=20).
 
 ## Siguiente paso exacto
-Cerrar F8 y crear `feat/f9-pruebas-manuales`: cobertura (`jest --coverage`, meta ≥ 70 % en dominio), tests de web faltantes, `docs/manual-usuario.md` y `docs/manual-administrador.md` con capturas del guion, auditor final.
+Mergear PR #10 con el CI verde. Luego, con Denis: F10 (si piden URL pública: Railway + Supabase con pooler IPv4, D-21) y verificar en su Windows `npm install`, `npm run dev` y `npm run db:reset`.
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna. Nuevas Tomadas: D-55 (demo solo con DEMO_MODE), D-56 (seed en src).
+Ninguna. Últimas Tomadas: D-57…D-60.
 
 ## Riesgos o deudas
-- `npm run db:reset` lo bloquea Prisma si lo ejecuta un agente (Denis sí puede); los agentes usan migrate deploy + seed (D-44).
-- Windows real de Denis no verificado a mano (CI windows verde).
+- Windows real de Denis no verificado a mano (el CI windows está en verde en todas las fases).
+- `npm run db:reset` lo bloquea Prisma si lo lanza un agente (Denis sí puede, D-44).
+- El ensayo automático de la demo necesita Playwright (viene en la nube; no está en el proyecto).
 
 ## Estado del CI
-F0–F7 ✅ ubuntu / ✅ windows. F8: pendiente.
+F0–F8 ✅ ubuntu / ✅ windows. F9: pendiente.
