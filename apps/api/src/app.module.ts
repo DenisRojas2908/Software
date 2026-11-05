@@ -6,6 +6,8 @@ import { ComunModule } from './comun/comun.module';
 import { PersistenciaModule } from './persistencia/persistencia.module';
 import { SeguridadModule } from './seguridad/seguridad.module';
 import { AdministracionModule } from './administracion/administracion.module';
+import { DominioCompartidoModule } from './dominio-compartido/dominio-compartido.module';
+import { CotizacionModule } from './cotizacion/cotizacion.module';
 
 // D-01: en producción Nest sirve también el build de la SPA → un proceso, una URL.
 const rutaWeb = join(__dirname, '..', '..', 'web', 'dist');
@@ -14,6 +16,14 @@ const servirWeb = existsSync(rutaWeb)
   : [];
 
 @Module({
-  imports: [...servirWeb, PersistenciaModule, ComunModule, SeguridadModule, AdministracionModule],
+  imports: [
+    ...servirWeb,
+    PersistenciaModule,
+    ComunModule,
+    SeguridadModule,
+    DominioCompartidoModule,
+    CotizacionModule,
+    AdministracionModule,
+  ],
 })
 export class AppModule {}

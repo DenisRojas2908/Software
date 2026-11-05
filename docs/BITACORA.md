@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 20:55 (Lima) · F3 · Cotizar y comparar (CU-01)
+- **Qué se hizo**: F2 mergeada (PR #3). Dominio puro: 5 estrategias + `primaDePrueba`, `calcularOpciones`, `evaluarNicho`, `unirCampos`/`validarContraCatalogo`, `redondear2`. Servicios: catálogo (formulario, inspección), registro único, `CotizacionService` (una transacción + derivación por puerto). Endpoints `GET /api/catalogo/formulario`, `POST/GET /api/cotizaciones`. Web: cotizador dinámico, comparativo ordenable con Opción 1/2 por plan, pantallas base de compra y asesoría. Los 5 casos de demo se verificaron en el navegador a 360 px.
+- **Archivos tocados**: `apps/api/src/{cotizacion,dominio-compartido,comun/dinero.ts}`, `apps/api/test/cotizacion.e2e-spec.ts`, `apps/web/src/pages/{cotizador,seleccion-canal,pago-poliza}`, `apps/web/src/{tipos,componentes/formato.ts}`.
+- **Decisiones**: D-46, D-47.
+- **Pruebas**: api 74/74, web 12/12. Cubren RF-01…RF-08, RF-10, RN-01…RN-05, RN-17…RN-26, RF-32 (cotización).
+- **Para defender**:
+  1. *Strategy* (`cotizacion/estrategia/estrategias.ts`): «¿qué cambia si entra HDI?» → Una clase nueva y una fila en `aseguradora`; el servicio no se toca.
+  2. *Reglas puras* (`cotizacion/dominio/calcular-opciones.ts`): «¿por qué el taxi no puede comprar en línea?» → La regla de inspección (aseguradora × uso) bloquea la Opción 1; 6 pruebas sin BD.
+  3. *Inversión de dependencias* (`cotizacion/derivador-casos.ts`): «¿cotización importa asesoría?» → No; depende de una interfaz.
+- **Siguiente paso**: cerrar F3 y empezar F4 (compra).
+
 ## 2026-11-04 20:47 (Lima) · F2 · Seguridad
 - **Qué se hizo**: F1 mergeada (PR #2, CI verde). Módulo `seguridad` (registro, login, `yo`, JWT con expiración, guard global de autenticación + rol, `verificarPropiedad`), `administracion/usuarios` (crear asesores, activar/desactivar), Reloj y RegistroActividad en `comun` (adelantado de F3 porque la actividad necesita la fecha), validación por campo con zod. Web: router, contexto de sesión, login/registro, rutas protegidas, menú por rol, pantallas base de mis-trámites/asesor/admin.
 - **Archivos tocados**: `apps/api/src/{seguridad,administracion,comun}/*`, `apps/api/test/{seguridad,permisos}.e2e-spec.ts`, `apps/api/test/soporte/*`, `apps/web/src/{api,sesion,componentes,pages,test}/*`.

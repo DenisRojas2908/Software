@@ -52,6 +52,12 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | Hook (`useSesion`, `useState`, `useEffect`) | Función de React que da estado o efectos a un componente; empieza con `use` | — (estado de la página en Streamlit: `st.session_state`) |
 | React Router (`<Route path="/admin">`) | Elige qué componente mostrar según la URL, sin recargar la página | Las rutas de Flask, pero en el navegador |
 | zod (`z.object({...})`) | Esquema que valida datos y devuelve errores por campo; se usa en api y web | pydantic |
+| Patrón Strategy | Una interfaz (`EstrategiaCotizacion`) y varias clases que la cumplen; el servicio las recorre sin saber cuál es cuál | Un dict `{codigo: funcion_cotizar}` que se recorre |
+| Clase abstracta / `extends` | Clase base con lógica común; las hijas completan lo que falta (`tarifa`, `recargo`) | Herencia de clases en Python (`class Rimac(EstrategiaDePrueba)`) |
+| Token de inyección (`Symbol('ESTRATEGIAS')`) | Nombre con el que Nest entrega una dependencia que no es una clase concreta (una interfaz o un arreglo) | Una clave en un diccionario de dependencias |
+| `$transaction(async (tx) => …)` | Todo lo que se haga con `tx` se guarda junto; si algo falla, se deshace todo | `with session.begin():` en SQLAlchemy |
+| TanStack Query (`useQuery`, `useMutation`) | Pide datos a la API y maneja «cargando», «error» y caché | `requests.get` con caché y estados |
+| react-hook-form (`register`, `setError`) | Conecta los inputs del formulario y sus errores sin escribir estado a mano | Un `Form` de WTForms |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -96,3 +102,20 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/web/src/sesion/sesion.tsx` | Contexto de sesión (`useSesion`): usuario, `iniciar`, `cerrar` | RF-31 |
 | `apps/web/src/componentes/RutaProtegida.tsx` · `Encabezado.tsx` | Rutas y menú según rol (la protección real está en el backend) | RF-32 |
 | `apps/web/src/pages/login/Login.tsx` | Ingresar / Crear cuenta (react-hook-form + zod), vuelve a `?volver=` | RF-11, CU-02 paso 2 |
+
+### F3 · Cotización (CU-01)
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/cotizacion/estrategia/estrategia-cotizacion.ts` | Interfaz `EstrategiaCotizacion { codigo; cotizar(datos, plan) }` y token `ESTRATEGIAS` | RF-04, D-09 |
+| `apps/api/src/cotizacion/estrategia/tarifa-prueba.ts` | `primaDePrueba()`: tarifaBase × factorPlan × factorUso × factorAntiguedad × recargo, redondeo a 2 decimales | RN-26, D-10 |
+| `apps/api/src/cotizacion/estrategia/estrategias.ts` | 5 estrategias (Rímac, Pacífico, La Positiva, Mapfre, Quálitas) + `CLASES_ESTRATEGIA` (registro) | RN-18…RN-24 |
+| `apps/api/src/cotizacion/dominio/calcular-opciones.ts` | Opción 1/2 por plan, unión de opciones y motivo de derivación | RN-01…RN-04, RN-25, D-17 |
+| `apps/api/src/cotizacion/dominio/evaluar-nicho.ts` | Fuera de nicho por clase o por número de vehículos | RN-05, D-14, D-39 |
+| `apps/api/src/cotizacion/derivador-casos.ts` | Puerto `DerivadorCasos` (cotización no conoce a asesoría) | RF-06, inversión de dependencias |
+| `apps/api/src/cotizacion/cotizacion.service.ts` | Orquesta: valida → nicho → registro único → estrategias → opciones → guarda en una transacción → deriva → actividad. `detalle()` arma el comparativo | CU-01, RF-05, RF-07 |
+| `apps/api/src/dominio-compartido/catalogo/formulario.ts` | `unirCampos()` (unión de campos activos + base fijos) y `validarContraCatalogo()` (errores por campo) | RF-02, RF-03, RN-17, D-26 |
+| `apps/api/src/dominio-compartido/catalogo/catalogo.service.ts` | Lee aseguradoras/planes activos, formulario, reglas de inspección y parámetros desde la BD | RNF-13, RN-16 |
+| `apps/api/src/dominio-compartido/cliente/registro-unico.service.ts` | Reutiliza o crea Cliente/Vehiculo/UbicacionUso | RF-07, D-16, D-46 |
+| `apps/api/src/comun/dinero.ts` | `redondear2()` sin errores de coma flotante | RN-26 |
+| `apps/web/src/pages/cotizador/Cotizador.tsx` | Formulario dinámico desde `/api/catalogo/formulario`; errores por campo | RF-01, RF-02, RF-03 |
+| `apps/web/src/pages/cotizador/Comparativo.tsx` | Tarjetas por plan ordenables por precio; «Comprar ahora» (deshabilitado con motivo) y «Prefiero que me asesoren» | RF-05, RF-08, RF-10 |

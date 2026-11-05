@@ -1,27 +1,27 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 20:47 (Lima) · rama `feat/f2-seguridad` · último commit `1781ee9`
+2026-11-04 20:55 (Lima) · rama `feat/f3-cotizacion` · último commit `4b099ee`
 
 ## Fase y paso actual
-**F2 · Seguridad**: lista; en `cerrar-fase` (PR #3 + CI). F0 (#1) y F1 (#2) mergeadas. Alcance: F0 → F9.
+**F3 · Cotizar y comparar (CU-01)**: lista; en `cerrar-fase` (PR #4 + CI). F0–F2 mergeadas (#1–#3). Alcance: F0 → F9.
 
 ## Qué funciona y cómo verlo
-- `npm run dev` → http://localhost:5173/login: ingresar / crear cuenta. Menú y rutas por rol (/mis-tramites, /asesor, /admin).
-- Usuarios: admin@svas.demo/Admin123!, asesor1@svas.demo/Asesor123!, cliente@svas.demo/Cliente123!.
-- API: POST /api/auth/registro, POST /api/auth/login, GET /api/auth/yo, /api/admin/usuarios (GET/POST/PATCH, solo admin).
-- `npm test`: api 41 (incl. 16 casos endpoints × roles) + web 6.
+- `npm run dev` → http://localhost:5173/cotizar: formulario dinámico; comparativo en /cotizacion/:id.
+- Casos de demo verificados a 360 px: auto 2022 (15 planes), 2009 (Rímac y La Positiva no cotizan), 2003 (no asegurable, derivado), taxi (solo Opción 2), camión (fuera de nicho).
+- Login: admin@svas.demo/Admin123!, asesor1@svas.demo/Asesor123!, cliente@svas.demo/Cliente123!.
+- `npm test`: api 74 + web 12.
 
 ## Siguiente paso exacto
-Cerrar F2 (PR → CI → merge) y crear `feat/f3-cotizacion`: `apps/api/src/cotizacion/estrategia/*` (5 estrategias + `primaDePrueba`), `cotizacion/dominio/calcular-opciones.ts`, catálogo/formulario, `POST /api/cotizaciones`.
+Cerrar F3 y crear `feat/f4-compra`: `apps/api/src/compra/dominio/{descuentos,atribuir-canal}.ts`, puertos en `integracion/` (pasarela, aseguradora, pdf), `POST /api/compras` … `/pagar` en UNA transacción, PDF, web pago-poliza y mis-trámites.
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna.
+Ninguna. Nuevas Tomadas: D-46 (registro único de invitados), D-47 (fuera de nicho = 201 con mensaje).
 
 ## Riesgos o deudas
-- F2 «cliente A no ve la cotización de B»: probado a nivel de dominio (`propiedad.spec.ts`); la prueba HTTP llega en F3 cuando existan cotizaciones.
-- Token en localStorage (aceptable para la simulación; en producción iría en cookie httpOnly).
+- `DerivadorCasosTemporal` solo registra actividad; la solicitud real llega en F5.
+- PDFs de las 80 pólizas históricas: se regeneran al pedirlos (F4).
 - Windows real de Denis no verificado a mano (CI windows verde).
 
 ## Estado del CI
-F0 ✅✅ · F1 ✅✅ (ubuntu/windows). F2: pendiente.
+F0–F2 ✅ ubuntu / ✅ windows. F3: pendiente.

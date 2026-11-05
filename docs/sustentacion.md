@@ -47,3 +47,24 @@ Con bcrypt (hash con sal, 10 rondas): nunca en claro ni se devuelven en la API. 
 **¿Por qué un Reloj propio y no `new Date()`?**
 Para poder adelantar el tiempo en la demo (enlace vencido a los 7 días) y fijarlo en las pruebas. Es un puerto con dos implementaciones (inversión de dependencias).
 → `comun/reloj.ts`.
+
+## F3 · Cotizar y comparar (CU-01)
+**¿Dónde se ve el patrón Strategy?**
+`EstrategiaCotizacion` es la interfaz y hay una clase por aseguradora. `CotizacionService` recibe todas en un arreglo y las busca por `codigo_estrategia` del catálogo, sin `if` ni `switch` por aseguradora.
+Agregar HDI = nueva clase + fila en el catálogo (abierto/cerrado, RNF-14). → `cotizacion/estrategia/estrategias.ts`, `cotizacion.service.ts`.
+
+**¿Cómo deciden si un plan permite "Comprar ahora"?**
+Con la función pura `calcularOpciones()`: el plan debe cotizar y su aseguradora no debe exigir inspección para ese uso (RN-25, tabla `regla_inspeccion`). Si ninguno cotiza → NO_ASEGURABLE; si ninguno puede comprarse → INSPECCION, y se deriva.
+Tiene 6 pruebas unitarias sin BD. → `cotizacion/dominio/calcular-opciones.ts`.
+
+**¿Cómo cotización deriva a asesoría sin depender de ese módulo?**
+Define el puerto `DerivadorCasos` (una interfaz) y lo pide por un token; el módulo de asesoría lo implementa (F5). Es inversión de dependencias: no hay ciclo entre módulos.
+→ `cotizacion/derivador-casos.ts`.
+
+**¿El formulario está escrito a mano?**
+No: es la unión de los campos requeridos de las aseguradoras activas (tabla `campo_requerido`), más uso/marca/modelo/año que siempre se piden (D-26). Si el admin activa un campo, aparece sin tocar código.
+→ `dominio-compartido/catalogo/formulario.ts`.
+
+**¿Por qué el auto 2009 no lo cotizan Rímac ni La Positiva?**
+Son tarifas de prueba: cada aseguradora tiene una antigüedad máxima (Rímac 15 años, La Positiva 16). 2026 − 2009 = 17 → devuelven `null` y el comparativo las muestra como «no cotizan».
+→ `estrategias.ts:28,45`, `estrategias.spec.ts`.
