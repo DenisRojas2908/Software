@@ -9,6 +9,6 @@ export function configurarApp(app: INestApplication): INestApplication {
 }
 
 export async function crearApp(): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule.forRoot());
   return configurarApp(app);
 }

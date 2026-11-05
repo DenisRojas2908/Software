@@ -63,6 +63,8 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `StreamableFile` | Respuesta que envía un archivo (el PDF) por partes | `FileResponse` en FastAPI |
 | `setInterval` en `onModuleInit` | Tarea que Nest ejecuta cada minuto mientras corre la API (job de abandonos) | Un hilo con `schedule`/`APScheduler` |
 | Recharts (`<BarChart>`) | Componentes de React para gráficos | matplotlib / seaborn, pero dentro de la página |
+| Módulo dinámico (`AppModule.forRoot()`) | Módulo que arma su lista de módulos al arrancar según el entorno (aquí: incluye el de demo solo con DEMO_MODE=true) | Una fábrica `crear_app(config)` en Flask |
+| Playwright | Controla un navegador real desde un script (clics, formularios, capturas) | Selenium / Playwright para Python |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -172,3 +174,12 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/api/src/administracion/administracion.service.ts` | Catálogo, campos y valores (incluye campos nuevos, D-11), reglas de inspección, parámetros, actividad, reporte. `cambio()` guarda el cambio y su RegistroActividad en la misma transacción | RF-27…RF-30, RNF-12, RNF-13, RN-16 |
 | `apps/api/src/administracion/administracion.controller.ts` | `/api/admin/*` solo para ADMINISTRADOR | RF-32 |
 | `apps/web/src/pages/panel-admin/*` | Pestañas: Reportes (Recharts + tabla), Aseguradoras y planes, Campos, Inspección, Parámetros, Usuarios, Actividad | CU-05 |
+
+### F8 · Modo demo y guion
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/app.module.ts` | `AppModule.forRoot()`: registra `DemoModule` solo si `DEMO_MODE=true` (si no, sus rutas no existen) | F8, RNF-10 |
+| `apps/api/src/demo/demo.service.ts` · `demo.controller.ts` | Estado, adelantar/reiniciar reloj, forzar fallos (pago rechazado, emisión fallida, aseguradora caída, envío fallido), buzón (desde la BD), procesar abandonos, reiniciar BD (solo ADMINISTRADOR) | D-06, D-07, D-12 |
+| `apps/api/src/persistencia/seed-datos.ts` | `sembrar(prisma, hoy)`: los datos del seed, reutilizados por `db:seed`, las pruebas y el reinicio de la demo | 02 §10, RNF-13 |
+| `apps/web/src/pages/demo/Demo.tsx` | Página Demo (menú visible solo con DEMO_MODE y rol ADMINISTRADOR) | F8 |
+| `scripts/guion-demo.cjs` | Ensayo automático de `docs/GUIA_DEMO.md` con Playwright (skill `demo`) | F8 |

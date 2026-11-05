@@ -142,3 +142,16 @@ Cada cambio y su RegistroActividad se guardan en la misma transacción (`cambio(
 **¿De dónde salen los reportes?**
 De las pólizas emitidas (`poliza.canal_venta`, fecha de emisión) agrupadas con la función pura `agruparVentas()`. El seed trae 80 pólizas históricas para que no salgan vacíos.
 → `administracion/dominio/reportes.ts`.
+
+## F8 · Modo simulación y guion de demo
+**¿Las herramientas de demo no son un hueco de seguridad?**
+Solo existen si el servidor arranca con `DEMO_MODE=true` (si no, el módulo ni se registra y responde 404), y aun así exigen rol ADMINISTRADOR (401/403 para los demás). Ambas cosas tienen pruebas.
+→ `app.module.ts` (`forRoot`), `test/demo.e2e-spec.ts`.
+
+**¿Cómo muestran 7 días de seguimiento en 15 minutos de exposición?**
+La demo adelanta el puerto `Reloj`: todas las reglas de tiempo (abandono, intentos, vigencia del enlace) preguntan la hora ahí. Adelantando 8 días el enlace aparece vencido.
+→ `demo/demo.service.ts`, `comun/reloj.ts`.
+
+**¿Cómo saben que el guion funciona de punta a punta?**
+Un script de Playwright recorre los 10 pasos de la guía como lo haría una persona: verifica cada resultado (5 %, 8 % negociado, canales, enlace vencido, rollback…) y toma capturas a 360 y 1366 px. Última corrida: 0 fallas en 54 s.
+→ `scripts/guion-demo.cjs`, `docs/GUIA_DEMO.md`.

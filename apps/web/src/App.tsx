@@ -14,6 +14,7 @@ import { PanelAdmin } from './pages/panel-admin/PanelAdmin';
 import { IniciarCompra } from './pages/pago-poliza/IniciarCompra';
 import { PagoPoliza } from './pages/pago-poliza/PagoPoliza';
 import { PanelAsesor } from './pages/panel-asesor/PanelAsesor';
+import { Demo } from './pages/demo/Demo';
 import { Retomar } from './pages/retomar/Retomar';
 import { SeleccionCanal } from './pages/seleccion-canal/SeleccionCanal';
 import { ProveedorSesion } from './sesion/sesion';
@@ -63,6 +64,17 @@ export function Rutas({ demoHabilitado = false }: { demoHabilitado?: boolean }) 
             </RutaProtegida>
           }
         />
+        {/* F8: la página de demo solo existe si la API tiene DEMO_MODE=true, y solo para ADMINISTRADOR */}
+        {demoHabilitado && (
+          <Route
+            path="/demo"
+            element={
+              <RutaProtegida roles={['ADMINISTRADOR']}>
+                <Demo />
+              </RutaProtegida>
+            }
+          />
+        )}
         <Route path="*" element={<p className="p-4">Página no encontrada.</p>} />
       </Routes>
     </>

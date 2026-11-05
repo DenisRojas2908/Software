@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 21:55 (Lima) · F8 · Modo simulación y guion de demo
+- **Qué se hizo**: F7 mergeada (PR #8). `AppModule.forRoot()` registra `DemoModule` solo con DEMO_MODE (D-55). Endpoints `/api/demo/*` (solo ADMINISTRADOR) y página Demo. Pruebas obligatorias: 404 con DEMO_MODE=false (también como admin y sin token), 401/403 con DEMO_MODE=true para quien no es admin, menú y ruta ocultos en la web. Skill `demo` ejecutada: `scripts/guion-demo.cjs` recorre los 10 pasos de `GUIA_DEMO.md` → 0 fallas, 58 verificaciones, 66 capturas (360/1366), 54 s.
+- **Errores encontrados y resueltos (en el script, no en la app)**: esperas antes de que cargara la página de datos faltantes; checkboxes controlados (cambian al responder la API) → `click()`; el estado del reloj persistía entre corridas → el script lo reinicia al empezar.
+- **Archivos tocados**: `apps/api/src/{app.module.ts,app.ts,demo/*,persistencia/seed-datos.ts}`, `apps/api/test/demo.e2e-spec.ts`, `apps/web/src/{App.tsx,pages/demo/*}`, `scripts/guion-demo.cjs`, `.claude/skills/demo/SKILL.md`.
+- **Decisiones**: D-55, D-56.
+- **Pruebas**: api 324 · web 33. Cubren RNF-10/RF-32 para `/api/demo/*`, D-06, D-07, D-12.
+- **Para defender**:
+  1. *Demo segura* (`app.module.ts`): «¿y si dejan DEMO_MODE en producción?» → Igual exige ADMINISTRADOR; y con false las rutas no existen.
+  2. *Ensayo automatizado* (`scripts/guion-demo.cjs`): «¿cómo garantizan que la demo no falle?» → Se ensayó de punta a punta con un navegador real.
+- **Siguiente paso**: cerrar F8 y empezar F9.
+
 ## 2026-11-04 21:42 (Lima) · F7 · Catálogo, parámetros, usuarios y reportes (CU-05) + auditoría F0–F7
 - **Qué se hizo**: F6 mergeada (PR #7). Dominio: `agruparVentas`, `validarParametros`. `AdministracionService`: catálogo, campos y valores (campo nuevo → `datos_adicionales`), inspección, parámetros, actividad y reportes; cada cambio + actividad en una transacción. Web: panel admin con 7 pestañas y Recharts. `GUIA_DEMO.md`. Seed movido a `src/persistencia/seed-datos.ts` con fecha inyectada. Base del modo demo (F8). **Auditor F0–F7**: 2 bloquea (caso aceptado descartado por el job, con el enlace invalidado; prima manual que saltaba el tope), 3 corregir (CU-04 3b, literal 1800.90, suites en paralelo) y 12 menores. Todos corregidos (D-51…D-54).
 - **Errores encontrados y resueltos**: una corrida fallida de Playwright dejó Quálitas desactivada en la BD de desarrollo (se restauró y se verificó de nuevo desde un estado limpio); lint de react-hooks por `setState` dentro de un efecto en Parámetros (se cambió por un formulario hijo con estado inicial).
