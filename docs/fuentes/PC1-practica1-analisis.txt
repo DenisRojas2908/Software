@@ -1,0 +1,5496 @@
+UNIVERSIDAD NACIONAL DE INGENIERÍA
+FACULTAD DE INGENIERÍA INDUSTRIAL Y DE SISTEMAS
+
+INGENIERÍA DE SOFTWARE - SI707V
+PROYECTO -“Sistema de Venta Autónoma de Seguros — SeguroSimple
+(SVAS)”
+Grupo N°4
+DOCENTE:
+Msc. Jesus Alberto Cossa Cabanillas
+INTEGRANTES:
+Espinoza Esteban, Sleyther Sthiber
+Flores Huayllaquispe , Dilan Baruc
+Rojas Chamochumby, Denis Alonso
+Sehuin Guevara, Charlie
+Vázquez García, D'Llamila Katherine
+Octubre
+Lima, Perú
+2026-2
+
+ÍNDICE
+1. Introducción..........................................................................................................................1
+2. Información general............................................................................................................. 2
+3. Perfil de proyecto..................................................................................................................2
+3.1 Descripción de la empresa..............................................................................................2
+3.2 Definición del problema.................................................................................................3
+3.2.1 Procesos ineficientes....................................................................................... 3
+3.2.2 Experiencia del cliente.................................................................................... 3
+3.2.3 Oportunidades desaprovechadas..................................................................... 4
+3.3 Objetivos del nuevo sistema: general y específicos....................................................... 4
+3.4 Nicho de mercado y justificación costo-beneficio......................................................... 5
+3.5 Aseguradoras consideradas............................................................................................ 6
+3.6 Alcance: funcionalidades principales (MVP).................................................................7
+3.7 Límites del proyecto.......................................................................................................7
+4. Análisis del Sistema Actual (AS-IS)....................................................................................8
+4.1 Descripción del proceso actual de venta........................................................................ 8
+4.2 Problemas, cuellos de botella y oportunidades de mejora..............................................9
+5. Partes interesadas y actores...............................................................................................10
+5.1 Stakeholders y sus necesidades.................................................................................... 11
+5.2 Actores del sistema.......................................................................................................12
+5.3 Fronteras del sistema y entorno operativo................................................................. 13
+
+6. Recopilación de requisitos................................................................................................. 15
+6.1 Entrevista......................................................................................................................15
+6.2 Análisis de la competencia........................................................................................... 16
+Informe comparativo.................................................................................................... 17
+Funcionalidades clave y tendencias............................................................................. 17
+6.3 Escenarios de uso......................................................................................................... 18
+Escenario 1 – Compra autónoma (Cliente, Segmento A; fuente: E3)..........................18
+Escenario 2 – Solicitud de asesoría o descuento (Cliente, Segmento B, y Asesor;
+fuentes: E2 y E4).......................................................................................................... 18
+Escenario 3 – Recuperación de cotizaciones no concretadas (Asesor en seguimiento;
+fuentes: E1 y E2).......................................................................................................... 19
+Escenario 4 – Gestión del catálogo (Administrador; fuente: E1).................................19
+Resultado esperado.......................................................................................................19
+7. Especificación de requisitos...............................................................................................19
+7.1 Requisitos funcionales..................................................................................................19
+7.2 Requisitos no funcionales.............................................................................................21
+7.3 Reglas de negocio.........................................................................................................22
+7.3.1 Derivación y flujo de venta................................................................................. 22
+7.3.2 Descuentos y seguimiento................................................................................... 23
+7.3.3 Pago, emisión y catálogo.....................................................................................23
+
+7.3.4 Datos requeridos por aseguradora....................................................................... 24
+7.3.5 Reglas complementarias para Mapfre y Quálitas................................................24
+8. Modelado de análisis (diagramas principales).................................................................25
+8.1 Diagrama general de caso de uso................................................................................. 25
+8.2 Casos de uso detallados................................................................................................25
+8.2.1 CU-01.................................................................................................................. 25
+8.2.2 CU-02.................................................................................................................. 28
+8.2.3 CU-03.................................................................................................................. 30
+8.2.4 CU-04.................................................................................................................. 32
+8.2.5 CU-05.................................................................................................................. 34
+8.3 DFD nivel 0 y descripción de sus elementos............................................................... 36
+8.4 DFD nivel 1 y descripción de subprocesos y flujos de datos.......................................39
+9. Arquitectura tecnológica preliminar................................................................................ 43
+9.1 Pila tecnológica............................................................................................................ 43
+9.2 Diagrama de arquitectura............................................................................................. 44
+9.3 Despliegue.................................................................................................................... 45
+10. Aplicación de los marcos y estándares en SVAS............................................................46
+10.1 SWEBOK................................................................................................................... 46
+10.2 SEBoK........................................................................................................................46
+10.3 ISO/IEC 12207........................................................................................................... 47
+10.4 ISO/IEC 15288........................................................................................................... 49
+11. Alineación con la competencia del curso........................................................................ 49
+Principios SOLID................................................................................................... 49
+Gestión de configuración....................................................................................... 51
+Testing.................................................................................................................... 51
+12. Cronograma...................................................................................................................... 52
+13. Conclusiones..................................................................................................................... 53
+14. Referencias........................................................................................................................ 54
+Anexos..................................................................................................................................... 56
+Anexo A1. Guías y respuestas de las entrevistas................................................................. 56
+E1 — Jefe comercial de una agencia de corretaje........................................................56
+E2 — Asesora comercial / bróker................................................................................ 57
+E3 — Cliente de uso particular (Segmento A).............................................................57
+E4 — Cliente de uso comercial ligero (Segmento B).................................................. 58
+Anexo A2. Capturas de la competencia................................................................................60
+
+1
+
+1.​ Introducción
+SeguroSimple.com es un corredor de seguros digital que compara en segundos las primas de
+Rímac, Pacífico, La Positiva, Mapfre y Quálitas. Sin embargo, aunque la cotización es en
+línea, la venta no es autónoma: el cierre (confirmación de datos, envío de documentos,
+emisión y pago) depende de que un asesor contacte al cliente. Esto limita la capacidad de
+venta al número de asesores y a su horario, obliga al cliente que ya decidió a esperar una
+llamada, genera re-digitación de datos y deja sin seguimiento sistemático las cotizaciones no
+concretadas.
+Frente a esta situación, el presente documento desarrolla el análisis inicial del Sistema de
+Venta Autónoma de Seguros (SVAS), un prototipo web de seguro vehicular que permite
+cotizar entre varias aseguradoras, contratar y obtener la póliza en PDF sin intervención
+obligatoria de un asesor cuando el caso no requiere evaluación ni negociación. El sistema
+deriva a asesoría los casos que sí la necesitan y recupera, mediante un módulo de retención y
+telemarketing, las cotizaciones que no llegaron a concretarse. Dado que las aseguradoras ya
+venden 100 % en línea por canal directo, el proyecto no compite por ser digital, sino por
+reunir varias aseguradoras en un solo lugar y ofrecer asesoría opcional con negociación,
+orientado a un nicho específico: propietarios de autos de uso particular y conductores con 1 a
+5 vehículos de uso comercial ligero.
+El análisis se apoyó en información verificada y no solo en supuestos: se reconstruyó el
+proceso actual de venta (AS-IS), se identificaron diez problemas, se entrevistó a cuatro
+perfiles representativos y se contrastó el mercado con la competencia. Con ello se
+especificaron los requisitos funcionales y no funcionales y las reglas de negocio, se elaboró el
+modelado de análisis (casos de uso y DFD de niveles 0 y 1) y se propuso una arquitectura
+tecnológica preliminar con Java (Spring Boot), React con TypeScript y PostgreSQL. El
+trabajo se enmarca en SWEBOK, SEBoK y las normas ISO/IEC 12207 e ISO/IEC 15288, y
+aplica en el diseño el patrón Strategy y los principios SOLID.
+El documento se organiza así: el perfil del proyecto, el análisis del sistema actual y las partes
+interesadas (secciones 3 a 5); la recopilación y especificación de requisitos (secciones 6 y 7);
+el modelado de análisis y la arquitectura preliminar (secciones 8 y 9); y la aplicación de los
+marcos y estándares y la alineación con la competencia del curso (secciones 10 y 11).
+
+2
+
+2.​ Información general
+Empresa: SeguroSimple.com
+Pila tecnológica:
+●​ Lenguaje de programación: Java (Spring Boot) para el backend y TypeScript (React)
+para el frontend.
+●​ Base de datos: PostgreSQL.
+●​ Framework de testing: JUnit (backend, Java) y Jest (frontend, TypeScript).
+●​ Canal de acceso: aplicación web responsiva, diseñada con enfoque mobile-first y
+preparada para evolucionar a una Web App progresiva (PWA) o App móvil (ver
+sección 3.7, Límites del proyecto).
+●​ Despliegue: Servicios cloud gratuitos o de prueba: Railway (backend), Supabase
+(base de datos) y hosting de sitio estático (frontend), sin necesidad de crear
+contenedores propios
+
+3.​ Perfil de proyecto
+3.1 Descripción de la empresa
+SeguroSimple.com es un corredor de seguros digital fundado en 2013, con operaciones en
+México y Perú. En Perú tiene su oficina en Santiago de Surco , está inscrito en el Registro de
+Corredores de Seguros de la SBS con el código J-0775 y es miembro de la Asociación
+Peruana de Corredores de Seguros. La empresa cuenta con entre 51 y 200 colaboradores entre
+ambos países.
+Modelo de negocio. Como todo corredor, SeguroSimple no asume el riesgo asegurado: actúa
+como intermediario entre el cliente y las compañías de seguros, y su ingreso proviene
+principalmente de la comisión que la aseguradora paga sobre la prima de cada póliza
+colocada. Declara acompañar al cliente en todo el ciclo: cotización, contratación, siniestro y
+renovación.
+Canales actuales. El cliente puede cotizar en el sitio web, que compara en segundos las
+primas de Rímac, Pacífico, La Positiva, Mapfre y Quálitas. El cierre de la venta se apoya en
+un equipo de asesores que atiende por teléfono, WhatsApp y correo electrónico.
+Posicionamiento. La empresa forma parte de la red Endeavor, fue reconocida como la startup
+digital más innovadora del Perú en 2016 y recibió de Rímac y La Positiva el reconocimiento
+como el corredor vehicular más grande en 2017. Según su propio sitio, más de 300 000
+personas han cotizado con ella y sus clientes ahorran en promedio USD 200 al año, con
+ahorros de hasta 35 % frente a contratar directamente.
+Contexto del negocio. A diferencia del SOAT, el seguro vehicular voluntario (todo riesgo)
+no es obligatorio en el Perú, por lo que su venta depende de convencer al cliente del valor de
+
+3
+la cobertura y del precio. SeguroSimple compite con los canales directos de las propias
+aseguradoras (que ya ofrecen cotizadores en línea), con la bancaseguros y con corredores
+tradicionales. Su ventaja es la comparación multiaseguradora; su desafío es convertir las
+cotizaciones en ventas sin que el costo de atención por asesor crezca al mismo ritmo que el
+volumen de cotizaciones. Este es el contexto en el que se propone el SVAS.
+
+3.2 Definición del problema
+Aunque SeguroSimple ya cotiza en línea, la venta no es autónoma: la web genera la
+cotización, pero el cierre (confirmación de datos, envío de documentos, emisión y pago)
+depende de que un asesor contacte al cliente. El problema se organiza en tres partes.
+3.2.1 Procesos ineficientes
+●​ Cierre dependiente del asesor. Toda venta pasa por una llamada o conversación de
+WhatsApp, incluso cuando el cliente ya eligió su plan. La capacidad de venta queda
+limitada por el número de asesores y su horario.
+●​ Re-digitación de datos. Los datos que el cliente ingresó en el cotizador se vuelven a
+solicitar por teléfono o WhatsApp y el asesor los vuelve a registrar en el portal de
+cada aseguradora, lo que genera retrabajo y errores.
+●​ Requisitos distintos por aseguradora. Cada compañía exige parámetros diferentes
+para cotizar y emitir (ubicación, clase o tipo de vehículo, etc.), por lo que el asesor
+debe pedir información adicional en contactos posteriores.
+●​ Casos no asegurables resueltos a mano. Cuando el cotizador no puede cotizar un
+modelo o una ubicación, el sitio indica al cliente que envíe un correo o solicite una
+llamada, y la cotización se hace manualmente.
+●​ Registro disperso. El seguimiento de clientes, descuentos y pagos se registra en
+herramientas no integradas (hojas de cálculo, chats personales), sin trazabilidad por
+canal.
+3.2.2 Experiencia del cliente
+●​ Espera obligatoria. El cliente que ya decidió comprar no puede hacerlo en el
+momento: debe esperar a ser contactado, y fuera del horario de atención la venta se
+posterga.
+●​ Un solo camino para perfiles distintos. No existe una opción explícita para elegir
+entre "comprar ya" o "prefiero hablar con un asesor"; ambos perfiles reciben el mismo
+trato.
+●​ Contacto insistente. Cuando el cliente no compra, recibe llamadas y mensajes
+repetidos sin haber elegido el canal en que prefiere ser contactado , lo que genera
+molestia en lugar de acercarlo a la compra.
+●​ Poca visibilidad del proceso. El cliente no sabe en qué estado está su solicitud,
+cuándo se emitirá la póliza ni si su pago fue registrado.
+
+4
+●​ Poco ajuste al nicho. Los propietarios de autos de uso particular que trabajan en
+horario de oficina, así como taxistas, conductores de aplicaciones y pequeños
+emprendedores que pasan la jornada en la calle, tienen poco tiempo para atender
+llamadas; necesitan un proceso rápido desde el celular.
+3.2.3 Oportunidades desaprovechadas
+●​ Seguimiento de cotizaciones abandonadas poco efectivo. Si el cliente cotiza y no
+compra, recibe llamadas y mensajes reiterados y, tras varios días sin respuesta, un
+correo genérico de disculpa que cierra el caso. No se registra por qué el cliente no
+compró ni se le ofrece una forma de retomar la compra por su cuenta, por lo que el
+esfuerzo de los asesores no se traduce en ventas.
+●​ Descuentos no gestionados. El descuento por primera compra se ofrece de forma
+discrecional, sin regla definida ni registro que permita medir su efecto en la
+conversión.
+●​ Datos no explotados. Se cotiza mucho, pero no se mide de forma consolidada qué
+aseguradora, plan o canal convierte mejor.
+●​ Segmentos sin un canal adecuado. El propietario de un auto particular que ya
+decidió su plan no tiene cómo comprar sin esperar a un asesor, y el propietario de 1 a
+5 vehículos de uso comercial, que suele comparar precios y negociar la prima, recibe
+el mismo trato que cualquier otro cliente, sin un canal de asesoría diferenciado (ver
+sección 3.4).
+Enunciado del problema. SeguroSimple.com genera un alto volumen de cotizaciones de
+seguro vehicular, pero su conversión en ventas depende del contacto manual de un asesor, lo
+que limita la capacidad de venta, obliga al cliente a esperar y deja sin seguimiento sistemático
+las cotizaciones no concretadas.
+
+3.3 Objetivos del nuevo sistema: general y específicos
+Objetivo general
+Desarrollar un sistema web de venta autónoma de seguros vehiculares (SVAS) para
+SeguroSimple.com, orientado a propietarios de vehículos de uso particular y a conductores
+independientes con vehículos de uso comercial ligero, que permita cotizar entre varias
+aseguradoras, contratar y generar la póliza (con emisión y pago simulados en esta versión) sin
+intervención obligatoria de un asesor cuando el caso no requiere evaluación o negociación,
+derivar a asesoría los casos que sí la requieren, y recuperar mediante telemarketing las
+cotizaciones no concretadas, con el fin de reducir la dependencia del asesor en el cierre de
+ventas y aumentar la conversión de cotizaciones.
+Objetivos específicos
+
+5
+N.º
+
+Objetivo específico
+
+Problemas que
+atiende
+
+Indicador de logro
+
+OE1
+
+Implementar un cotizador multiaseguradora con un
+catálogo configurable de campos requeridos por
+aseguradora, que genere el formulario dinámicamente y
+valide los datos en el backend, y con el patrón Strategy
+para encapsular el cálculo de la prima de cada aseguradora.
+
+P3, P10
+
+El 100 % de las aseguradoras activas
+devuelve cotización con sus campos
+obligatorios validados; agregar un campo
+nuevo a una aseguradora no requiere
+modificar el frontend.
+
+OE2
+
+Implementar el flujo de venta dual con reglas de
+derivación según el uso del vehículo: compra inmediata
+autónoma (Opción 1) para los casos de tarifa estándar, y
+solicitud de asesoría, negociación o descuento (Opción 2)
+para quien la pida o para los casos que la aseguradora no
+permite cerrar en línea.
+
+P1, P6, P7
+
+Un cliente con vehículo de uso particular
+completa la compra autónoma desde un
+celular sin contacto de asesor, en un
+tiempo meta a validar (propuesta: 10
+minutos o menos); el 100 % de los casos
+que requieren evaluación se derivan a la
+Opción 2 con sus datos ya capturados.
+
+OE3
+
+Desarrollar el módulo de retención y telemarketing que
+registre las cotizaciones no concretadas en una cola con
+estados (convertido, en seguimiento, descartado), respete
+el canal preferido del cliente y un número máximo de
+intentos, registre el motivo de no compra y aplique el
+descuento por primera compra según reglas definidas.
+
+P4, P5, P10
+
+El 100 % de las cotizaciones no
+concretadas ingresa a la cola con su
+estado, número de intentos y motivo de
+cierre, sin superar el máximo de intentos
+definido.
+
+OE4
+
+Automatizar la generación de la póliza en PDF descargable
+y el registro de pagos (pago único o en cuotas),
+reutilizando los datos ya ingresados por el cliente,
+mediante componentes de integración con la aseguradora y
+con la pasarela de pago que en esta versión operan en
+modo simulado.
+
+P2, P8
+
+El PDF se genera al confirmar el pago
+simulado, sin re-digitación de datos;
+reemplazar el componente simulado por
+la integración real no exige cambiar el
+flujo de venta.
+
+OE5
+
+Construir un panel administrativo con reportes de ventas
+por canal, aseguradora y plan, y con un catálogo
+configurable de aseguradoras y planes.
+
+P9
+
+El administrador obtiene los reportes y
+activa o desactiva aseguradoras sin
+modificar el código.
+
+OE6
+
+Asegurar la calidad y disponibilidad del sistema mediante
+pruebas unitarias (JUnit, Jest) y de integración, y su
+despliegue en servicios cloud con plan gratuito o de
+prueba.
+
+Transversal
+
+Pruebas de los flujos críticos aprobadas y
+sistema accesible públicamente (backend
+en Railway, base de datos en Supabase,
+frontend como sitio estático).
+
+3.4 Nicho de mercado y justificación costo-beneficio
+Para responder a la observación sobre la relación costo-beneficio frente al volumen actual de
+operaciones y a la competencia de las grandes aseguradoras, el proyecto no buscará competir
+de forma generalista en el seguro vehicular masivo. Se orienta a un nicho específico,
+desatendido por las campañas masivas de las grandes compañías:
+●​ Nicho propuesto: personas que compran su seguro por su cuenta y valoran la rapidez,
+en dos segmentos:
+
+6
+○​ Segmento A – Uso particular: propietarios de autos de uso particular
+(personas naturales con uno o dos vehículos) que quieren comparar
+aseguradoras y contratar sin esperar una llamada.
+○​ Segmento B – Uso comercial ligero: taxistas, conductores de aplicaciones de
+movilidad y pequeños emprendedores con 1 a 5 vehículos, que comparan
+precios y con frecuencia negocian la prima.
+●​ Propuesta de valor: comparación multiaseguradora en un solo lugar, compra en
+minutos sin llamada obligatoria y posibilidad de acceder a un descuento por primera
+compra.
+●​ Canal según el caso. La venta autónoma y la negociación no se mezclan en un mismo
+flujo. El sistema aplica estas reglas (desarrolladas en la sección 7.3):
+Caso
+
+Canal
+
+Uso particular con cotización estándar
+
+Opción 1 (compra autónoma) disponible; Opción 2 visible si el
+cliente la prefiere.
+
+Uso comercial cuando la aseguradora
+cotiza en línea sin evaluación adicional y
+no es transporte de pasajeros
+
+Opción 1 disponible con la prima publicada; si el cliente quiere
+negociar, elige la Opción 2.
+
+Uso comercial cuando la aseguradora exige
+inspección o evaluación del riesgo
+
+Solo Opción 2: el caso pasa a la cola de asesoría con los datos ya
+capturados.
+
+Vehículo no asegurable en línea
+
+Derivación automática a la Opción 2 (P10).
+
+Transporte de pasajeros (taxi, colectivo y
+aplicaciones de movilidad)
+
+Solo Opción 2 por defecto (RN-25, editable por el
+administrador): el caso pasa a la cola de asesoría con los datos ya
+capturados.
+
+La negociación la hace el asesor dentro de un rango de descuento máximo configurado por el
+administrador, y cada descuento queda registrado. Así, el segmento que negocia se atiende
+por la Opción 2 sin que el flujo autónomo tenga que resolverla.
+●​ Justificación: un sistema que automatiza la venta y el seguimiento reduce la carga
+operativa del equipo de asesores, permite atender más cotizaciones con los mismos
+recursos y recupera ventas que hoy se pierden por falta de seguimiento o de oferta de
+descuento.
+
+3.5 Aseguradoras consideradas
+El catálogo de aseguradoras replica el que actualmente ofrece SeguroSimple.com en Perú:
+●​ Rímac Seguros.
+●​ Pacífico Seguros.
+●​ La Positiva Seguros.
+●​ Mapfre Perú.
+●​ Quálitas.
+
+7
+Este catálogo será configurable desde el panel administrativo, de modo que el administrador
+pueda activar o desactivar aseguradoras y planes sin modificar el código fuente.
+
+3.6 Alcance: funcionalidades principales (MVP)
+1.​ Flujo de venta dual. Al cotizar, el cliente elige entre dos caminos claros:
+○​ Opción 1 – Compra inmediata autónoma: selección de plan, ingreso de
+datos del cliente y del vehículo, pago simulado y generación de la póliza, sin
+intervención obligatoria de un asesor.Disponible para los vehículos de uso
+particular y para los de uso comercial que la aseguradora cotiza en línea sin
+evaluación adicional y que no son de transporte de pasajeros (sección 3.4).
+○​ Opción 2 – Solicitud de asesoría / descuento: para quienes prefieren ser
+contactados por un asesor (llamada o WhatsApp) para aclarar dudas, negociar
+la prima o evaluar promociones, y para los casos que el sistema deriva porque
+la aseguradora exige inspección o evaluación. Está visible en cada plan.
+2.​ Módulo de retención y telemarketing. Si el cliente realiza la cotización pero no
+completa la compra autónoma, el sistema registra el caso y lo envía a la cola de
+seguimiento (telemarketing) para que un asesor lo contacte y le ofrezca un incentivo o
+descuento por primera compra. El seguimiento lo realiza el mismo rol de asesor; no
+existe un rol de telemarketing aparte. El contacto respeta el canal preferido del cliente
+y un número máximo de intentos, y se registra el resultado (convertido, en
+seguimiento, descartado) y el motivo de no compra.
+3.​ Generación de la póliza en formato PDF descargable a partir de una emisión
+simulada. El sistema se comunica con cada aseguradora mediante un componente de
+integración con una interfaz común; en esta versión ese componente devuelve un
+número de póliza de prueba.
+4.​ Registro y gestión de pagos (pago único o en cuotas), manejados de forma simulada
+en esta versión mediante el mismo esquema de componente reemplazable.
+5.​ Panel administrativo con reportes de ventas por canal (autónomo, asesoría,
+telemarketing), aseguradora y plan.
+Se incluyen cinco funcionalidades, más de las tres o cuatro sugeridas en la ficha del
+curso, porque las entrevistas confirmaron la necesidad del seguimiento de
+cotizaciones no concretadas (E1) y del catálogo configurable (E1, E2), y los reportes
+atienden el problema P9.
+
+3.7 Límites del proyecto
+Es un prototipo funcional. La póliza en PDF que genera es un documento de
+demostración sin validez legal: una emisión vinculante requiere la integración con los
+servicios web de cada aseguradora y la confirmación de una pasarela de pago real,
+que quedan fuera del alcance de esta versión.
+●​ No procesará pagos reales con pasarelas bancarias; el flujo de pago será simulado.
+●​ No gestionará el ciclo de siniestros (reportes, peritajes, indemnizaciones).
+●​
+
+8
+●​ No incluirá firma electrónica certificada legalmente, solo una simulación del proceso
+
+de firma.
+●​ No reemplazará al asesor humano en casos complejos; solo ofrecerá la alternativa
+autónoma para clientes que no requieren asesoría.
+●​ No incluirá venta de otros ramos (salud, vida, hogar, SOAT); el alcance se limita al
+seguro vehicular y, dentro de este, al nicho definido (uso particular y uso comercial
+ligero). No atiende flotas de más de 5 vehículos ni vehículos pesados o de transporte
+de carga. La promoción de SOAT que SeguroSimple.com ofrece al contratar el seguro
+vehicular tampoco es gestionada por el SVAS.
+●​ No incluirá en esta versión una App móvil nativa. La interfaz web será responsiva y
+se dejará abierta la adaptación posterior a una PWA o App móvil que permita al
+cliente instalar la aplicación, consultar el vencimiento de su póliza y comunicarse de
+inmediato con SeguroSimple.
+
+4.​ Análisis del Sistema Actual (AS-IS)
+4.1 Descripción del proceso actual de venta
+El proceso actual se reconstruyó a partir de la información pública del sitio de
+SeguroSimple.com (cotizador web, canales de contacto y mensaje para vehículos no
+asegurables).
+Actores: Cliente, Cotizador web, Asesor comercial y Aseguradora.
+Paso
+
+Actor
+
+Actividad
+
+Punto crítico
+
+1
+
+Cliente
+
+Ingresa al sitio y completa el formulario de cotización (uso, marca, modelo, año,
+ubicación y datos de contacto).
+
+—
+
+2
+
+Cotizador web
+
+Verifica si el vehículo es asegurable. Si no lo es, muestra un mensaje para que el
+cliente envíe un correo o solicite una llamada y se cotice manualmente.
+
+P10
+
+3
+
+Cotizador web
+
+Muestra las primas de las aseguradoras y registra la cotización como lead.
+
+—
+
+4
+
+Cliente
+
+Solicita contratar y espera la llamada, o abandona el sitio.
+
+5
+
+Asesor
+
+Recibe el lead, tanto de clientes que pidieron contratar como de los que abandonaron
+el sitio.
+
+P1
+
+6
+
+Asesor
+
+Contacta al cliente por teléfono y WhatsApp; si no responde, sigue llamando y
+escribiendo durante varios días, sin considerar un canal preferido.
+
+P4
+
+6a
+
+Asesor
+
+Si el cliente nunca responde, envía un correo genérico de disculpa por no haber
+podido ayudarlo y cierra el caso, sin registrar el motivo ni ofrecer un enlace para
+retomar la compra.
+
+P4
+
+7
+
+Asesor
+
+Resuelve dudas, negocia la prima y ofrece descuentos a criterio.
+
+P5
+
+8
+
+Asesor / Cliente
+
+Solicita documentos (DNI, tarjeta de propiedad) y datos adicionales exigidos por la
+aseguradora; coordina la inspección si aplica.
+
+P6, P7
+
+P2, P3
+
+9
+9
+
+Asesor
+
+Re-digita los datos en el portal de la aseguradora.
+
+P2
+
+10
+
+Aseguradora
+
+Valida la información y emite la póliza.
+
+—
+
+11
+
+Cliente
+
+Recibe la poliza.
+
+P8
+
+12
+
+Asesor
+
+Registra la venta de manera manula
+
+P9
+
+Cuellos de botella observados.Todo camino hacia la venta pasa por el carril del asesor: no
+existe una ruta en la que el cliente compre solo. Además, la rama de abandono consume
+muchos contactos del asesor y, si el cliente no responde, termina en un correo de disculpa y
+en una venta perdida, sin que el caso deje información útil para la empresa.
+
+Figura. Diagrama de flujo del proceso actual de venta (AS-IS). Fuente: elaboración propia.
+
+4.2 Problemas, cuellos de botella y oportunidades de mejora
+ID
+
+Tipo
+
+Problema
+
+Causa
+
+Impacto
+
+Solución en el SVAS
+
+P1
+
+Proceso
+
+El cierre de toda
+venta depende del
+contacto de un
+asesor.
+
+La web solo cotiza; no
+permite contratar,
+pagar ni emitir.
+
+Cuello de botella: la
+capacidad de venta se
+limita al número de
+asesores y a su horario.
+
+Opción 1 del flujo dual: compra inmediata
+autónoma con emisión sin intervención
+obligatoria del asesor.
+
+P2
+
+Proceso
+
+Re-digitación de
+Cotizador, WhatsApp
+datos del cliente y del y portal de la
+vehículo.
+aseguradora no están
+integrados.
+
+Retrabajo, errores de
+registro y mayor tiempo
+por venta.
+
+Registro único de cliente y vehículo; los datos
+de la cotización se reutilizan en la compra y en
+la emisión del PDF.
+
+10
+P3
+
+Proceso
+
+Cada aseguradora
+exige datos distintos
+para cotizar.
+
+Diferencias en las
+reglas de tarifa de cada
+compañía.
+
+Contactos adicionales para Catálogo configurable de campos por
+pedir información y
+aseguradora: el frontend arma el formulario a
+cotizaciones incompletas. partir de ese catálogo y el backend valida los
+datos contra él; el cálculo de la prima de cada
+aseguradora se encapsula con el patrón Strategy
+(sección 11).
+
+P4
+
+Oportunidad
+
+El seguimiento de
+cotizaciones
+abandonadas es
+insistente y poco
+efectivo: llamadas y
+mensajes reiterados
+durante días y, sin
+respuesta, un correo
+genérico de disculpa
+que cierra el caso.
+
+El seguimiento se basa
+en repetir contactos sin
+reglas: no se pregunta
+el canal ni el horario
+preferido, no hay
+límite de intentos, no
+se registra el motivo de
+no compra y el cierre
+no ofrece otra forma
+de comprar.
+
+Molestia del cliente y
+deterioro de la imagen de
+la marca; horas de asesor
+en contactos no
+productivos; ventas
+perdidas sin conocer su
+causa.
+
+Módulo de retención y telemarketing: cola con
+estados (convertido, en seguimiento,
+descartado); el cliente elige al cotizar si prefiere
+llamada o WhatsApp; límite de intentos
+configurable; registro obligatorio del motivo de
+cierre; y un mensaje final con enlace para
+retomar la compra autónoma con el descuento
+por primera compra.
+
+P5
+
+Oportunidad
+
+Los descuentos se
+ofrecen a criterio del
+asesor.
+
+No hay una política de
+incentivos registrada
+en un sistema.
+
+Margen inconsistente y
+efecto del descuento no
+medible.
+
+Descuento por primera compra y rango máximo
+de descuento negociable parametrizados como
+reglas de negocio y registrados en cada
+cotización (sección 7.3).
+
+P6
+
+Cliente
+
+El cliente que ya
+decidió debe esperar
+a ser contactado.
+
+La compra requiere
+interacción humana.
+
+Abandono, sobre todo en
+el nicho, que dispone de
+poco tiempo en horario
+laboral.
+
+Compra disponible en cualquier momento desde
+una interfaz web responsiva y mobile-first.
+
+P7
+
+Cliente
+
+No hay una opción
+explícita de asesoría.
+
+Un único flujo para
+todos los perfiles.
+
+Clientes que quieren
+asesoría esperan igual que
+los demás y el asesor
+dedica tiempo a ventas
+simples.
+
+Opción 2 visible en cada plan: solicitud de
+asesoría o descuento por llamada o WhatsApp.
+
+P8
+
+Cliente
+
+Póliza y pago se
+gestionan por correo
+o chat, sin estado
+visible.
+
+Verificación manual de Incertidumbre del cliente
+pagos y envío manual y consultas repetidas al
+de la póliza.
+asesor.
+
+Registro de pagos (único o en cuotas, simulado)
+con estado consultable y emisión inmediata de
+la póliza en PDF descargable.
+
+P9
+
+Oportunidad
+
+No hay reportes
+consolidados por
+canal, aseguradora o
+plan.
+
+Ventas registradas en
+No se sabe qué canal o
+herramientas dispersas. producto convierte mejor,
+lo que dificulta decidir
+campañas.
+
+Panel administrativo con reportes por canal
+(autónomo, asesoría, telemarketing),
+aseguradora y plan.
+
+P10
+
+Proceso
+
+Los vehículos no
+asegurables en línea
+se cotizan de forma
+manual por correo.
+
+El cotizador no cubre
+ciertos modelos o
+ubicaciones.
+
+El SVAS detecta el caso y lo deriva
+automáticamente a la cola de asesoría con los
+datos ya capturados, sin pedir un correo.
+
+Demora en la respuesta y
+leads que no vuelven a
+escribir.
+
+5.​ Partes interesadas y actores
+Antes de especificar los requisitos del Sistema de Venta Autónoma de Seguros (SVAS) se
+identifica a todos los involucrados del negocio y se distingue cuáles interactúan directamente
+con el sistema. Se separan dos conceptos: los stakeholders (cualquier parte interesada que
+influye en el proyecto o se ve afectada por él, aunque no lo opere) y los actores (el
+
+11
+subconjunto de stakeholders —u otros sistemas— que intercambian información
+directamente con el SVAS durante un caso de uso). Los códigos P1 a P10 remiten a la sección
+4.2 y los OE a la sección 3.3.
+
+5.1 Stakeholders y sus necesidades
+La siguiente tabla identifica a los stakeholders del SVAS, su rol frente al sistema, las
+necesidades que esperan cubrir y cómo las atiende el sistema. Siguiendo la decisión del
+alcance (sección 3.6), el seguimiento de telemarketing lo realiza el mismo rol de asesor; no
+existe un rol de telemarketing aparte.
+Stakeholder
+
+Rol
+frente
+sistema
+
+Gerencia
+de
+SeguroSimple
+
+al
+
+Necesidades principales
+
+Cómo las atiende el SVAS
+
+Patrocinador
+del
+negocio; decide y
+define las reglas
+comerciales.
+
+Aumentar la conversión de
+cotizaciones sin que el costo de
+atención crezca al ritmo del
+volumen; saber qué canal,
+aseguradora y plan vende más;
+controlar los descuentos.
+
+Compra autónoma (OE2);
+panel de reportes por canal,
+aseguradora y plan (OE5, P9);
+descuento por primera compra
+y
+rango
+máximo
+parametrizados (P5).
+
+Administrador
+
+Operador
+de la
+configuración
+comercial y de los
+reportes.
+
+Activar
+o
+desactivar
+aseguradoras y planes sin tocar
+el código; mantener el catálogo
+de campos por aseguradora;
+fijar el rango de descuento y el
+máximo de intentos; consultar
+reportes.
+
+Catálogo configurable y panel
+administrativo (OE1, OE5, P3,
+P9); parámetros de descuento e
+intentos
+editables
+sin
+desarrollo.
+
+Asesores
+comerciales
+(incluye
+telemarketing)
+
+Atienden consultas,
+negocian la prima,
+cierran los casos que
+requieren evaluación
+y
+contactan
+a
+quienes cotizaron y
+no compraron.
+
+Dedicar su tiempo a los clientes
+que
+piden
+asesoría
+o
+negociación; recibir los casos
+con los datos ya capturados;
+una
+cola
+ordenada
+de
+cotizaciones no concretadas
+con canal preferido, límite de
+intentos y motivo de no
+compra.
+
+Opción 2 visible en cada plan;
+cola de asesoría con los datos
+de cotización (OE2, P1, P2,
+P7); derivación automática de
+vehículos
+no asegurables
+(P10); módulo de retención
+con estados (OE3, P4, P5).
+
+Clientes
+–
+Segmento A (uso
+particular)
+
+Propietarios de uno
+o dos autos que
+compran por su
+cuenta.
+
+Comparar
+aseguradoras y
+contratar desde el celular, sin
+esperar una llamada y fuera del
+horario del asesor; ver el estado
+de su solicitud y su pago.
+
+Cotizador multi aseguradora y
+Opción 1 de compra autónoma
+con póliza en PDF (OE1, OE2,
+OE4, P6, P8).
+
+Clientes
+–
+Segmento B (uso
+comercial ligero)
+
+Taxistas,
+conductores
+de
+aplicaciones
+y
+emprendedores con
+1 a 5 vehículos.
+
+Comparar precios, negociar la
+prima y recibir atención en los
+momentos libres de su jornada.
+
+Opción 2 con negociación
+dentro de un rango de
+descuento máximo; compra
+autónoma
+cuando
+la
+aseguradora cotiza en línea sin
+evaluación (sección 3.4).
+
+12
+Aseguradoras
+(Rímac, Pacífico,
+La
+Positiva,
+Mapfre
+y
+Quálitas)
+
+Emiten la póliza y
+cobran la prima; el
+corredor
+las
+representa.
+
+Recibir solicitudes con datos
+completos y válidos según sus
+propios requisitos de cotización
+y emisión.
+
+Catálogo configurable de
+campos
+por
+aseguradora,
+validación en el backend y
+componente de integración con
+interfaz común, simulado en
+esta versión (OE1, OE4, P3).
+
+Equipo
+de
+desarrollo
+(Grupo N.° 4)
+
+Analiza, diseña y
+construye el SVAS
+como entregable del
+curso.
+
+Requisitos claros y priorizados;
+un alcance acotado a un MVP
+realista;
+una
+arquitectura
+modular
+(patrón Strategy,
+separación
+de
+responsabilidades).
+
+Alcance
+MVP
+definido
+(secciones 3.6–3.7); diseño
+con Strategy y módulos
+independientes (sección 11).
+
+5.2 Actores del sistema
+No todos los stakeholders son actores. Un actor es un rol que interactúa directamente con el SVAS
+intercambiando información durante los casos de uso. Se consideran internos los actores que operan
+el sistema (usuarios) y externos los sistemas con los que el SVAS se comunica. Estos mismos actores
+se usan en el diagrama general de casos de uso y en los DFD de la sección 8; la columna final indica
+los flujos del DFD de nivel 0 (sección 8.3).
+Actor
+
+Tipo
+
+Qué hace con el sistema
+
+Flujos (DFD N0)
+
+Cliente
+
+Interno
+
+Ingresa los datos del vehículo y de contacto y elige
+su canal preferido; compara las cotizaciones; elige
+la Opción 1 (compra autónoma) o la Opción 2
+(asesoría o descuento); realiza el pago simulado;
+descarga la póliza en PDF y consulta el estado de
+su solicitud.
+
+F1–F10
+
+Administrador
+
+Interno
+
+Activa o desactiva aseguradoras y planes;
+mantiene el catálogo de campos requeridos por
+aseguradora; configura el rango máximo de
+descuento y el máximo de intentos; consulta los
+reportes de ventas por canal, aseguradora y plan;
+gestiona usuarios y roles.
+
+F11–F12
+
+Asesor (incluye
+telemarketing)
+
+Interno
+
+Atiende la cola de asesoría (solicitudes de la
+Opción 2 y casos derivados por el sistema);
+negocia la prima dentro del rango de descuento
+máximo y registra cada descuento. También
+gestiona la cola de cotizaciones no concretadas,
+contacta al cliente por su canal preferido sin
+superar el máximo de intentos, ofrece el descuento
+por primera compra y registra el resultado y el
+motivo de no compra.
+
+F19–F22
+
+Aseguradoras
+(Rímac, Pacífico,
+La
+Positiva,
+Mapfre
+y
+Quálitas)
+
+Externo
+
+Reciben la solicitud de cotización y de emisión
+mediante un componente de integración con
+interfaz común (patrón Strategy). En esta versión
+el componente devuelve tarifas de prueba y un
+número de póliza de prueba.
+
+F13–F16
+
+13
+Pasarela de pago
+(simulada)
+
+Externo
+
+Recibe el monto y el modo de pago (único o en
+cuotas) y devuelve una confirmación simulada; no
+procesa cobros reales.
+
+F17–F18
+
+5.3 Fronteras del sistema y entorno operativo
+El SVAS cubre el recorrido que va desde la cotización hasta la póliza simulada, el
+seguimiento de las cotizaciones no concretadas y los reportes de venta. Todo lo demás queda
+fuera. Esta delimitación, junto con los requerimientos operativos de alto nivel, corresponde al
+análisis de requisitos del sistema de ISO/IEC 15288 (sección 10.4).
+Qué queda dentro del sistema
+
+•​ Cotizador multiaseguradora con catálogo configurable de campos para las cinco
+aseguradoras.
+•​ Flujo de venta dual: Opción 1 (compra autónoma) y Opción 2 (asesoría o descuento),
+con derivación según el uso del vehículo.
+•​ Módulo de retención y telemarketing con cola de casos, estados y motivo de cierre.
+•​ Registro y gestión de pagos, único o en cuotas, en modo simulado.
+•​ Póliza en PDF descargable, como documento de demostración.
+•​ Panel administrativo con reportes y catálogo de aseguradoras y planes.
+•​ Autenticación con roles (Cliente, Asesor, Administrador).
+Qué queda fuera del sistema
+
+•​ Cobros reales con pasarelas bancarias y emisión vinculante mediante los servicios web
+de cada aseguradora.
+•​ Gestión de siniestros (reportes, peritajes e indemnizaciones).
+•​ Firma electrónica certificada; solo se simula el proceso de firma.
+•​ Venta de otros ramos (salud, vida, hogar y SOAT).
+•​ Flotas de más de 5 vehículos, vehículos pesados y transporte de carga.
+•​ Aplicación móvil nativa; la interfaz web responsiva deja abierta una PWA o app
+posterior.
+•​ Reemplazo del asesor humano en los casos que requieren evaluación o negociación.
+Entorno operativo
+
+•​ Usuarios y dispositivos: el cliente accede desde un celular o un computador mediante
+una aplicación web responsiva con enfoque mobile-first. Asesores y administrador
+trabajan desde el navegador de un computador.
+•​ Sistemas externos: las cinco aseguradoras y la pasarela de pago, ambas simuladas
+mediante componentes reemplazables en esta versión.
+
+14
+•​ Plataforma técnica: backend en Java (Spring Boot), frontend en TypeScript (React) y
+base de datos PostgreSQL, desplegados en un servicio cloud con plan gratuito o de
+prueba (secciones 2 y 9).
+•​ Horario: la compra autónoma está disponible también fuera del horario de atención
+de los asesores.
+Requerimientos operativos de alto nivel
+ID
+
+Categoría
+
+Requerimiento operativo
+
+Meta de diseño
+
+RO-01
+
+Entorno de
+operación
+
+Aplicación web responsiva usada por el
+cliente desde celular o computador y por
+asesores y administrador desde el
+navegador. Backend Spring Boot y base
+de datos PostgreSQL en un servicio cloud
+(sección 9.3); aseguradoras y pago
+simulados en esta versión.
+
+Hasta 10 000 cotizaciones y 1
+000 pólizas emitidas al mes.
+
+RO-02
+
+Capacidad
+
+El sistema atiende a clientes y personal
+interno al mismo tiempo, también en
+campañas o picos de vencimiento.
+
+200 clientes simultáneos en
+hora pico; 20 asesores y
+administradores simultáneos.
+
+RO-03
+
+Disponibilidad y
+horarios
+
+La compra autónoma está disponible las
+24 horas, también fuera del horario de
+atención de los asesores.
+
+99,5 % mensual (unas 3,6 horas
+de caída al mes).
+
+RO-04
+
+Respaldo y
+recuperación
+
+Copias de seguridad de la base de datos y
+procedimiento de restauración.
+
+Copia diaria con 30 días de
+historial; pérdida máxima de 24
+horas; restauración en 4 horas o
+menos.
+
+RO-05
+
+Monitoreo y
+soporte
+
+Registro de errores y de actividad
+(cotizaciones, descuentos y contactos) y
+alertas ante caídas; el administrador es el
+primer nivel de soporte.
+
+Logs conservados 90 días;
+incidencias críticas atendidas el
+mismo día hábil.
+
+RO-06
+
+Mantenimiento
+
+Control de versiones con Git y despliegue
+desde la rama principal; el catálogo de
+aseguradoras y de campos se cambia sin
+modificar el código.
+
+Actualizaciones programadas
+fuera de la hora pico, con aviso
+previo.
+
+RO-07
+
+Capacitación y
+procedimientos
+
+Manuales de usuario y de administrador,
+e inducción a los asesores sobre la cola de
+casos.
+
+Manuales entregados con el
+consolidado final; una sesión
+de inducción.
+
+RO-08
+
+Integración con
+procesos
+existentes
+
+Los asesores trabajan desde la cola del
+sistema y no desde hojas de cálculo o
+chats personales; los casos derivados
+llegan con los datos ya capturados y los
+reportes reemplazan el armado manual.
+
+El 100 % de las cotizaciones
+queda registrado en el sistema.
+
+Las metas son capacidades de diseño para operar en producción y crecer, no el
+volumen actual. La agencia entrevistada cierra del orden de 400 a 500 ventas al
+mes (E1); esa cifra corresponde a la agencia y no a SeguroSimple.com. Las
+
+15
+metas se validarán con una prueba de carga sobre datos sintéticos; un plan
+gratuito puede no sostenerlas y deberá revisarse.
+
+6.​ Recopilación de requisitos
+6.1 Entrevista
+Para construir el SVAS sobre información verificada —y no solo sobre supuestos— se
+realizaron entrevistas semiestructuradas a cuatro perfiles representativos de los actores (lado
+del negocio y lado del cliente). Lo que aquí se presenta es una síntesis ordenada de cada
+entrevista, no una transcripción textual; el respaldo de cada una (nota de la conversación o
+autorización del entrevistado) se conserva como evidencia. El objetivo fue validar los
+supuestos del proceso actual, confirmar las reglas de negocio e incorporar las observaciones
+del docente sobre el rol del bróker, la relación costo-beneficio y el nicho de mercado. Las
+síntesis completas están en el Anexo A1.
+Perfiles entrevistados
+Perfil
+
+Representa a
+
+Modalidad y fecha
+
+Jefe comercial de una agencia
+de corretaje
+
+Gerencia / lado del negocio
+
+Presencial · 22/09/2026
+
+Asesora comercial (bróker)
+
+Asesor (incluye telemarketing)
+
+Videollamada · 23/09/2026
+
+Cliente de uso particular
+
+Clientes – Segmento A
+
+Presencial · 25/09/2026
+
+Cliente de uso comercial
+ligero
+
+Clientes – Segmento B
+
+Videollamada · 26/09/2026
+
+Guía de preguntas por perfil
+
+Jefe comercial. ¿Cómo es hoy el proceso desde que un cliente cotiza hasta que compra? ·
+¿Qué parte genera más pérdida de ventas? · Con la compra autónoma, ¿qué pasa con el
+descuento que hoy consigue el bróker? · ¿La negociación debería desaparecer del sistema? ·
+¿Qué registran de las cotizaciones no concretadas? · ¿Cuántas ventas manejan frente al
+volumen de cotizaciones? · ¿El catálogo de aseguradoras y planes cambia con frecuencia?
+Asesora / bróker. ¿Los datos del lead ya vienen cargados o los vuelves a pedir? · ¿Todos los
+leads necesitan asesor? · ¿Cómo manejas los descuentos? · ¿Qué datos distintos pide cada
+aseguradora? · ¿Cómo te gustaría recibir los casos en el nuevo sistema?
+Cliente – Segmento A. ¿Cómo te fue al cotizar en una web de seguros? · ¿Qué te incomodó?
+· ¿Comprarías el seguro tú mismo desde el celular, sin llamada? · ¿Te interesaría una alerta de
+vencimiento? · ¿En qué casos sí querrías un asesor?
+Cliente – Segmento B. ¿Cuántos vehículos aseguras y cómo compras hoy? · ¿Cuánto tiempo
+tienes para el trámite? · ¿Comprarías en línea sin asesor? · ¿Qué es lo que más valoras?
+Resumen de respuestas y hallazgos
+
+16
+Las entrevistas confirman que el cierre depende hoy del asesor y que la espera por la llamada
+es el principal punto de abandono. El bróker consigue rebajas puntuales que no pueden
+garantizarse a todos; por ello la negociación se conserva como Opción 2 y no se mezcla con
+la compra autónoma. Solo una parte de los leads requiere asesor, lo que sustenta el flujo dual.
+La agencia entrevistada maneja del orden de 400 a 500 ventas al mes de un volumen mucho
+mayor de cotizaciones, lo que justifica atender un nicho (Segmentos A y B) en lugar de
+competir de forma masiva; esta cifra corresponde a la agencia, no a SeguroSimple.com. La
+tabla siguiente consolida los hallazgos y los vincula con los problemas de la sección 4.2 y con
+la decisión de diseño adoptada.
+Hallazgo
+
+Fuente
+
+Problema /
+sección
+
+Decisión de diseño en el SVAS
+
+El cierre de toda venta
+depende del asesor
+
+E1, E3
+
+P1 / P6
+
+Opción 1: compra autónoma con
+emisión sin intervención obligatoria del
+asesor.
+
+Re-digitación de datos del
+cliente y del vehículo
+
+E2, E3
+
+P2
+
+Registro único de cliente y vehículo;
+los datos se reutilizan en la compra y en
+el PDF.
+
+Cada aseguradora exige datos
+distintos
+
+E2
+
+P3
+
+Catálogo configurable de campos por
+aseguradora y patrón Strategy para la
+prima.
+
+Solo una parte de los casos
+requiere asesor
+
+E1, E2, E4
+
+P7
+
+Flujo de venta dual: Opción 2 visible en
+cada plan, pero no obligatoria.
+
+Descuentos a criterio del
+bróker, sin registro
+
+E1, E2, E4
+
+P5
+
+Negociación dentro de la Opción 2, con
+rango máximo configurable y
+descuento registrado.
+
+Cotizaciones no concretadas
+sin seguimiento
+
+E1
+
+P4
+
+Módulo de retención y telemarketing:
+cola con estado, motivo y límite de
+intentos.
+
+Reportes de ventas dispersos
+y manuales
+
+4.1 (obs.)
+
+P9
+
+Panel administrativo con reportes por
+canal, aseguradora y plan.
+
+Escala acotada y foco en
+nicho
+
+E1, E4
+
+Sec. 3.4
+
+Segmentación en uso particular (A) y
+comercial ligero (B); no se compite de
+forma masiva.
+
+Desconocimiento del
+vencimiento de la póliza
+
+E3
+
+Oportunidad
+
+Alerta de vencimiento como
+funcionalidad diferencial (backlog).
+
+6.2 Análisis de la competencia
+Objetivo y actividades. El objetivo es identificar cómo se vende hoy el seguro vehicular en
+línea en el Perú, qué funcionalidades ofrecen los competidores y en qué puede diferenciarse
+el SVAS. Las actividades fueron:
+
+17
+•
+
+Revisar los sitios públicos de SeguroSimple.com y de las aseguradoras de su
+catálogo.
+
+•
+
+Revisar notas de prensa sobre su canal digital.
+
+•
+
+Comparar funcionalidades y contrastar el resultado con las entrevistas (sección
+6.1).
+
+Informe comparativo
+Competidor
+
+Cómo vende
+
+Fortalezas
+
+Debilidades
+al SVAS
+
+SeguroSimple.co
+m (situación
+actual)
+
+Compara aseguradoras y ofrece que un ejecutivo llame al instante, sin
+costo, para asistir la compra
+
+Comparación
+multiasegurado
+ra y asesoría
+
+El cierre depende del
+asesor (4.2, P1; E1 y
+E3)
+
+Rímac (canal
+directo)
+
+Su web permite contratar seguros de forma 100 % digital y suma un
+agente inteligente para que los usuarios avancen sin depender
+necesariamente de un asesor humano. Reporta un crecimiento de 43 %
+en ventas 100 % digitales
+
+Marca,
+Vende solo sus
+autoservicio y
+propios productos
+asistente con IA
+
+Pacífico (canal
+directo)
+
+Ofrece el seguro todo riesgo Plan Kilómetros, presentado como 100 %
+digital, con ahorro de hasta 50 % para quien maneja menos
+
+Producto
+diferenciado
+(pago por uso)
+
+Vende solo sus
+propios productos
+
+Mapfre Perú
+(canal directo)
+
+Promociona compras digitales, "100 % online o asistida", en seguros
+como el vehicular
+
+Modelo
+híbrido, como
+la Opción 1 y 2
+del SVAS
+
+Vende solo sus
+propios productos
+
+Comparabien
+
+Comparador peruano con guías paso a paso para comparar seguros
+vehiculares en línea
+
+Contenido y
+comparación
+
+No se pudo
+confirmar si cierra la
+venta en línea
+
+Hallazgo clave. Las aseguradoras ya venden 100 % en línea por canal directo, así que
+el SVAS no compite por ser digital. Compite por reunir varias aseguradoras en un solo
+lugar y por sumar la asesoría opcional con negociación. Esto coincide con E1, que
+descarta competir de forma masiva con Rímac o Pacífico.
+
+Funcionalidades clave y tendencias
+
+Funcionalidad
+
+Quién la ofrece (según las fuentes)
+
+En el SVAS
+
+Cotización multiaseguradora instantánea SeguroSimple y comparadores
+
+Sí
+
+Compra 100 % digital
+
+Rímac, Pacífico y Mapfre
+
+Sí (Opción 1)
+
+Compra asistida opcional
+
+Mapfre
+
+Sí (Opción 2)
+
+frente
+
+18
+Asistente virtual 24/7
+
+Rímac lo tiene desde noviembre de 2018 con el Fuera del alcance (idea futura)
+chatbot TOBI, por WhatsApp, Facebook y su web
+
+Inspección virtual
+
+Rímac la usa para agilizar la venta de seguros Fuera del alcance; el caso pasa a
+vehiculares
+la Opción 2
+
+Seguimiento con reglas
+cotizaciones no concretadas
+
+de
+
+Alerta de vencimiento de la póliza
+
+las No se encontró en fuentes públicas
+No se encontró en las fuentes revisadas
+
+Diferenciador (OE3; E1)
+Backlog (E3)
+
+Tendencias del mercado: más autogestión y compra digital, asistentes con IA y modelos que
+combinan lo digital con la ayuda de un asesor. Esto respalda el flujo dual del SVAS.
+
+6.3 Escenarios de uso
+Objetivo. Describir cómo interactúan los actores con el sistema, para derivar de ahí los
+requisitos funcionales de la sección 7.1. Los escenarios usan los hallazgos de las entrevistas
+de la sección 6.1.
+
+Escenario 1 – Compra autónoma (Cliente, Segmento A; fuente: E3)
+1. ​ El cliente ingresa desde su celular y completa los datos del vehículo y de contacto.
+2. ​ Elige su canal de contacto preferido (llamada o WhatsApp).
+3. ​ El sistema muestra las cotizaciones de las aseguradoras activas.
+4. ​ El cliente elige un plan y la Opción 1.
+5. ​ Completa los datos que falten y confirma el pago simulado (único o en cuotas).
+6. ​ El sistema genera la póliza en PDF y el cliente la descarga en el momento.
+
+Escenario 2 – Solicitud de asesoría o descuento (Cliente, Segmento B, y Asesor;
+fuentes: E2 y E4)
+1. ​ El cliente elige la Opción 2 en el plan de su interés.
+2. ​ Confirma su canal preferido y el motivo (duda, negociación o descuento).
+3. ​ El sistema registra la solicitud en la cola de asesoría con estado "pendiente" y los
+datos ya capturados (como en el CU-03).
+4. ​ Si el vehículo requiere inspección o no es asegurable en línea, el sistema crea la
+solicitud automáticamente.
+5. ​ El asesor recibe el caso marcado con su motivo, negocia dentro del rango de
+descuento máximo y registra el descuento.
+6. ​ El cliente acepta y completa la compra, o el caso queda en seguimiento.
+
+19
+
+Escenario 3 – Recuperación de cotizaciones no concretadas (Asesor en
+seguimiento; fuentes: E1 y E2)
+1. ​ El cliente cotiza y no compra.
+2. ​ El sistema registra el caso en la cola con estado "en seguimiento".
+3. ​ El asesor lo contacta por el canal preferido, sin superar el máximo de intentos, y
+ofrece el descuento por primera compra.
+4. ​ Registra el resultado (convertido, en seguimiento o descartado) y el motivo de no
+compra.
+5. ​ Al cerrar el caso, el sistema envía un mensaje con el enlace para retomar la
+compra autónoma con el descuento.
+
+Escenario 4 – Gestión del catálogo (Administrador; fuente: E1)
+1. ​ El administrador inicia sesión en el panel.
+2. ​ Activa o desactiva aseguradoras y planes y edita los campos requeridos de cada
+una.
+3. ​ Define el rango máximo de descuento y el máximo de intentos de contacto.
+4. ​ Guarda los cambios y el cotizador los aplica sin modificar el código.
+
+Resultado esperado
+Escenario
+
+Funcionalidades que deriva
+
+Atiende
+
+1
+
+Cotizar, elegir canal, pago simulado, generar el PDF
+
+OE1, OE2, OE4; P1, P2, P6
+
+2
+
+Cola de asesoría con motivo, derivación automática, registro de
+descuentos
+
+OE2, OE3; P5, P7, P10
+
+3
+
+Cola con estados, límite de intentos, motivo de cierre, enlace de retoma
+
+OE3; P4
+
+4
+
+Administración de catálogo y parámetros, reportes
+
+OE1, OE5; P3, P9
+
+7.​ Especificación de requisitos
+7.1 Requisitos funcionales
+Prioridad: 5 = más alta; 1 = más baja.
+ID
+
+RF-01
+
+Módulo
+
+Cotizador
+
+Requisito funcional
+
+Prior.
+(1–5)
+
+El sistema permite al cliente ingresar los datos del vehículo (uso
+—particular, comercial ligero o transporte de pasajeros—, marca,
+modelo, año, ubicación, clase y tipo) y de contacto, e indicar su
+canal preferido (llamada o WhatsApp).
+
+5
+
+20
+
+Requisito funcional
+
+Prior.
+(1–5)
+
+Cotizador
+
+El sistema genera el formulario de cotización de forma dinámica
+con la unión de los campos requeridos por las aseguradoras
+activas, tomados del catálogo configurable.
+
+4
+
+RF-03
+
+Cotizador
+
+El backend valida los datos recibidos contra el catálogo de
+campos de cada aseguradora (obligatoriedad, tipo y valores
+permitidos) y devuelve los errores por campo.
+
+4
+
+RF-04
+
+Cotizador
+
+El sistema calcula la prima de cada aseguradora activa mediante
+la interfaz EstrategiaCotizacion, con una implementación por
+aseguradora (tarifas de prueba en esta versión).
+
+5
+
+RF-05
+
+Cotizador
+
+El sistema muestra un comparativo de planes y primas de las
+aseguradoras activas. Si una aseguradora no cotiza, las demás se
+muestran igual.
+
+5
+
+RF-06
+
+Cotizador
+
+El sistema detecta los vehículos no asegurables en línea (modelo o
+ubicación) y los deriva automáticamente a la cola de asesoría con
+los datos ya capturados, sin pedir un correo. El asesor cotiza el
+caso manualmente con la aseguradora y contacta al cliente por el
+canal elegido.
+
+4
+
+RF-07
+
+Cotizador
+
+El sistema registra cada cotización en un registro único de cliente
+y vehículo, con su canal preferido, estado y fecha.
+
+4
+
+RF-08
+
+Flujo dual
+
+El sistema muestra en cada plan la Opción 1 (compra inmediata) y
+la Opción 2 (asesoría o descuento), habilitándolas según las reglas
+de derivación (RN-01 a RN-04).
+
+5
+
+RF-09
+
+Flujo dual
+
+En la Opción 1 el cliente elige plan, completa solo los datos
+faltantes (RNF-08) y confirma la compra sin intervención del
+asesor.
+
+5
+
+RF-10
+
+Flujo dual
+
+El sistema bloquea la Opción 1 y deja solo la Opción 2 cuando la
+aseguradora exige inspección o evaluación del riesgo (RN-03 y
+RN-25; por defecto, el transporte de pasajeros).
+
+4
+
+RF-11
+
+Asesoría
+
+El cliente puede solicitar asesoría o descuento (CU-03) indicando
+motivo (duda, negociación o descuento) y canal; si no está
+registrado, el sistema pide un registro mínimo.
+
+4
+
+RF-12
+
+Asesoría
+
+El sistema registra la solicitud en la cola de asesoría con estado
+inicial «pendiente», asociada a la cotización, y muestra al cliente
+una confirmación con el tiempo estimado de contacto.
+
+4
+
+RF-13
+
+Asesoría
+
+El asesor visualiza la cola de asesoría con los datos capturados y
+el motivo de cada caso (negociación, inspección, duda o no
+asegurable).
+
+4
+
+RF-14
+
+Asesoría
+
+El asesor puede aplicar un descuento solo dentro del rango
+máximo configurado; cada descuento queda registrado con asesor,
+fecha, aseguradora, plan y porcentaje.
+
+3
+
+RF-15
+
+Asesoría
+
+El asesor registra el resultado del caso. Si el cliente acepta, el
+sistema le habilita completar la compra con la prima negociada.
+
+3
+
+RF-16
+
+Retención
+
+El sistema registra la cotización no concretada en la cola de
+seguimiento con estado «en seguimiento» cuando el cliente no
+completa la compra.
+
+4
+
+RF-17
+
+Retención
+
+El asesor registra cada intento de contacto (canal, fecha,
+resultado); el sistema impide superar el máximo de intentos
+configurado y respeta el canal preferido del cliente.
+
+3
+
+RF-18
+
+Retención
+
+El sistema exige el motivo de no compra al cerrar un caso.
+
+3
+
+RF-19
+
+Retención
+
+El sistema gestiona los estados de la cola: convertido, en
+seguimiento y descartado.
+
+3
+
+ID
+
+Módulo
+
+RF-02
+
+21
+Prior.
+(1–5)
+
+ID
+
+Módulo
+
+Requisito funcional
+
+RF-20
+
+Retención
+
+El sistema aplica el descuento por primera compra según las
+reglas definidas (RN-08) y lo registra en la cotización.
+
+3
+
+RF-21
+
+Retención
+
+Al cerrar el caso, el sistema envía un mensaje con un enlace de
+vigencia limitada para retomar la compra autónoma con el
+descuento.
+
+2
+
+RF-22
+
+Emisión
+
+El sistema solicita la emisión a la aseguradora mediante un
+componente de integración con interfaz común, que en esta
+versión devuelve un número de póliza de prueba.
+
+5
+
+RF-23
+
+Pagos
+
+El sistema registra el pago, único o en cuotas, mediante un
+componente de pasarela reemplazable que devuelve una
+confirmación simulada.
+
+5
+
+RF-24
+
+Emisión
+
+El sistema simula el proceso de firma, sin validez legal.
+
+1
+
+RF-25
+
+Pólizas
+
+El sistema genera la póliza en PDF descargable al confirmarse el
+pago simulado, sin volver a pedir los datos ya ingresados
+(RNF-08) y marcándola como documento de demostración.
+
+5
+
+RF-26
+
+Seguimiento
+
+El cliente consulta el estado de su solicitud, pago y póliza.
+
+3
+
+RF-27
+
+Administració
+n
+
+El administrador activa o desactiva aseguradoras y planes sin
+modificar el código.
+
+3
+
+RF-28
+
+Administració
+n
+
+El administrador mantiene el catálogo de campos requeridos por
+aseguradora (nombre, tipo, obligatoriedad, valores permitidos).
+
+3
+
+RF-29
+
+Administració
+n
+
+El administrador configura el descuento por primera compra, el
+rango máximo de negociación, el máximo de intentos de contacto
+y la exigencia de inspección por aseguradora y uso.
+
+3
+
+RF-30
+
+Reportes
+
+El sistema genera reportes de ventas por canal (autónomo,
+asesoría, telemarketing), aseguradora y plan, filtrables por
+periodo. Se opera desde CU-05 «Gestionar catálogo y reportes».
+
+3
+
+RF-31
+
+Seguridad
+
+El sistema autentica a los usuarios y controla el acceso por roles
+(Cliente, Asesor, Administrador); el administrador gestiona
+usuarios y roles.
+
+5
+
+RF-32
+
+Seguridad
+
+El sistema impide que un usuario acceda a vistas u operaciones de
+otro rol.
+
+4
+
+RF-33
+
+Postventa
+
+Fuera del MVP (backlog). El sistema alerta al cliente antes del
+vencimiento de su póliza.
+
+1
+
+Nota explicativa sobre la escala de priorización: La columna Prior. (1–5) utiliza una escala donde 5 indica
+Prioridad Máxima / Crítica y 1 indica Prioridad Mínima / Funcionalidad secundaria
+
+7.2 Requisitos no funcionales
+ID
+
+Categoría
+
+Requisito no funcional
+
+Meta / criterio de verificación
+
+RNF-01
+
+Rendimiento
+
+El cotizador responde con rapidez en
+condiciones normales.
+
+Comparativo de primas en ≤ 3 s (percentil 95) con 200
+clientes simultáneos.
+
+RNF-02
+
+Rendimiento
+
+Las demás operaciones interactivas del
+cliente son ágiles.
+
+Respuesta ≤ 2 s en el 95 % de las operaciones, sin
+contar la generación del PDF.
+
+El sistema soporta el volumen previsto.
+
+Capacidad de diseño: 10 000 cotizaciones y 1 000
+pólizas al mes; 200 clientes y 20 usuarios internos
+simultáneos. No es el volumen actual. Se validará con
+una prueba de carga sobre datos sintéticos; un plan
+gratuito puede no sostenerla y deberá revisarse.
+
+RNF-03
+
+Capacidad
+
+22
+ID
+
+Categoría
+
+Requisito no funcional
+
+Meta / criterio de verificación
+
+RNF-04
+
+Disponibilidad
+
+La compra autónoma está disponible las 24
+horas, también fuera del horario de
+atención de los asesores.
+
+99,5 % mensual (≈ 3,6 h de caída al mes).
+
+RNF-05
+
+Fiabilidad
+
+La emisión, el pago y el registro de la
+venta son consistentes.
+
+Una compra no deja registros a medias: o se completa
+o se revierte (transacción atómica).
+
+RNF-06
+
+Recuperabilidad
+
+Respaldo y restauración de la base de
+datos.
+
+Copia diaria con 30 días de historial, pérdida máxima
+24 h y restauración ≤ 4 h.
+
+RNF-07
+
+Usabilidad
+
+La interfaz es mobile-first y responsiva.
+
+Correcta visualización desde 360 px de ancho; compra
+autónoma desde un celular en ≤ 10 minutos (meta a
+validar).
+
+RNF-08
+
+Usabilidad
+
+El proceso es claro y reutiliza los datos ya
+capturados para no repetir su captura (evita
+la re-digitación).
+
+Ningún dato de la cotización se pide de nuevo; errores
+de validación indicados por campo.
+
+RNF-09
+
+Seguridad
+
+Protección de credenciales y de datos en
+tránsito.
+
+HTTPS en todo el sitio; contraseñas con hash (p. ej.
+BCrypt); sesiones con expiración.
+
+RNF-10
+
+Seguridad
+
+Control de acceso por rol aplicado en el
+backend, no solo en la interfaz.
+
+El 100 % de los endpoints protegidos rechaza accesos
+de otro rol (prueba JUnit).
+
+RNF-11
+
+Protección de
+datos
+
+Tratamiento de datos personales (DNI,
+contacto, vehículo).
+
+Uso limitado a la finalidad de la venta y el
+seguimiento, conforme a la Ley N.° 29733; el cliente
+elige el canal de contacto.
+
+RNF-12
+
+Trazabilidad
+
+Se registran las acciones críticas.
+
+Cotizaciones, descuentos, contactos y cambios de
+estado con usuario y fecha; logs conservados 90 días.
+
+RNF-13
+
+Mantenibilidad
+
+Agregar una aseguradora o campo no
+obliga a modificar el cotizador.
+
+Un campo nuevo es un cambio de configuración; una
+aseguradora nueva = nueva estrategia + registro en el
+catálogo (principio abierto/cerrado).
+
+RNF-14
+
+Mantenibilidad
+
+Diseño modular y desacoplado.
+
+Módulos de cotización, compra, asesoría/retención y
+pagos independientes; el servicio depende de interfaces
+(inversión de dependencias).
+
+RNF-15
+
+Extensibilidad
+
+Reemplazar los componentes simulados
+por los reales.
+
+Cambiar el componente de aseguradora o pasarela no
+altera el flujo de venta.
+
+RNF-16
+
+Testabilidad
+
+Cobertura de pruebas de los flujos críticos.
+
+Pruebas JUnit y Jest de cotización, autenticación y
+reglas de derivación; pruebas de integración de compra
+autónoma, asesoría y cola de retención; cobertura ≥ 70
+% en lógica de dominio (meta propuesta).
+
+RNF-17
+
+Compatibilidad
+
+Funciona en los navegadores habituales.
+
+Últimas 2 versiones de Chrome, Safari, Firefox y
+Edge.
+
+RNF-18
+
+Portabilidad
+
+Preparado para evolucionar a PWA o app
+móvil.
+
+Frontend desacoplado del backend mediante una API
+REST.
+
+RNF-19
+
+Despliegue
+
+Operación en servicios cloud gratuitos o de
+prueba, sin necesidad de crear
+contenedores propios.
+
+Backend en Railway, base de datos en Supabase y
+frontend en hosting estático; sistema accesible
+públicamente; despliegue desde la rama principal.
+
+RNF-20
+
+Legalidad del
+prototipo
+
+La póliza y el pago no tienen validez real.
+
+Todo PDF lleva la leyenda «Documento de
+demostración sin validez legal».
+
+7.3 Reglas de negocio
+7.3.1 Derivación y flujo de venta
+ID
+RN-01
+
+Regla
+Uso particular con cotización estándar: se habilita la Opción 1; la Opción 2 permanece visible.
+
+23
+ID
+
+Regla
+
+RN-02
+
+Uso comercial que la aseguradora cotiza en línea sin evaluación adicional y que no es transporte de pasajeros: se habilita
+la Opción 1 con la prima publicada; si el cliente quiere negociar, elige la Opción 2.
+
+RN-03
+
+Uso comercial que exige inspección o evaluación del riesgo (por defecto, el transporte de pasajeros: taxi, colectivo y
+aplicaciones de movilidad, según RN-25): solo Opción 2; el caso entra a la cola de asesoría con los datos capturados.
+
+RN-04
+
+Vehículo no asegurable en línea: derivación automática a la Opción 2, sin pedir correo. El asesor cotiza el caso
+manualmente con la aseguradora y contacta al cliente por el canal elegido.
+
+RN-05
+
+Nicho: se atienden vehículos de uso particular (1 o 2 por persona) y de uso comercial ligero (1 a 5 vehículos). Flotas de
+más de 5, vehículos pesados y transporte de carga quedan fuera del alcance; el sistema lo informa y no genera cotización
+ni solicitud.
+
+RN-06
+
+Separación de flujos: la Opción 1 no admite negociación. La prima publicada solo cambia por el descuento por primera
+compra (RN-08) o por un descuento acordado con un asesor y registrado (RN-07, RF-15). La negociación solo se hace en
+la Opción 2.
+
+7.3.2 Descuentos y seguimiento
+
+Los valores iniciales son propuestas parametrizables por el administrador y deben validarse
+con el negocio.
+ID
+
+Regla
+
+Valor inicial
+
+RN-07
+
+El asesor solo aplica descuentos dentro del rango máximo que fija el administrador; todo
+descuento queda registrado (asesor, fecha, plan, %).
+
+Máx. 10 %
+
+RN-08
+
+El descuento por primera compra (5%) se aplica de forma automática en la Opción 1 al
+verificar por número de documento que el cliente no registra póliza previa con
+SeguroSimple. En la gestión de telemarketing, el asesor promueve esta misma regla
+reenviando el enlace de retoma con dicho descuento
+
+5%
+
+RN-09
+
+El descuento por primera compra y el negociado no se acumulan; se aplica el mayor, sin
+exceder el rango máximo.
+
+—
+
+RN-10
+
+El contacto de seguimiento respeta el canal preferido del cliente y no supera el máximo
+de intentos configurado. Al alcanzarlo, el caso se cierra.
+
+4 intentos en 7 días
+
+RN-11
+
+Todo caso cerrado exige un motivo (precio, ya contrató, no responde, sin interés, otro) y
+un estado final: convertido o descartado.
+
+—
+
+RN-12
+
+Al cerrar un caso sin conversión se envía un solo mensaje final con enlace para retomar la
+compra con el descuento; el enlace expira.
+
+Vigencia 7 días
+
+RN-13
+
+La cola de asesoría atiende primero los casos derivados por el sistema (RN-03 y RN-04)
+y luego las solicitudes del cliente, por orden de llegada.
+
+—
+
+7.3.3 Pago, emisión y catálogo
+ID
+
+Regla
+
+RN-14
+
+El pago puede ser único o en cuotas; el número máximo de cuotas es un parámetro configurable.
+
+RN-15
+
+La póliza en PDF se genera solo tras la confirmación del pago simulado y lleva la leyenda de demostración.
+
+RN-16
+
+Una aseguradora o plan desactivado no aparece en nuevas cotizaciones; las cotizaciones y compras ya registradas se
+conservan.
+
+RN-17
+
+El formulario de cotización muestra la unión de los campos requeridos por las aseguradoras activas (RN-18 a RN-22).
+
+RN-27
+
+Atribución del canal de la venta: se registra «telemarketing» si la compra se inició desde el enlace de retoma o tras
+aceptar el descuento en el seguimiento; «asesoría» si el cliente completa la compra con la prima negociada en la Opción 2
+; y «autónomo» en los demás casos.
+
+24
+7.3.4 Datos requeridos por aseguradora
+Estos campos se almacenan en el catálogo configurable de la base de datos y no en el código.
+Los datos de Mapfre Perú y Quálitas se completan con el formulario común de
+SeguroSimple, según la revisión de sus cotizadores.
+Variable
+diferenciadora
+
+ID
+
+Aseguradora
+
+Datos requeridos para cotizar
+
+Estrategia
+
+RN-18
+
+Rímac Seguros
+
+Marca, modelo y año
+
+Ninguna adicional
+
+EstrategiaRimac
+
+RN-19
+
+Pacífico Seguros
+
+Marca, modelo, año y ubicación
+
+Ubicación
+geográfica
+
+EstrategiaPacifico
+
+RN-20
+
+La Positiva
+Seguros
+
+Marca, modelo, año, clase y tipo de
+vehículo
+
+Clase y tipo de
+vehículo
+
+EstrategiaLaPositiva
+
+RN-21
+
+Mapfre Perú
+
+Uso, marca, modelo, año y ubicación
+(formulario común de SeguroSimple)
+
+Ninguna adicional
+identificada
+
+EstrategiaMapfre
+
+RN-22
+
+Quálitas
+
+Uso, marca, modelo, año y ubicación
+(formulario común de SeguroSimple)
+
+Ninguna adicional
+identificada
+
+EstrategiaQualitas
+
+7.3.5 Reglas complementarias para Mapfre y Quálitas
+ID
+
+Regla
+
+RN-23
+
+Si una aseguradora no tiene un campo diferenciador identificado, se le asigna el conjunto común (uso, marca, modelo,
+año y ubicación). Si una validación posterior revela otro dato, se agrega al catálogo sin modificar el código.
+
+RN-24
+
+Mapfre promociona la compra «100 % online o asistida» , por lo que admite la Opción 1 y la Opción 2 con las reglas
+RN-01 a RN-04.
+
+RN-25
+
+El requisito de inspección o evaluación del riesgo es un parámetro por aseguradora y uso del vehículo. Valor inicial:
+activo para los vehículos livianos de transporte de pasajeros (taxis, autos colectivos de hasta 5 unidades por cliente y
+unidades de aplicaciones de movilidad como Uber. Se excluyen expresamente los buses, minivans de transporte masivo y
+transporte pesado de carga, los cuales están fuera del alcance del proyecto
+
+RN-26
+
+En esta versión ambas estrategias devuelven tarifas de prueba y números de póliza de prueba; reemplazarlas por la
+integración real solo cambia su implementación.
+
+25
+
+8.​ Modelado de análisis (diagramas principales)
+8.1 Diagrama general de caso de uso
+
+8.2 Casos de uso detallados
+
+8.2.1 CU-01
+1. Caso de uso del sistema
+CU-01
+
+Cotizar y comparar
+
+2. Descripción del caso de uso
+Permite al cliente ingresar los datos de su vehículo y de contacto, elegir su canal preferido y obtener un
+comparativo de primas de las aseguradoras activas. El formulario se construye a partir del catálogo
+configurable de campos y los datos se validan en el backend contra ese mismo catálogo. El sistema registra la
+cotización en un registro único de cliente y vehículo, de modo que los datos se reutilicen en la compra
+(CU-02) o en la solicitud de asesoría (CU-03) sin volver a pedirlos (RNF-08). Incluye la detección de
+vehículos no asegurables en línea, que se derivan automáticamente a la Opción 2, y de los casos que exigen
+inspección (por defecto, el transporte de pasajeros), en los que solo queda disponible la Opción 2.
+
+26
+3. Actores
+Actor principal
+
+Cliente (conductor / propietario).
+
+Actores secundarios
+
+Aseguradoras (Rímac, Pacífico, La Positiva, Mapfre y Quálitas), mediante
+el componente de integración con interfaz común (patrón Strategy), que en
+esta versión devuelve tarifas de prueba.
+
+4. Precondiciones
+El sistema está disponible y existe al menos una aseguradora activa con sus campos requeridos configurados
+en el catálogo. El cliente no necesita estar registrado para cotizar.
+5. Postcondiciones
+La cotización queda registrada con el vehículo, los datos de contacto, el canal preferido y las primas
+obtenidas. El cliente ve el comparativo con las opciones de compra habilitadas según el caso. Si no continúa
+con la compra, la cotización queda disponible para el módulo de retención y telemarketing (CU-04). Si el
+vehículo no es asegurable en línea o exige inspección, queda registrada la solicitud en la cola de asesoría con
+los datos capturados.
+6. Pasos (flujo de eventos)
+
+N.º
+
+Acción del actor
+
+Respuesta del sistema
+
+1
+
+El cliente ingresa al cotizador
+desde su celular o computador.
+
+Muestra el formulario de cotización
+construido dinámicamente con la unión de
+los campos requeridos por las aseguradoras
+activas (RF-02, RN-17).
+
+2
+
+El cliente completa uso, marca,
+modelo, año, ubicación y, si se
+solicitan, clase y tipo de vehículo;
+ingresa sus datos de contacto, elige
+su canal preferido (llamada o
+WhatsApp) y envía el formulario.
+
+Valida en el backend los datos contra el
+catálogo de campos de cada aseguradora
+(obligatoriedad, tipo y valores permitidos)
+(RF-01, RF-03).
+
+3
+
+—
+
+Verifica que el vehículo esté dentro del
+nicho y sea asegurable en línea (RN-04,
+RN-05) y registra la cotización en el registro
+único de cliente y vehículo (RF-07).
+
+4
+
+—
+
+Invoca la estrategia de cotización de cada
+aseguradora activa y obtiene sus primas
+(RF-04).
+
+27
+5
+
+—
+
+Determina qué opciones habilitar según el
+uso del vehículo y la exigencia de
+inspección (RN-01 a RN-03, RN-25), y
+muestra el comparativo de planes y primas
+con la Opción 1 (compra inmediata) y/o la
+Opción 2 (asesoría o descuento) en cada
+plan (RF-05, RF-08, RF-10).
+
+6
+
+El cliente revisa el comparativo,
+elige un plan y una de las opciones
+habilitadas.
+
+Si elige la Opción 1, continúa en CU-02 con
+los datos de la cotización ya cargados. Si
+elige la Opción 2, continúa en CU-03.
+
+7. Flujo alternativo
+2a. Datos inválidos o
+incompletos
+
+Si algún dato obligatorio falta o no es válido, el sistema muestra
+el error junto al campo correspondiente y conserva lo ya
+ingresado para que el cliente lo corrija (RF-03, RNF-08).
+
+3a. Vehículo no
+asegurable en línea
+
+Si el cotizador no puede cotizar el modelo o la ubicación (P10),
+el sistema crea automáticamente la solicitud de asesoría con los
+datos capturados, informa al cliente que un asesor lo contactará
+por su canal preferido y no le pide un correo (RF-06, RN-04). El
+asesor cotiza el caso manualmente con la aseguradora y contacta
+al cliente por el canal elegido (CU-03).
+
+3b. Vehículo fuera del
+nicho
+
+Si se trata de una flota de más de 5 vehículos, un vehículo
+pesado o de transporte de carga, el sistema informa que no puede
+cotizarlo y no genera cotización ni solicitud (RN-05).
+
+4a. Una aseguradora
+no devuelve cotización
+
+El sistema muestra las primas de las demás aseguradoras activas
+e indica cuáles no pudieron cotizar (RF-05). Si ninguna devuelve
+prima, se aplica el flujo 3a.
+
+5a. El caso exige
+inspección o
+evaluación del riesgo
+
+Si la inspección está activa para la aseguradora y el uso del
+vehículo (por defecto, el transporte de pasajeros: taxi, colectivo
+y aplicaciones de movilidad), el sistema muestra el comparativo
+con solo la Opción 2 y no habilita la Opción 1. El caso entra a la
+cola de asesoría con los datos ya capturados y el motivo
+«inspección» (RF-10, RN-03, RN-25; CU-03).
+
+6a. El cliente
+abandona sin elegir
+
+La cotización queda registrada y pasa a la cola de seguimiento
+como cotización no concretada (RF-16; CU-04).
+
+8. Requisitos y reglas asociadas
+Objetivos / problemas
+
+OE1 y OE2; atiende P3, P6 y P10.
+
+28
+Requisitos funcionales
+
+RF-01 a RF-08 y RF-10.
+
+Reglas de negocio
+
+Derivación según el uso del vehículo y la exigencia de
+inspección (RN-01 a RN-04); nicho (RN-05); separación de
+flujos (RN-06); datos requeridos por aseguradora (RN-17 a
+RN-22); inspección por aseguradora y uso (RN-25).
+
+Requisitos no
+funcionales
+
+RNF-01 (tiempo de respuesta del comparativo), RNF-07
+(interfaz mobile-first), RNF-08 (no repetir la captura de datos) y
+RNF-11 (el cliente elige el canal de contacto).
+
+8.2.2 CU-02
+1. Caso de uso del sistema
+CU-02
+
+Comprar de forma autónoma
+
+2. Descripción del caso de uso
+Permite al cliente que ya eligió su plan completar la contratación sin intervención de un asesor (Opción 1). El
+sistema reutiliza los datos de la cotización, pide solo los datos que faltan, registra el pago (único o en cuotas,
+simulado), emite la póliza mediante el componente de la aseguradora (simulado) y genera la póliza en PDF
+descargable. La compra puede hacerse a cualquier hora, también fuera del horario de atención de los asesores.
+3. Actores
+Actor principal
+
+Cliente (conductor / propietario).
+
+Actores secundarios
+
+Aseguradora (componente de integración que devuelve un número de póliza
+de prueba); Pago simulado (pasarela que devuelve una confirmación
+simulada).
+
+4. Precondiciones
+El cliente generó una cotización válida (CU-01) y eligió un plan para el cual la Opción 1 está habilitada (es
+decir, no se trata de un caso de las reglas RN-03 o RN-04). La aseguradora y el plan están activos. El cliente
+está identificado o se registra durante la compra. El cliente puede llegar también desde el enlace de retoma
+del seguimiento o después de aceptar el descuento en un contacto del asesor (CU-04).
+5. Postcondiciones
+El pago queda registrado como confirmado (simulado), la póliza queda emitida con un número de prueba y el
+PDF queda disponible para su descarga con la leyenda de demostración. La venta se registra con el canal que
+corresponde: «telemarketing» si la compra se inició desde el enlace de retoma o tras aceptar el descuento en
+el seguimiento (CU-04), y «autónomo» en los demás casos. La cotización pasa a «convertido», con lo que
+sale de la cola de seguimiento.
+
+6. Pasos (flujo de eventos)
+
+29
+N.º
+
+Acción del actor
+
+Respuesta del sistema
+
+1
+
+El cliente elige un plan y selecciona la
+Opción 1 «Comprar ahora».
+
+Verifica que la Opción 1 esté habilitada para ese plan
+y muestra el resumen: vehículo, plan, prima y, si
+corresponde, el descuento por primera compra
+(RN-08).
+
+2
+
+Si no está registrado, el cliente completa
+un registro mínimo o inicia sesión.
+
+Asocia la cotización a la cuenta del cliente.
+
+3
+
+El cliente completa los datos que faltan y
+que exige la aseguradora para emitir (por
+ejemplo, documento de identidad y datos
+del vehículo).
+
+Muestra solo los campos que no se capturaron en la
+cotización y los valida contra el catálogo (RF-09,
+RF-03).
+
+4
+
+El cliente revisa el resumen, acepta las
+condiciones, realiza la firma simulada y
+elige el modo de pago: único o en cuotas.
+
+Calcula el monto total o el de cada cuota según el
+modo elegido (RN-14) y registra la aceptación y la
+firma simulada (RF-24).
+
+5
+
+El cliente confirma el pago.
+
+Envía el monto y el modo de pago al componente de
+pasarela simulada, recibe la confirmación y registra el
+pago (RF-23).
+
+6
+
+—
+
+Solicita la emisión al componente de la aseguradora y
+obtiene el número de póliza de prueba (RF-22).
+
+7
+
+—
+
+Genera la póliza en PDF con los datos ya ingresados,
+marcada como documento de demostración (RN-15);
+registra la venta con el canal que corresponde según
+el origen de la compra («telemarketing» o
+«autónomo», RN-27) y marca la cotización como
+convertido (RF-25, RF-19, RF-30).
+
+8
+
+El cliente descarga la póliza y puede
+consultar el estado de su solicitud y pago.
+
+Muestra la confirmación de compra, el enlace de
+descarga y el estado de la solicitud (RF-26).
+
+30
+7. Flujo alternativo
+1a. Opción 1 no habilitada
+
+Si el caso exige inspección o evaluación, o el vehículo no es asegurable en
+línea, el sistema no permite la compra autónoma y ofrece solo la Opción 2
+(RN-03, RN-04; CU-03).
+
+1b / 4a. El cliente prefiere
+asesoría
+
+En cualquier momento el cliente puede cambiar a la Opción 2; el sistema
+conserva los datos ya ingresados y continúa en CU-03.
+
+3a. Datos inválidos o
+incompletos
+
+El sistema muestra el error junto al campo, conserva lo ya ingresado y
+mantiene la cotización para reintentar.
+
+5a. Pago rechazado
+(simulado)
+
+El sistema informa el resultado, no emite la póliza y permite reintentar o
+cambiar el modo de pago. La cotización sigue vigente.
+
+5b. El cliente abandona
+antes de pagar
+
+La compra queda pendiente sin póliza emitida y la cotización pasa a la cola de
+seguimiento como no concretada (RF-16; CU-04).
+
+6a. Falla la emisión tras el
+pago
+
+El sistema revierte el registro del pago (operación atómica, RNF-05), informa
+el error, permite reintentar y registra la incidencia en el log.
+
+8. Requisitos y reglas asociadas
+Objetivos / problemas
+
+OE2 y OE4; atiende P1, P2, P6 y P8.
+
+Requisitos funcionales
+
+RF-08 a RF-10, RF-19, RF-21, RF-22 a RF-26, RF-30 y RF-31.
+
+Reglas de negocio
+
+Separación de flujos: sin negociación en la Opción 1 (RN-06), salvo el
+descuento por primera compra (RN-08), que no es negociación y no se
+acumula con otro descuento (RN-09); pago único o en cuotas (RN-14); póliza
+de demostración (RN-15); atribución del canal de la venta (RN-27).
+
+Requisitos no funcionales
+
+RNF-05 (consistencia de la compra), RNF-07 (compra desde el celular en 10
+minutos o menos, a validar), RNF-15 (componentes simulados
+reemplazables) y RNF-20 (leyenda de demostración).
+
+8.2.3 CU-03
+1. Caso de uso del sistema
+CU-03
+
+Solicitar asesoría / descuento
+
+2. Descripción del caso de uso
+Permite al cliente que prefiere o necesita atención humana solicitar a un asesor aclarar dudas de cobertura,
+negociar la prima o acceder a un descuento, sin volver a ingresar sus datos. El sistema coloca la solicitud en
+la cola de asesoría con los datos de la cotización ya capturados y el motivo. Incluye los casos derivados
+automáticamente cuando la aseguradora exige inspección o evaluación, o cuando el vehículo no es asegurable
+en línea. El asesor negocia dentro del rango de descuento máximo configurado por el administrador y registra
+el resultado; si el cliente acepta, se habilita la compra con la prima negociada (continúa en CU-02).
+3. Actores
+Actor principal
+
+Cliente (conductor / propietario).
+
+Actores secundarios
+
+Asesor (incluye telemarketing): atiende la solicitud y negocia. Aseguradora
+(componente de integración): participa cuando el caso exige evaluación o
+cotización manual.
+
+31
+4. Precondiciones
+El cliente generó una cotización válida en CU-01 (al menos una aseguradora devolvió prima) o el sistema
+derivó el caso por inspección o por vehículo no asegurable en línea. El cliente está identificado o se registra
+al enviar la solicitud. El administrador configuró el rango de descuento máximo (CU-05).
+5. Postcondiciones
+La solicitud queda en la cola de asesoría con estado «pendiente», asociada a la cotización, con su motivo
+(negociación, inspección, duda o no asegurable) y el canal preferido; la cola atiende primero los casos
+derivados por el sistema (RN-13). Si el cliente acepta el descuento, la cotización queda habilitada para
+completar la compra con la prima negociada (CU-02); si rechaza o no responde, el caso pasa a la cola de
+seguimiento (CU-04).
+
+6. Pasos (flujo de eventos)
+N.º
+
+Acción del actor
+
+Respuesta del sistema
+
+1
+
+El cliente, desde el comparativo de planes
+(CU-01), elige la Opción 2 «Solicitar asesoría /
+descuento» en el plan de su interés.
+
+Muestra el formulario de solicitud con los datos
+de la cotización ya cargados (vehículo, plan y
+prima) y pide confirmar el canal preferido y el
+motivo (RF-11, RNF-08).
+
+2
+
+El cliente confirma el canal (llamada o
+WhatsApp) y el motivo (duda, negociación o
+descuento) y envía; si no está registrado,
+completa un registro mínimo.
+
+Valida los datos y asocia la cotización a la
+cuenta del cliente (RF-11, RNF-11).
+
+3
+
+—
+
+Registra la solicitud en la cola de asesoría con
+estado «pendiente», el motivo y el canal; ordena
+la cola con los casos derivados primero (RN-13)
+y muestra al cliente la confirmación con el
+tiempo estimado de contacto (RF-12).
+
+4
+
+El asesor abre la cola, selecciona el caso y
+revisa los datos capturados y el motivo.
+
+Muestra el detalle de la cotización con los datos
+del cliente y el motivo, sin volver a pedirlos
+(RF-13, RNF-08).
+
+5
+
+El asesor contacta al cliente por el canal
+preferido, aclara las dudas y negocia la prima
+dentro del rango de descuento máximo.
+
+Registra el descuento aplicado (asesor, fecha,
+plan y porcentaje) solo dentro del rango
+permitido (RF-14, RN-07).
+
+6
+
+El asesor registra el resultado de la atención (el
+cliente acepta o rechaza).
+
+Guarda el resultado; si el cliente acepta, habilita
+completar la compra con la prima negociada y
+aplica el mayor descuento sin acumular (RF-15,
+RN-09).
+
+7
+
+Si aceptó, el cliente continúa con la compra.
+
+Continúa en CU-02 con la prima negociada ya
+cargada.
+
+7. Flujo alternativo
+1a. Derivación automática
+(caso del sistema)
+
+Si la aseguradora exige inspección o evaluación (RN-03, RN-25) o el
+vehículo no es asegurable en línea (RN-04, P10), el sistema crea la solicitud
+automáticamente con los datos capturados y el motivo «inspección» o «no
+asegurable», sin pedir un correo (RF-06). El asesor cotiza el caso
+manualmente con la aseguradora.
+
+32
+2a. Datos del canal
+incompletos
+
+Si falta un dato obligatorio del canal, el sistema muestra el error junto al
+campo y conserva la cotización para reintentar (RNF-08).
+
+6a. El cliente rechaza o no
+decide
+
+El asesor registra el resultado «no acepta»; la cotización pasa a la cola de
+seguimiento como no concretada (CU-04, RF-16).
+
+6b. El cliente no responde al
+contacto
+
+El asesor registra el intento; el caso pasa a seguimiento (CU-04) respetando
+el canal preferido y el máximo de intentos (RN-10).
+
+8. Requisitos y reglas asociadas
+Objetivos / problemas
+
+OE2; atiende P7 y P5; se relaciona con P10.
+
+Requisitos funcionales
+
+RF-06 y RF-11 a RF-15.
+
+Reglas de negocio
+
+Derivación según el uso del vehículo (RN-03, RN-04); rango de descuento
+máximo y registro (RN-07); no acumulación de descuentos (RN-09); orden
+de la cola, derivados primero (RN-13). Detalle en la sección 7.3.
+
+Requisitos no funcionales
+
+RNF-08 (no repetir la captura de datos), RNF-11 (datos personales y canal
+elegido por el cliente) y RNF-12 (trazabilidad).
+
+8.2.4 CU-04
+1. Caso de uso del sistema
+CU-04
+
+Gestionar seguimiento de telemarketing
+
+2. Descripción del caso de uso
+Permite al asesor, en su función de seguimiento (telemarketing), gestionar la cola de cotizaciones no
+concretadas. El asesor contacta al cliente por su canal preferido, le ofrece el descuento por primera compra,
+registra cada intento y cierra el caso con un estado final y un motivo. Si el caso se cierra sin conversión, el
+sistema envía un único mensaje con un enlace de vigencia limitada para retomar la compra autónoma
+(CU-02).
+3. Actores
+Actor principal
+
+Asesor (incluye telemarketing).
+
+Actores secundarios
+
+Cliente (recibe el contacto y el mensaje final).
+
+4. Precondiciones
+El asesor está autenticado con el rol Asesor. Existe al menos una cotización no concretada en la cola con
+estado «en seguimiento», registrada cuando el cliente no completó la compra (CU-01, flujo 6a; CU-02, flujo
+5b). El administrador configuró el descuento por primera compra y el máximo de intentos (CU-05).
+5. Postcondiciones
+Cada intento queda registrado con su canal, fecha y resultado. El caso queda «en seguimiento» si aún tiene
+intentos disponibles, o cerrado con estado «convertido» o «descartado» y su motivo. Si se cerró sin
+conversión, se envió un único mensaje con enlace de 7 días para retomar la compra. Si el cliente compra
+desde ese enlace o tras aceptar el descuento, la venta queda atribuida al canal «telemarketing».
+
+33
+6. Pasos (flujo de eventos)
+N.º
+
+Acción del actor
+
+Respuesta del sistema
+
+1
+
+El asesor abre la cola de seguimiento.
+
+Muestra los casos «en seguimiento» con vehículo,
+plan, prima, canal preferido e intentos realizados y
+restantes (RF-16, RF-17).
+
+2
+
+El asesor selecciona un caso.
+
+Muestra el detalle de la cotización y el descuento por
+primera compra si el cliente no tiene póliza previa
+(RF-20, RN-08).
+
+3
+
+El asesor contacta al cliente por su canal
+preferido (llamada o WhatsApp) y le
+ofrece el descuento.
+
+Permite el contacto solo por el canal preferido y
+mientras no se supere el máximo de intentos (RN-10).
+
+4
+
+El asesor registra el intento: canal, fecha y
+resultado (contactado, no responde,
+rechaza o acepta).
+
+Guarda el intento con usuario y fecha y actualiza el
+contador de intentos (RF-17, RNF-12).
+
+5
+
+Si el cliente acepta, el asesor lo indica en
+el caso.
+
+Asocia el descuento a la cotización y genera/reactiva
+el enlace de retoma para que el cliente complete la
+compra de manera autónoma desde dicho enlace . El
+caso pasa a 'convertido' cuando se confirma el pago
+simulado y la venta se atribuye al canal
+'telemarketing'
+
+6
+
+Si el caso no se concreta, el asesor lo
+cierra y elige el motivo: precio, ya
+contrató, no responde, sin interés u otro.
+
+Exige el motivo, marca el caso «descartado» y lo
+registra (RF-18, RF-19, RN-11).
+
+7
+
+—
+
+Envía al cliente un único mensaje final con un enlace
+de 7 días para retomar la compra autónoma con el
+descuento (RF-21, RN-12).
+
+7. Flujo alternativo
+3a. El cliente no responde
+
+El asesor registra el intento «no responde». El caso sigue «en seguimiento»
+mientras queden intentos. Al alcanzar el máximo (valor inicial: 4 intentos en 7
+días), el sistema bloquea nuevos contactos y el caso se cierra (RN-10).
+
+3b. El cliente quiere
+negociar o pedir asesoría
+
+El asesor registra la solicitud y se continúa en CU-03. La negociación no se
+mezcla con la compra autónoma (RN-06).
+
+3c. El cliente pide no ser
+contactado
+
+El asesor cierra el caso con el motivo «sin interés» y no se hacen más intentos
+(RN-11, RNF-11).
+
+5a. El cliente ya tuvo
+póliza
+
+Se ofrece sin el descuento por primera compra (RN-08).
+
+6a. El cliente ya contrató
+con otro corredor
+
+El asesor cierra el caso con el motivo «ya contrató» (RN-11).
+
+34
+7a. Falla el envío del
+mensaje final
+
+El sistema registra la incidencia en el log y permite al asesor reenviarlo
+(RNF-12).
+
+7b. El enlace expira sin
+compra
+
+El caso permanece «descartado» y no se registra ninguna venta; el cliente
+puede volver a cotizar desde el cotizador (CU-01) (RN-12).
+
+8. Requisitos y reglas asociadas
+Objetivos / problemas
+
+OE3; atiende P4 y P5.
+
+Requisitos funcionales
+
+RF-16 a RF-21, RF-29, RF-30, RF-31 y RF-32.
+
+Reglas de negocio
+
+Descuento por primera compra (RN-08) y no acumulación (RN-09); canal y
+máximo de intentos (RN-10); motivo de cierre (RN-11); mensaje final con
+enlace (RN-12); atribución del canal de la venta (RN-27); separación de flujos
+(RN-06).
+
+Requisitos no funcionales
+
+RNF-10 (control de acceso por rol), RNF-11 (datos personales y canal elegido
+por el cliente) y RNF-12 (trazabilidad).
+
+8.2.5 CU-05
+
+1. Caso de uso del sistema
+CU-05
+
+Gestionar catálogo y reportes
+
+2. Descripción del caso de uso
+Permite al administrador mantener sin modificar el código el catálogo y los parámetros del sistema: activar o
+desactivar aseguradoras y planes, mantener los campos requeridos por aseguradora y configurar el descuento
+por primera compra, el rango máximo de negociación, el máximo de intentos de contacto y la exigencia de
+inspección. También permite consultar los reportes de ventas por canal, aseguradora y plan. Los cambios se
+aplican a las nuevas cotizaciones, y lo ya registrado se conserva.
+3. Actores
+Actor principal
+
+Administrador.
+
+Actores secundarios
+
+Ninguno; los cambios los consumen el cotizador (CU-01) y los casos de
+asesoría y seguimiento (CU-03, CU-04).
+
+4. Precondiciones
+El administrador está autenticado con el rol Administrador. Existe al menos una aseguradora activa en el
+catálogo.
+5. Postcondiciones
+Los cambios quedan guardados y se aplican a las nuevas cotizaciones, compras y casos, sin modificar el
+código. El cambio queda registrado con usuario y fecha. Las cotizaciones y compras ya registradas no se
+alteran. Al consultar reportes, el sistema muestra las ventas del periodo elegido sin modificar ningún dato.
+
+35
+
+6. Pasos (flujo de eventos)
+N.º
+
+Acción del actor
+
+Respuesta del sistema
+
+1
+
+El administrador inicia sesión y abre el
+panel de administración.
+
+Verifica el rol y muestra las opciones: aseguradoras y
+planes, campos requeridos, parámetros comerciales y
+reportes (RF-31, RF-32).
+
+2
+
+Elige «Aseguradoras y planes» y activa o
+desactiva una aseguradora o un plan.
+
+Actualiza el estado. Lo desactivado deja de aparecer
+en nuevas cotizaciones y se conservan las ya
+registradas (RF-27, RN-16).
+
+3
+
+Elige «Campos requeridos», selecciona
+una aseguradora y agrega, edita o
+desactiva un campo (nombre, tipo,
+obligatoriedad, valores permitidos).
+
+Valida la definición y la guarda en el catálogo. El
+formulario mostrará la unión de los campos de las
+aseguradoras activas y el backend validará contra el
+mismo catálogo (RF-28, RF-02, RF-03, RN-17).
+
+4
+
+Elige «Parámetros comerciales» y define
+el descuento por primera compra, el rango
+máximo de negociación, el máximo de
+intentos, el máximo de cuotas y la
+exigencia de inspección por aseguradora y
+uso.
+
+Valida los valores y los guarda. Por defecto, la
+inspección está activa para el transporte de pasajeros
+(taxi, colectivo y aplicaciones) (RF-29, RN-07,
+RN-08, RN-10, RN-14, RN-25).
+
+5
+
+Guarda los cambios.
+
+Registra el cambio con usuario y fecha y lo aplica sin
+modificar el código (RNF-12, RNF-13).
+
+6
+
+Elige «Reportes», selecciona el periodo y,
+si lo desea, filtra por canal, aseguradora o
+plan.
+
+Consolida las ventas y pagos del periodo y muestra el
+reporte por canal (autónomo, asesoría,
+telemarketing), aseguradora y plan (RF-30).
+
+7
+
+Cambia el periodo o los filtros.
+
+Actualiza el reporte sin modificar datos (RF-30,
+RNF-02).
+
+7. Flujo alternativo
+1a. Usuario sin rol
+Administrador
+
+El sistema deniega el acceso (RF-32, RNF-10).
+
+2a. Desactivar la última
+aseguradora activa
+
+El sistema lo impide e informa que el cotizador necesita al menos una
+aseguradora activa (precondición de CU-01).
+
+3a. Campo duplicado o con
+datos inválidos
+
+El sistema muestra el error junto al campo y no guarda el cambio.
+
+3b. El campo ya tiene
+datos en cotizaciones
+existentes
+
+El sistema lo desactiva en lugar de eliminarlo, para conservar el histórico
+(RN-16).
+
+4a. Valor fuera de rango
+
+El sistema muestra el error (por ejemplo, un porcentaje mayor a 100) y
+conserva el valor anterior.
+
+36
+6a. No hay ventas en el
+periodo
+
+El sistema muestra el reporte vacío con un mensaje informativo, sin error.
+
+8. Requisitos y reglas asociadas
+Objetivos / problemas
+
+OE1, OE3 y OE5; atiende P3, P4, P5 y P9.
+
+Requisitos funcionales
+
+RF-27 a RF-32.
+
+Reglas de negocio
+
+Rango máximo de descuento (RN-07); descuento por primera compra
+(RN-08); máximo de intentos (RN-10); máximo de cuotas (RN-14);
+aseguradora o plan desactivado (RN-16); unión de campos (RN-17);
+inspección por aseguradora y uso (RN-25).
+
+Requisitos no funcionales
+
+RNF-02 (respuesta de las operaciones interactivas), RNF-10 (acceso por rol),
+RNF-12 (trazabilidad) y RNF-13 (mantenibilidad: un campo nuevo es
+configuración).
+
+8.3 DFD nivel 0 y descripción de sus elementos
+
+Tabla 1. Elementos del DFD nivel 0.
+Tipo
+
+Elemento
+
+Descripción
+
+Flujos
+
+Entidad
+externa
+
+Cliente
+
+Propietario de vehículo de uso
+particular (Segmento A) o de uso
+comercial ligero (Segmento B).
+Cotiza, compra de forma autónoma o
+solicita asesoría, paga (simulado) y
+descarga su póliza.
+
+F1, F2, F3,
+F4, F5, F6,
+F7, F8, F9,
+F10
+
+Entidad
+externa
+
+Administrador
+
+Configura aseguradoras, planes,
+catálogo de campos y parámetros
+
+F11, F12
+
+37
+(descuentos, intentos, cuotas,
+inspección); consulta los reportes.
+Entidad
+externa
+
+Asesor (incluye
+telemarketing)
+
+Atiende la cola de asesoría y negocia
+dentro del rango de descuento.
+También gestiona la cola de
+seguimiento de cotizaciones no
+concretadas (sección 3.6).
+
+F19, F20,
+F21, F22
+
+Entidad
+externa
+
+Aseguradoras
+
+Rímac, Pacífico, La Positiva, Mapfre
+y Quálitas, mediante el componente
+de integración con interfaz común. En
+esta versión devuelven tarifas y
+números de póliza de prueba.
+
+F13, F14,
+F15, F16
+
+Entidad
+externa
+
+Pasarela de pago
+(simulada)
+
+Recibe el monto y el modo de pago y
+devuelve una confirmación simulada;
+no procesa cobros reales (RNF-20).
+
+F17, F18
+
+Proceso
+
+0. SVAS –
+Sistema de Venta
+Autónoma de
+Seguros
+
+Todo el sistema: cotiza, deriva, vende, F1 a F22
+cobra y emite en modo simulado,
+gestiona las colas de asesoría y
+seguimiento, y genera reportes.
+
+Tabla 2. Flujos de datos del DFD nivel 0.
+
+Código
+
+Flujo
+
+Origen
+
+Destino
+
+Datos que contiene
+
+Requisitos /
+reglas
+
+F1
+
+Datos de
+cotización
+
+Cliente
+
+SVAS (0)
+
+Uso, marca, modelo, año, ubicación, clase
+y tipo de vehículo; datos de contacto y
+canal preferido (llamada o WhatsApp)
+
+RF-01 a
+RF-03
+
+F2
+
+Compra
+Opción 1
+
+Cliente
+
+SVAS (0)
+
+Plan elegido, datos faltantes para emitir,
+aceptación de condiciones y firma
+simulada
+
+RF-09, RF-24
+
+F3
+
+Modo de
+pago
+
+Cliente
+
+SVAS (0)
+
+Pago único o en cuotas
+
+RF-23,
+RN-14
+
+F4
+
+Solicitud de
+asesoría
+
+Cliente
+
+SVAS (0)
+
+Plan de interés, motivo (duda, negociación
+o descuento) y canal preferido
+
+RF-11
+
+F5
+
+Consulta de
+estado
+
+Cliente
+
+SVAS (0)
+
+Identificación del cliente que consulta su
+solicitud, pago y póliza
+
+RF-26
+
+F6
+
+Comparativ
+o de primas
+
+SVAS (0)
+
+Cliente
+
+Planes y primas de las aseguradoras
+activas, con la Opción 1 y la Opción 2
+habilitadas según RN-01 a RN-04
+
+RF-05, RF-08
+
+38
+F7
+
+Confirmaci
+ón de pago
+
+SVAS (0)
+
+Cliente
+
+Resultado del pago simulado y
+cronograma de cuotas
+
+RF-23
+
+F8
+
+Confirmaci
+ón de
+solicitud
+
+SVAS (0)
+
+Cliente
+
+Solicitud registrada y tiempo estimado de
+contacto
+
+RF-12
+
+F9
+
+Póliza PDF
+y estado
+
+SVAS (0)
+
+Cliente
+
+Póliza en PDF con leyenda de
+demostración y estado de solicitud, pago y
+póliza
+
+RF-25,
+RF-26,
+RN-15
+
+F10
+
+Enlace de
+retoma
+
+SVAS (0)
+
+Cliente
+
+Mensaje final con enlace de vigencia
+limitada para retomar la compra con
+descuento
+
+RF-21,
+RN-12
+
+F11
+
+Configuraci
+ón
+
+Administra
+dor
+
+SVAS (0)
+
+Aseguradoras y planes activos, catálogo
+de campos, descuento por primera
+compra, rango máximo de descuento,
+máximo de intentos, cuotas e inspección
+por aseguradora
+
+RF-27 a
+RF-29,
+RN-25
+
+F12
+
+Reportes de
+ventas
+
+SVAS (0)
+
+Administrad
+or
+
+Ventas por canal (autónomo, asesoría,
+telemarketing), aseguradora y plan, por
+periodo
+
+RF-30
+
+F13
+
+Datos de
+cotización
+(asegurador
+a)
+
+SVAS (0)
+
+Aseguradora
+s
+
+Datos que exige cada aseguradora,
+enviados a su estrategia de cotización
+
+RF-04
+
+F14
+
+Tarifas de
+prueba
+
+Asegurado
+ras
+
+SVAS (0)
+
+Prima calculada por cada aseguradora, o
+aviso de que no cotiza
+
+RF-04, RF-05
+
+F15
+
+Solicitud de
+emisión
+
+SVAS (0)
+
+Aseguradora
+s
+
+Datos del asegurado, vehículo, plan y
+pago confirmado
+
+RF-22
+
+F16
+
+Número de
+póliza de
+prueba
+
+Asegurado
+ras
+
+SVAS (0)
+
+Número de póliza devuelto por el
+componente simulado
+
+RF-22,
+RN-26
+
+F17
+
+Orden de
+pago
+
+SVAS (0)
+
+Pasarela de
+pago
+(simulada)
+
+Monto y modo de pago (único o en
+cuotas)
+
+RF-23
+
+F18
+
+Confirmaci
+ón simulada
+
+Pasarela
+de pago
+(simulada)
+
+SVAS (0)
+
+Pago aprobado o rechazado (simulado)
+
+RF-23
+
+F19
+
+Cola de
+asesoría
+
+SVAS (0)
+
+Asesor
+(incluye
+telemarketin
+g)
+
+Casos pendientes con datos capturados y
+motivo (negociación, inspección, duda o
+no asegurable)
+
+RF-13,
+RN-13
+
+F20
+
+Descuento
+y resultado
+del caso
+
+Asesor
+(incluye
+telemarketi
+ng)
+
+SVAS (0)
+
+Descuento aplicado dentro del rango y
+resultado de la atención
+
+RF-14,
+RF-15,
+RN-07
+
+F21
+
+Cola de
+seguimiento
+
+SVAS (0)
+
+Asesor
+(incluye
+
+Cotizaciones no concretadas con canal
+preferido, intentos realizados y descuento
+por primera compra
+
+RF-16, RF-20
+
+39
+telemarketin
+g)
+F22
+
+Intento de
+contacto y
+cierre
+
+Asesor
+(incluye
+telemarketi
+ng)
+
+SVAS (0)
+
+Canal, fecha y resultado de cada intento;
+estado (convertido, en seguimiento,
+descartado) y motivo de no compra
+
+RF-17 a
+RF-19,
+RN-10,
+RN-11
+
+8.4 DFD nivel 1 y descripción de subprocesos y flujos de datos
+
+Tabla 3 . Subprocesos del DFD nivel 1
+N.º
+
+Subproceso
+
+Descripción
+
+Entradas
+
+Salidas
+
+Caso de
+uso
+
+Requisitos y
+reglas
+
+Módulo
+
+1.0
+
+Cotizar y
+comparar
+
+Arma el formulario con el
+catálogo de campos, valida los
+datos en el backend, verifica
+nicho y asegurabilidad, obtiene
+las primas por aseguradora
+(Strategy), registra la cotización
+y habilita la Opción 1 y/o 2.
+
+F1, F14,
+F23
+
+F6, F13,
+F24,
+F25,
+F26
+
+CU-01
+Cotizar y
+comparar
+
+RF-01 a
+RF-08; RN-01
+a RN-05,
+RN-17 a
+RN-22
+
+Cotizació
+n
+(Strategy)
+
+40
+Deriva a asesoría los casos no
+asegurables o con inspección.
+2.0
+
+Comprar de
+forma
+autónoma
+
+Reutiliza los datos de la
+cotización, pide solo los
+faltantes, registra la firma
+simulada, aplica el descuento
+que corresponda (primera
+compra o negociado, sin
+acumular) y genera la orden de
+compra.
+
+F2, F27,
+F28, F29,
+F30
+
+F31,
+F32,
+F33
+
+CU-02
+Comprar
+de forma
+autónoma
+
+RF-09, RF-10,
+RF-24; RN-06,
+RN-08, RN-09
+
+Compra
+
+3.0
+
+Procesar
+pago
+simulado
+
+Calcula el monto único o por
+cuota, envía la orden a la
+pasarela simulada y registra el
+pago confirmado.
+
+F3, F18,
+F33
+
+F7, F17,
+F34,
+F35
+
+CU-02
+(incluye
+pagar)
+
+RF-23; RN-14
+
+Pagos
+(simulado
+)
+
+4.0
+
+Emitir póliza
+y consultar
+estado
+
+Solicita la emisión a la
+aseguradora, genera el PDF de
+demostración y registra la
+venta. Atiende la consulta de
+estado de solicitud, pago y
+póliza.
+
+F5, F16,
+F35, F36,
+F37, F38,
+F40
+
+F9, F15,
+F39
+
+CU-02
+(incluye
+emitir
+póliza)
+
+RF-22, RF-25,
+RF-26; RN-15,
+RN-26
+
+Pólizas
+
+5.0
+
+Gestionar
+asesoría y
+descuento
+
+Registra la solicitud del cliente,
+toma los casos derivados por
+1.0, ordena la cola (derivados
+primero), la muestra al asesor y
+guarda el descuento y el
+resultado.
+
+F4, F20,
+F41, F42,
+F44
+
+F8, F19,
+F43
+
+CU-03
+Solicitar
+asesoría /
+descuento
+
+RF-06, RF-11
+a RF-15;
+RN-03, RN-04,
+RN-07, RN-13
+
+Asesoría
+y
+retención
+
+6.0
+
+Gestionar
+seguimiento
+(telemarketin
+g)
+
+Registra las cotizaciones no
+concretadas en la cola, controla
+canal e intentos, aplica el
+descuento por primera compra,
+exige el motivo de cierre y
+envía el enlace de retoma.
+
+F22, F45,
+F46, F48
+
+F10,
+F21,
+F47
+
+CU-04
+Gestionar
+seguimient
+o
+
+RF-16 a
+RF-21; RN-08,
+RN-10 a
+RN-12
+
+Asesoría
+y
+retención
+
+7.0
+
+Administrar
+catálogo y
+reportes
+
+Mantiene aseguradoras, planes,
+catálogo de campos y
+parámetros; consolida pagos y
+ventas para los reportes por
+canal, aseguradora y plan.
+
+F11, F50,
+F51
+
+F12,
+F49
+
+CU-05
+
+RF-27 a
+RF-30; RN-16
+
+Reportes
+y
+administr
+ación
+
+Gestionar
+catálogo
+y reportes
+
+Tabla 4. Almacenes de datos del DFD nivel 1.
+Código
+
+Almacén
+
+Contenido
+
+Escribe
+
+Lee
+
+Clases relacionadas
+
+D1
+
+Catálogo y
+parámetros
+
+Aseguradoras y planes, catálogo de
+campos por aseguradora, reglas de
+inspección, descuento por primera
+compra, rango máximo de descuento,
+máximo de intentos y de cuotas
+
+7.0
+
+1.0, 2.0,
+5.0, 6.0
+
+Aseguradora, Plan,
+CampoRequerido
+
+D2
+
+Clientes y
+vehículos
+
+Registro único de cliente y vehículo
+con canal preferido
+
+1.0, 2.0
+
+2.0, 4.0
+
+Cliente, Vehículo
+
+41
+D3
+
+Cotizaciones
+
+Cotizaciones con primas, opción
+habilitada, estado y fecha
+
+1.0, 2.0
+
+2.0, 4.0,
+5.0, 6.0
+
+Cotización
+
+D4
+
+Pagos
+
+Pagos simulados (único o en cuotas) y
+su estado
+
+3.0
+
+4.0, 7.0
+
+Pago
+
+D5
+
+Pólizas y ventas
+
+Pólizas emitidas (número de prueba,
+PDF) y venta con su canal
+
+4.0
+
+4.0, 7.0
+
+Póliza
+
+D6
+
+Colas de asesoría
+y seguimiento
+
+Casos con estado, motivo, canal,
+intentos, descuento aplicado y resultado
+
+1.0, 5.0,
+6.0
+
+2.0, 5.0, 6.0
+
+Solicitud, Seguimiento
+
+Tabla 5. Flujos de datos internos del DFD nivel 1.
+
+Código
+
+Flujo
+
+Origen
+
+Destino
+
+Contenido
+
+F23
+
+Catálogo de campos y
+aseguradoras activas
+
+D1 Catálogo y
+parámetros
+
+1.0 Cotizar y
+comparar
+
+Campos requeridos, aseguradoras y
+planes activos, reglas de inspección
+
+F24
+
+Cliente, vehículo y canal
+
+1.0 Cotizar y
+comparar
+
+D2 Clientes y
+vehículos
+
+Registro único con canal preferido
+(RF-07)
+
+F25
+
+Cotización registrada
+
+1.0 Cotizar y
+comparar
+
+D3 Cotizaciones
+
+Primas, opciones habilitadas, estado y
+fecha
+
+F26
+
+Caso derivado
+
+1.0 Cotizar y
+comparar
+
+D6 Colas de
+asesoría y
+seguimiento
+
+Cotización no asegurable en línea o
+con inspección, registrada en la cola
+de asesoría (RF-06, RN-03, RN-04)
+
+F27
+
+Cotización seleccionada
+
+D3 Cotizaciones
+
+2.0 Comprar de
+forma autónoma
+
+Plan y prima elegidos
+
+F28
+
+Datos ya capturados
+
+D2 Clientes y
+vehículos
+
+2.0 Comprar de
+forma autónoma
+
+Datos de la cotización que se
+reutilizan (RF-09)
+
+F29
+
+Descuento por primera
+compra
+
+D1 Catálogo y
+parámetros
+
+2.0 Comprar de
+forma autónoma
+
+Porcentaje vigente (RN-08)
+
+F30
+
+Descuento negociado
+
+D6 Colas de
+asesoría y
+seguimiento
+
+2.0 Comprar de
+forma autónoma
+
+Prima negociada aceptada por el
+cliente (RF-15, RN-09)
+
+F31
+
+Datos faltantes
+
+2.0 Comprar de
+forma autónoma
+
+D2 Clientes y
+vehículos
+
+Datos adicionales para emitir
+
+F32
+
+Cotización convertida
+
+2.0 Comprar de
+forma autónoma
+
+D3 Cotizaciones
+
+Cambio de estado a convertida
+
+F33
+
+Orden de compra
+
+2.0 Comprar de
+forma autónoma
+
+3.0 Procesar pago
+simulado
+
+Cliente, plan y prima final
+
+F34
+
+Pago registrado
+
+3.0 Procesar pago
+simulado
+
+D4 Pagos
+
+Monto, modo, cuotas y estado
+
+F35
+
+Pago confirmado
+
+3.0 Procesar pago
+simulado
+
+4.0 Emitir póliza y
+consultar estado
+
+Confirmación que habilita la emisión
+(RN-15)
+
+42
+F36
+
+Datos del asegurado
+
+D2 Clientes y
+vehículos
+
+4.0 Emitir póliza y
+consultar estado
+
+Datos del cliente y del vehículo para
+la póliza
+
+F37
+
+Estado de la solicitud
+
+D3 Cotizaciones
+
+4.0 Emitir póliza y
+consultar estado
+
+Estado de la cotización del cliente
+(RF-26)
+
+F38
+
+Estado del pago
+
+D4 Pagos
+
+4.0 Emitir póliza y
+consultar estado
+
+Estado del pago del cliente (RF-26)
+
+F39
+
+Póliza y venta
+
+4.0 Emitir póliza y
+consultar estado
+
+D5 Pólizas y ventas
+
+Número de prueba, PDF y canal de
+venta
+
+F40
+
+Pólizas del cliente
+
+D5 Pólizas y ventas
+
+4.0 Emitir póliza y
+consultar estado
+
+Pólizas emitidas para la consulta
+
+F41
+
+Cotización asociada
+
+D3 Cotizaciones
+
+5.0 Gestionar
+asesoría y
+descuento
+
+Cotización sobre la que se pide
+asesoría
+
+F42
+
+Rango máximo de
+descuento
+
+D1 Catálogo y
+parámetros
+
+5.0 Gestionar
+asesoría y
+descuento
+
+Tope que fija el administrador
+(RN-07)
+
+F43
+
+Caso de asesoría
+
+5.0 Gestionar
+asesoría y descuento
+
+D6 Colas de
+asesoría y
+seguimiento
+
+Solicitud, motivo, estado, descuento y
+resultado
+
+F44
+
+Casos pendientes
+
+D6 Colas de
+asesoría y
+seguimiento
+
+5.0 Gestionar
+asesoría y
+descuento
+
+Cola ordenada por prioridad (RN-13)
+
+F45
+
+Cotizaciones no
+concretadas
+
+D3 Cotizaciones
+
+6.0 Gestionar
+seguimiento
+(telemarketing)
+
+Cotizaciones sin compra (RF-16)
+
+F46
+
+Intentos y descuento
+
+D1 Catálogo y
+parámetros
+
+6.0 Gestionar
+seguimiento
+(telemarketing)
+
+Máximo de intentos y descuento por
+primera compra (RN-08, RN-10)
+
+F47
+
+Caso de seguimiento
+
+6.0 Gestionar
+seguimiento
+(telemarketing)
+
+D6 Colas de
+asesoría y
+seguimiento
+
+Intentos, estado y motivo de cierre
+
+F48
+
+Casos en seguimiento
+
+D6 Colas de
+asesoría y
+seguimiento
+
+6.0 Gestionar
+seguimiento
+(telemarketing)
+
+Casos abiertos de la cola
+
+F49
+
+Catálogo y parámetros
+
+7.0 Administrar
+catálogo y reportes
+
+D1 Catálogo y
+parámetros
+
+Cambios de aseguradoras, planes,
+campos y parámetros
+
+F50
+
+Pagos registrados
+
+D4 Pagos
+
+7.0 Administrar
+catálogo y reportes
+
+Pagos para los reportes
+
+F51
+
+Ventas por canal
+
+D5 Pólizas y ventas
+
+7.0 Administrar
+catálogo y reportes
+
+Ventas por canal, aseguradora y plan
+
+43
+
+9.​ Arquitectura tecnológica preliminar
+9.1 Pila tecnológica
+La pila tecnológica del proyecto se detalla en la sección 2 (Información general): Java
+(Spring Boot) y TypeScript (React) como lenguajes, PostgreSQL como base de datos, JUnit y
+Jest como frameworks de testing, y despliegue en servicios cloud con plan gratuito o de
+prueba (detalle en la sección 9.3). La tabla siguiente indica el papel de cada tecnología en la
+arquitectura y por qué se eligió.
+Componente
+
+Tecnología
+
+Uso en el SVAS
+
+Justificación
+
+Frontend
+
+React con TypeScript
+
+Aplicación de una sola página
+(SPA): cotizador, flujo dual,
+pago y póliza, panel del asesor y
+panel administrativo
+
+Interfaz responsiva y mobile-first
+(RNF-07); el tipado reduce errores en el
+formulario dinámico de cotización
+
+Backend
+
+Java con Spring Boot
+(Spring Web, Spring
+Data JPA, Spring
+Security)
+
+API REST con los módulos de
+negocio y los componentes de
+integración
+
+Ecosistema maduro para APIs, acceso a
+datos y control de acceso por roles (RF-31,
+RF-32)
+
+Base de datos
+
+Supabase
+
+Almacenes D1 a D6 del DFD
+
+Base relacional con transacciones, necesaria
+para que la compra, el pago y la emisión
+sean atómicos (RNF-05)
+
+Generación de PDF
+
+Librería Java (p. ej.,
+OpenPDF)
+
+Póliza descargable con leyenda
+de demostración
+
+Se genera en el backend con los datos ya
+registrados (RF-25, RNF-20)
+
+Pruebas
+
+JUnit (backend) y
+Jest (frontend)
+
+Pruebas unitarias y de
+integración de los flujos críticos
+
+Cobertura de cotización, autenticación,
+reglas de derivación y compra (RNF-16)
+
+Control de versiones
+
+Git y GitHub (ramas
+de características y
+pull requests)
+
+Código fuente y despliegue
+desde la rama principal
+
+Trabajo colaborativo con trazabilidad
+(RO-06)
+
+Despliegue
+
+Railway (backend),
+Supabase (base de
+datos), hosting de
+sitio estático
+(frontend)
+
+Entorno público del prototipo
+
+Planes gratuitos o de prueba y
+ejecución nativa, sin necesidad de crear
+contenedores propios (RNF-19, OE6)
+
+44
+
+9.2 Diagrama de arquitectura
+
+45
+
+9.3 Despliegue
+
+Nodo
+
+Servicio
+
+Qué se despliega
+
+Configuración
+
+Frontend
+
+Hosting de sitio
+estático (p. ej., Vercel
+o Netlify)
+
+Compilación de la SPA React
+(HTML, CSS y JavaScript)
+
+Dominio con HTTPS; variable con la URL
+pública de la API
+
+Backend
+
+Railway
+
+Aplicación Spring Boot
+empaquetada como JAR,
+ejecutada de forma nativa
+
+Variables de entorno: URL y credenciales de
+la base de datos, secreto de sesión, origen
+permitido para CORS (dominio del frontend)
+y parámetros iniciales
+
+Base de datos
+
+Supabase
+
+Esquema con los almacenes
+D1 a D6 y la tabla de registro
+de actividad
+
+Conexión cifrada (TLS); credenciales solo en
+las variables de entorno del backend
+
+Repositorio y
+CI/CD
+
+GitHub (p. ej., con
+GitHub Actions)
+
+Código fuente, pruebas
+automáticas y tareas
+programadas
+
+Despliegue automático desde la rama principal
+cuando las pruebas pasan
+
+46
+
+10.​ Aplicación de los marcos y estándares en SVAS
+10.1 SWEBOK
+El SWEBOK (Guide to the Software Engineering Body of Knowledge, IEEE Computer
+Society) organiza el conocimiento de la ingeniería de software en áreas de conocimiento.
+Para el SVAS se tomaron las áreas que corresponden a lo trabajado en este análisis inicial y a
+lo que se construirá después. La tabla indica cómo se aplica cada una y en qué parte del
+documento se evidencia:
+
+Área de conocimiento
+del SWEBOK
+
+Cómo se aplica en el SVAS
+
+Requisitos de software
+
+Se realizaron entrevistas a cuatro perfiles, análisis de la competencia y escenarios de
+uso (sección 6). Se especificaron requisitos funcionales con prioridad, requisitos no
+funcionales medibles y reglas de negocio (sección 7). El modelado de análisis incluye
+el diagrama general de casos de uso, los casos de uso detallados CU-01 a CU-05 y los
+DFD de nivel 0 y nivel 1 (sección 8).
+
+Arquitectura de
+software
+
+Arquitectura en capas: SPA en React, API REST en Spring Boot y base de datos
+PostgreSQL (Supabase). Los componentes de integración con las aseguradoras y la
+pasarela se separan del flujo de venta (sección 9).
+
+Diseño de software
+
+Patrón Strategy (EstrategiaCotizacion) para el cálculo de la prima de cada aseguradora
+y catálogo configurable de campos para el formulario dinámico. Se aplican los
+principios abierto/cerrado e inversión de dependencias, con módulos de una sola
+responsabilidad (sección 11).
+
+Construcción de
+software
+
+Java (Spring Boot) y TypeScript (React) con PostgreSQL (sección 2). Ramas de
+características y pull requests en Git/GitHub. Reutilización de los datos ya capturados
+para evitar re-digitación (RNF-08).
+
+Pruebas de software
+
+Pruebas unitarias con JUnit (backend) y Jest (frontend), más pruebas de integración de
+la compra autónoma, la solicitud de asesoría, la cola de telemarketing y las reglas de
+derivación (sección 11, RNF-16, OE6).
+
+Calidad del software
+
+Atributos de calidad con metas verificables: rendimiento (RNF-01, RNF-02),
+disponibilidad (RNF-04), usabilidad mobile-first (RNF-07), mantenibilidad (RNF-13,
+RNF-14) y extensibilidad (RNF-15). Cada objetivo específico tiene un indicador de
+logro (3.3).
+
+10.2 SEBoK
+El SEBoK (Systems Engineering Body of Knowledge) organiza el conocimiento de
+ingeniería de sistemas. Dado que el SVAS es un sistema socio-técnico que coordina personas
+(cliente, asesor, administrador) y componentes de software y servicios externos (aseguradoras
+
+47
+y pasarela), se aplican los siguientes conceptos del SEBoK, con el artefacto del proyecto
+donde se evidencian:
+Concepto del SEBoK
+
+Cómo se aplica en el SVAS
+
+Pensamiento de sistemas y
+definición del sistema de interés
+
+El SVAS se delimita como sistema de interés frente a su entorno
+(aseguradoras, pasarela, canales); la frontera se define en la sección
+5.3.
+
+Necesidades y requisitos de los
+stakeholders
+
+Identificación de stakeholders y sus necesidades (sección 5.1),
+validadas con las entrevistas (sección 6.1) antes de especificar
+requisitos (sección 7).
+
+Límites del sistema y contexto
+operativo
+
+Definición de qué queda dentro y fuera, usuarios, dispositivos y
+entorno operativo (sección 5.3).
+
+Ciclo de vida y enfoque incremental
+
+El proyecto se aborda como un MVP con límites explícitos (secciones
+3.6–3.7) y un cronograma por hitos (sección 12).
+
+Arquitectura y principios de diseño
+
+Separación de responsabilidades y patrón Strategy para la variación
+entre aseguradoras (sección 11).
+
+Verificación y validación
+
+Plan de pruebas unitarias (JUnit/Jest) e integración del flujo de
+compra autónoma (secciones 11 y OE6).
+
+10.3 ISO/IEC 12207
+La norma ISO/IEC/IEEE 12207 define los procesos del ciclo de vida del software. Es
+armónica con la ISO/IEC 15288 (sección 10.4): mientras 15288 se aplica al SVAS como
+sistema, 12207 se aplica al software que lo implementa. La norma permite adaptarla al
+tamaño del proyecto, por lo que el SVAS aplica solo los procesos pertinentes a un prototipo
+académico y deja explícito cuáles no. La tabla relaciona cada proceso con su evidencia en el
+proyecto:
+Grupo de procesos
+(ISO/IEC 12207)
+
+Proceso
+
+Evidencia en el SVAS
+
+Acuerdo
+
+Adquisición y
+suministro
+
+El equipo actúa como proveedor y el docente del curso
+como adquirente. Los objetivos, el alcance (3.3, 3.6) y los
+límites (3.7) fijan lo que se entrega y lo que no.
+
+Gestión técnica
+
+Planificación del
+proyecto
+
+Alcance del MVP, división en módulos y cronograma por
+hitos (3.6 y sección 12).
+
+Gestión técnica
+
+Evaluación y control
+del proyecto
+
+Seguimiento de tareas con tablero Kanban y revisión de
+avance por entregas (sección 11).
+
+Gestión técnica
+
+Gestión de decisiones
+
+Decisiones documentadas: el nicho (3.4), el flujo dual con
+reglas de derivación (7.3.1) y el patrón Strategy (sección
+11).
+
+48
+Gestión técnica
+
+Gestión de riesgos
+
+Supuestos a validar con las entrevistas (3.2.1, 6.1), valores
+iniciales de las reglas de negocio sujetos a confirmación
+(7.3.2) y dependencia de aseguradoras y pasarela, mitigada
+con componentes simulados reemplazables (RN-26,
+RNF-15).
+
+Gestión técnica
+
+Gestión de la
+configuración
+
+Git con ramas de características y pull requests, despliegue
+desde la rama principal (RO-06, sección 11).
+
+Gestión técnica
+
+Medición
+
+Indicadores de logro de los objetivos (3.3), metas medibles
+de los RNF y reportes de ventas por canal, aseguradora y
+plan (RF-30).
+
+Gestión técnica
+
+Aseguramiento de la
+calidad
+
+Criterios de verificación en cada RNF, cobertura de pruebas
+≥ 70 % en lógica de dominio como meta propuesta
+(RNF-16) y revisión de código mediante pull requests.
+
+Técnicos
+
+Definición de
+necesidades y
+requisitos de los
+stakeholders
+
+Stakeholders y necesidades (5.1), entrevistas (6.1), análisis
+de la competencia (6.2) y escenarios de uso (6.3).
+
+Técnicos
+
+Definición de
+requisitos del software
+
+Requisitos funcionales y no funcionales y reglas de negocio
+(sección 7). Casos de uso y DFD (sección 8).
+
+Técnicos
+
+Definición de la
+arquitectura y del
+diseño
+
+Arquitectura en capas (9.1 y 9.2), catálogo de campos
+configurable y patrón Strategy (sección 11).
+
+Técnicos
+
+Implementación
+
+Backend en Java con Spring Boot y frontend en TypeScript
+con React, con una estrategia por aseguradora y
+componentes de integración simulados (secciones 2 y 9).
+
+Técnicos
+
+Integración
+
+Integración de los módulos de cotización, compra, asesoría
+y retención, y pagos. Pruebas de integración del flujo
+completo (OE6, sección 11).
+
+Técnicos
+
+Verificación y
+validación
+
+Pruebas con JUnit y Jest. La validación se hace con los
+escenarios de uso (6.3) y con las entrevistas (6.1).
+
+Técnicos
+
+Transición
+
+Despliegue del prototipo en Railway, Supabase y hosting
+estático (9.3), con manuales de usuario e inducción a los
+asesores (RO-07).
+
+49
+Técnicos
+
+Operación y
+mantenimiento
+
+Disponibilidad, respaldo, monitoreo y mantenimiento
+(RO-03 a RO-06, RNF-04 a RNF-06). Cambios de catálogo
+sin tocar código (RF-27, RF-28).
+
+Soporte del
+software
+
+Gestión de
+documentación
+
+Este documento de análisis, los manuales (RO-07) y los
+anexos de entrevistas y competencia.
+
+Soporte del
+software
+
+Resolución de
+problemas
+
+Registro de errores y actividad con logs de 90 días y alertas
+ante caídas. Incidencias críticas atendidas el mismo día hábil
+(RO-05, RNF-12).
+
+10.4 ISO/IEC 15288
+La norma ISO/IEC 15288 define los procesos del ciclo de vida de los sistemas. En el SVAS
+se aplican principalmente los procesos técnicos, que conectan las necesidades de los
+stakeholders con la solución y su operación. La tabla relaciona cada proceso con el artefacto
+del proyecto que lo evidencia:
+Proceso técnico (ISO/IEC 15288)
+
+Evidencia en el SVAS
+
+Definición de necesidades y
+requisitos de los stakeholders
+
+Stakeholders y necesidades (5.1) y entrevistas (6.1); las necesidades
+se expresan como lo que cada actor espera del sistema.
+
+Definición de requisitos del sistema
+
+Requerimientos operativos de alto nivel (RO-01 a RO-08, sección
+5.3) y especificación de requisitos funcionales y no funcionales
+(sección 7).
+
+Definición de la arquitectura
+
+Arquitectura tecnológica preliminar (sección 9) y separación de
+módulos con patrón Strategy (sección 11).
+
+Análisis del sistema
+
+Análisis del sistema actual AS-IS, problemas y cuellos de botella
+(sección 4).
+
+Implementación e integración
+
+Pila tecnológica y componentes de integración con aseguradoras y
+pasarela, simulados en esta versión (secciones 2 y 9).
+
+Verificación y validación
+
+Pruebas unitarias y de integración del flujo de compra autónoma
+(OE6).
+
+Operación y mantenimiento
+
+Disponibilidad, respaldo, monitoreo y mantenimiento definidos como
+requerimientos operativos (RO-03 a RO-06, sección 5.3).
+
+11.​ Alineación con la competencia del curso
+Principios SOLID
+
+La variación entre aseguradoras tiene dos partes, y el diseño las separa:
+
+50
+1.​ Qué datos pide cada aseguradora (capa de presentación y validación). Se resuelve con
+un catálogo de campos por aseguradora almacenado en la base de datos: nombre del
+campo, tipo, si es obligatorio y sus valores permitidos. El frontend construye el
+formulario a partir de este catálogo, pidiendo la unión de los campos de las
+aseguradoras activas, y el backend valida los datos recibidos contra el mismo
+catálogo. Agregar un campo a una aseguradora es un cambio de configuración, no de
+código.
+2.​ Cómo calcula u obtiene la prima cada aseguradora (capa de dominio). Aquí se aplica
+el patrón Strategy: una interfaz común EstrategiaCotizacion con la operación
+cotizar(datosCotizacion), y una implementación por aseguradora que contiene su
+lógica de tarifa o su llamada al servicio de la compañía. En esta versión las
+implementaciones usan tarifas de prueba; al integrarse con los servicios reales, solo
+cambia la implementación de cada estrategia.
+Los datos que pide cada aseguradora, según la revisión de sus cotizadores públicos, son:
+
+Aseguradora
+
+Datos requeridos para
+cotizar
+
+Variable diferenciadora
+
+Pacífico
+Seguros
+
+Marca, modelo, año y
+ubicación geográfica
+
+Ubicación geográfica
+
+La Positiva
+Seguros
+
+Marca, modelo, año, clase y
+tipo de vehículo
+
+Clase y tipo de vehículo
+
+Rímac Seguros
+
+Marca, modelo y año
+
+Ninguna adicional
+
+Mapfre Perú y
+Quálitas
+
+Datos del formulario común
+de SeguroSimple: uso, marca,
+modelo, año y ubicación
+
+No se identificó una variable adicional;
+si la entrevista (6.1) revela otra, se
+agrega al catálogo de campos sin
+modificar el código
+
+Esta separación aplica dos principios SOLID. Por el principio abierto/cerrado, incorporar
+una aseguradora consiste en registrar sus campos en el catálogo y agregar una nueva
+implementación de EstrategiaCotizacion, sin modificar el cotizador ni las demás
+estrategias. Por el principio de inversión de dependencias, el servicio de cotización
+depende de la interfaz y no de las implementaciones concretas, lo que permite
+probarlo con estrategias simuladas y reemplazar la integración simulada por la real.
+
+51
+Cada módulo hace una sola cosa: uno cotiza, otro gestiona la compra, otro la asesoría y la
+retención (telemarketing) y otro los pagos, sin mezclarse entre ellos.
+Gestión de configuración
+
+Se empleará Git para la gestión del código fuente, con un flujo de trabajo basado en ramas de
+características (feature branches), pull requests y un tablero Kanban para el seguimiento de
+tareas del equipo.
+Testing
+
+Se definirá un plan de pruebas unitarias con JUnit para el backend, cubriendo el flujo de
+cotización (incluyendo casos límite como vehículo no asegurable, aseguradora ya contratada
+o campos obligatorios faltantes según cada aseguradora) y el módulo de autenticación
+(credenciales inválidas, accesos indebidos a vistas de otro rol). En el frontend se usará Jest
+para probar los componentes de React. Además, se realizarán pruebas de integración para
+verificar el flujo completo de compra autónoma sin intervención de asesor, el flujo de
+solicitud de asesoría el registro de cotizaciones no concretadas en la cola de telemarketing y
+las reglas de derivación por uso del vehículo.
+
+52
+
+12.​ Cronograma
+
+Cronograma
+
+53
+
+13.​ Conclusiones
+El problema está acotado y validado. El análisis del sistema actual y las entrevistas
+confirmaron que el cierre de toda venta depende del asesor y que la espera por la
+llamada es el principal punto de abandono. Los diez problemas identificados (P1 a
+P10) se traducen en objetivos, requisitos y reglas de negocio trazables entre sí.
+El flujo dual es la decisión de diseño central. Separar la compra autónoma (Opción 1)
+de la solicitud de asesoría, negociación o descuento (Opción 2) responde a lo hallado
+en campo: solo una parte de los casos requiere asesor y la negociación del bróker es
+puntual y no puede garantizarse a todos. Las reglas de derivación (RN-01 a RN-06)
+permiten que cada caso siga el canal que le corresponde sin mezclar ambos flujos.
+El seguimiento de cotizaciones no concretadas pasa a ser una oportunidad medible. El
+módulo de retención reemplaza el contacto insistente y sin registro por una cola con
+estados, canal preferido, número máximo de intentos, motivo de cierre y un único
+mensaje final con enlace para retomar la compra. Esto no solo busca recuperar ventas,
+sino dejar información útil para la empresa, algo que hoy no existe.
+El diseño favorece el cambio y la prueba. El catálogo configurable de campos por
+aseguradora y el patrón Strategy permiten agregar una aseguradora o un campo sin
+modificar el cotizador (principio abierto/cerrado). Los componentes simulados de
+aseguradora y pasarela son reemplazables sin alterar el flujo de venta (RNF-15), lo
+que deja preparado el camino hacia una integración real.
+El alcance es realista y sus límites son explícitos. El proyecto se plantea como un
+MVP para un nicho definido, con despliegue en servicios cloud gratuitos o de prueba.
+No procesa pagos reales, no emite pólizas con validez legal ni gestiona siniestros.
+Algunas metas, como el tiempo de compra de 10 minutos, la cobertura de pruebas del
+70 % y los valores iniciales de las reglas de descuento e intentos, son propuestas que
+deben validarse con el negocio, y la capacidad de diseño (10 000 cotizaciones al mes)
+supera el volumen actual y se comprobará con una prueba de carga.
+Próximos pasos. Con el análisis completo, el equipo continuará con el diseño
+detallado, la construcción de los módulos de cotización, compra, asesoría y retención,
+y pagos, las pruebas unitarias y de integración con JUnit y Jest, y el despliegue del
+prototipo. Queda también como backlog la alerta de vencimiento de la póliza,
+funcionalidad valorada por los clientes entrevistados y no encontrada en las fuentes
+públicas revisadas.
+
+54
+
+14.​ Referencias
+●​ Business Empresarial. (2019, 10 de noviembre). Chatbot TOBI: La apuesta de
+RIMAC por vender seguros vía redes sociales.
+https://www.businessempresarial.com.pe/chatbot-tobi-la-apuesta-de-rimac-por-vender
+-seguros-via-redes-sociales/
+●​ Business Empresarial. (2026, 25 de febrero). RIMAC convierte su web en un asesor
+digital inteligente que ya duplica la conversión.
+https://www.businessempresarial.com.pe/rimac-convierte-su-web-en-un-asesor-digital
+-inteligente-que-ya-duplica-la-conversion/
+●​ Comparabien. (2026, 4 de febrero). ¿Cuál es el mejor seguro vehicular en Perú?
+Guía.
+https://comparabien.com.pe/blog-consejos/cual-mejor-seguro-vehicular-peru-guia
+●​ Congreso de la República. (2011, 3 de julio). Ley N.° 29733, Ley de Protección de
+Datos Personales. Diario Oficial El Peruano.
+https://diariooficial.elperuano.pe/Normas/obtenerDocumento?idNorma=23
+●​ Hurtado de Mendoza, C. (2019, 5 de septiembre). Rímac Seguros se enfocará en
+digitalizar sus servicios. El Comercio.
+https://elcomercio.pe/economia/dia-1/rimac-camino-digitalizar-servicios-noticia-6729
+05-noticia/
+●​ International Organization for Standardization. (2017). Systems and software
+engineering—Software life cycle processes (ISO/IEC/IEEE Standard No.
+12207:2017).
+●​ International Organization for Standardization. (2023). Systems and software
+engineering—System life cycle processes (ISO/IEC/IEEE Standard No. 15288:2023).
+●​ Pacífico Seguros. (s. f.-a). Promociones. Recuperado el 1 de octubre de 2026, de
+https://pacifico.com.pe/promociones-original
+●​ Pacífico Seguros. (s. f.-b). Seguro vehicular por kilómetros - Paga solo por lo que
+usas. Recuperado el 2 de octubre de 2026, de
+https://www.pacifico.com.pe/seguros/vehicular/plan-kilometros
+●​ Redacción RPP. (2024, 12 de noviembre). Aprovecha el MAPFRE WOW y encuentra
+tu seguro ideal a precios exclusivos. RPP.
+https://rpp.pe/campanas/contenido-patrocinado/aprovecha-el-mapfre-wow-y-encuentr
+a-tu-seguro-ideal-a-precios-exclusivos-noticia-1597901
+●​ RIMAC Seguros y Reaseguros. (s. f.). Tu seguro vehicular viene con SOAT gratis |
+RIMAC. Recuperado el 2 de octubre de 2026, de
+https://www.rimac.com/comprar/seguro-vehicular
+●​ SEBoK Editorial Board. (2025). Guide to the systems engineering body of knowledge
+(SEBoK) (Versión 2.12). International Council on Systems Engineering; Systems
+Engineering Research Center; IEEE Computer Society. https://sebokwiki.org
+●​ SeguroSimple.com. (s. f.). Cotiza tu seguro vehicular. Recuperado el 1 de octubre de
+2026, de https://www.segurosimple.com/seguro/Login
+●​ Supabase. (s. f.). Pricing. Recuperado el 2 de octubre de 2026, de
+https://supabase.com/pricing
+
+55
+●​ Washizaki, H. (Ed.). (2024). Guide to the software engineering body of knowledge
+(SWEBOK Guide) (Versión 4.0). IEEE Computer Society.
+https://www.computer.org/education/bodies-of-knowledge/software-engineering
+
+56
+
+Anexos
+Anexo A1. Guías y respuestas de las entrevistas
+E1 — Jefe comercial de una agencia de corretaje
+Entrevistado
+
+Martín Agüero — Jefe comercial de una agencia de corretaje de seguros
+vehiculares
+
+Fecha / Modalidad
+
+22/09/2026 · Presencial (≈ 35 min)
+
+Entrevistador
+
+Denis Rojas Chamochumby (Grupo N.° 4)
+
+Objetivo
+
+Validar el problema central, las reglas de negocio y el rol del bróker en la
+negociación de descuentos.
+
+P1. ¿Cómo es hoy el proceso desde que un cliente cotiza hasta que compra?
+R: El cliente cotiza en la web, pero el cierre siempre pasa por un asesor que lo llama o le
+escribe por WhatsApp, normalmente entre 25 y 30 minutos después. Sin asesor no se
+concreta la venta.
+P2. ¿Qué parte de ese proceso les genera más pérdida de ventas?
+R: La espera. Varios clientes que ya decidieron no contestan la llamada o se enfrían, y
+también perdemos a los que cotizan fuera del horario de atención.
+P3. El sistema propone comprar sin asesor. ¿Qué pasa con el descuento que hoy
+consigue el bróker?
+R: El bróker consigue rebajas puntuales negociando con la aseguradora, pero no es algo que
+se pueda dar a todos ni siempre; depende del caso y de la compañía. En la web la
+aseguradora publica su prima estándar.
+P4. ¿Eso significa que la negociación debería desaparecer del sistema?
+R: No. Debe quedar como una opción: quien quiere negociar o pedir una rebaja pide
+asesoría (Opción 2); quien solo quiere comprar rápido usa la compra autónoma (Opción 1).
+P5. ¿Qué registran hoy de las cotizaciones que no se concretan?
+R: Casi nada. Se insiste por teléfono y, si no responde, se manda un correo de disculpa y se
+cierra el caso, sin registrar el motivo de la no compra.
+P6. Sobre el volumen y el costo-beneficio: ¿cuántas ventas manejan frente a las
+cotizaciones?
+R: Cerramos del orden de 400 a 500 ventas al mes de un volumen de cotizaciones mucho
+mayor. Por eso nos interesa un segmento específico: dueños de autos particulares y
+conductores de uso comercial ligero que compran por su cuenta, no competir de forma
+masiva con Rímac o Pacífico.
+P7. ¿El catálogo de aseguradoras y planes cambia con frecuencia?
+R: Sí: cambian primas, planes y a veces con qué aseguradora trabajamos. Necesitamos
+poder activarlos o desactivarlos sin depender del área de sistemas.
+Hallazgos
+
+57
+•​ Se confirma que el cierre de toda venta depende del asesor (valida P1 y P6).
+•​ El seguimiento de cotizaciones no concretadas no registra motivo ni resultado (valida
+P4).
+•​ La negociación del bróker es puntual y no garantizable: se conserva en la Opción 2, no
+en el flujo autónomo.
+
+E2 — Asesora comercial / bróker
+Entrevistado
+
+Lucía Ramírez — Asesora comercial (bróker); también realiza el
+seguimiento de telemarketing
+
+Fecha / Modalidad
+
+23/09/2026 · Videollamada (≈ 30 min)
+
+Entrevistador
+
+Denis Rojas Chamochumby (Grupo N.° 4)
+
+Objetivo
+
+Entender la re-digitación de datos, los descuentos y qué casos requieren
+realmente asesoría.
+
+P1. Cuando te llega un lead del cotizador, ¿los datos ya vienen cargados?
+R: No. El cliente ya los ingresó en la web, pero yo se los vuelvo a pedir por WhatsApp y
+los vuelvo a digitar en el portal de cada aseguradora. Es doble trabajo y se cuelan errores.
+P2. ¿Todos los leads necesitan de verdad un asesor?
+R: No. Muchos ya saben qué quieren y solo necesitaban pagar; atender a esos es tiempo
+perdido. Donde sí aporto es cuando hay que negociar la prima, cuando la aseguradora pide
+inspección o cuando el cliente no entiende la cobertura.
+P3. ¿Cómo manejas los descuentos?
+R: A criterio. Llamo a la aseguradora y pido una rebaja; a veces la dan, a veces no. No
+queda registrado en ningún sistema.
+P4. ¿Qué pasa con las aseguradoras que piden más datos?
+R: Pacífico pide la ubicación, La Positiva pide clase y tipo de vehículo; a Rímac le basta
+marca, modelo y año. Si falta un dato hay que volver a contactar al cliente.
+P5. ¿Cómo te gustaría recibir los casos en el nuevo sistema?
+R: En una cola, con los datos del cliente ya capturados y marcados por qué llegaron a mí
+(negociación, inspección o duda), para no empezar de cero.
+Hallazgos
+
+•​ La re-digitación de datos es real (valida P2).
+•​ Cada aseguradora exige datos distintos (valida P3): justifica el catálogo configurable y
+el patrón Strategy.
+•​ Los descuentos se aplican a criterio y sin registro (valida P5).
+•​ Solo una parte de los leads requiere asesor (valida P7): sustenta el flujo dual con la
+Opción 2.
+
+E3 — Cliente de uso particular (Segmento A)
+
+58
+Entrevistado
+
+José Panduro — Propietario de un auto de uso particular
+
+Fecha / Modalidad
+
+25/09/2026 · Presencial (≈ 20 min)
+
+Entrevistador
+
+Denis Rojas Chamochumby (Grupo N.° 4)
+
+Objetivo
+
+Conocer la experiencia del cliente y su disposición a comprar sin asesor.
+
+P1. ¿Alguna vez cotizaste un seguro vehicular en una web? ¿Cómo te fue?
+R: Sí, cuando renové el seguro de mi carro. Coticé en la web y a los 20 o 30 minutos me
+empezaron a llamar y a escribir por WhatsApp. Yo ya había decidido, solo quería pagar.
+P2. ¿Qué fue lo que más te incomodó?
+R: Tener que esperar la llamada y repetir mis datos, que ya había puesto en la web. Al final
+cerré con un conocido que me lo consiguió más rápido.
+P3. Si pudieras comprar el seguro tú mismo desde el celular, sin llamada, ¿lo harías?
+R: Sí, siempre que pueda comparar precios y me entreguen la póliza al toque.
+P4. ¿Te interesaría que el sistema te avise cuándo vence tu seguro?
+R: Bastante. Varias veces me enteré tarde y tuve que cotizar con el seguro ya vencido.
+P5. ¿En qué casos sí te gustaría hablar con un asesor?
+R: La primera vez, cuando uno no entiende bien qué cubre. Después ya no hace falta.
+Hallazgos
+
+•​ La espera obligatoria por la llamada es un punto de abandono (valida P6).
+•​ La re-digitación se percibe como molestia desde el lado del cliente (refuerza P2).
+•​ Hay disposición clara a la compra autónoma si hay comparación y entrega inmediata
+(valida P7).
+•​ La alerta de vencimiento aparece como funcionalidad diferencial valorada
+(oportunidad).
+
+E4 — Cliente de uso comercial ligero (Segmento B)
+Entrevistado
+
+Royer Casas — Conductor de aplicaciones de movilidad (3 unidades)
+
+Fecha / Modalidad
+
+26/09/2026 · Videollamada (≈ 15 min)
+
+Entrevistador
+
+Denis Rojas Chamochumby (Grupo N.° 4)
+
+Objetivo
+
+Validar el segmento comercial ligero y su necesidad de negociar la prima.
+
+P1. ¿Cuántos vehículos aseguras y cómo compras hoy?
+R: Tengo 3 unidades para app y taxi. Comparo precios en varias webs y casi siempre
+negocio la prima por teléfono.
+P2. ¿Cuánto tiempo tienes para ese trámite?
+R: Poco, estoy en la calle todo el día. Contestar llamadas en horario de oficina me
+complica.
+
+59
+P3. ¿Comprarías en línea sin asesor?
+R: Si el precio es bueno, sí. Pero me gusta tener la opción de pedir una rebaja cuando
+aseguro varias unidades.
+P4. ¿Qué es lo que más valoras?
+R: Rapidez desde el celular y poder negociar cuando conviene.
+Hallazgos
+
+•​ Se valida el Segmento B: conductores de uso comercial ligero que comparan y
+negocian.
+•​ Confirma el flujo dual: Opción 1 (compra rápida) y Opción 2 (negociación) según el
+caso.
+•​ La atención fuera del horario de oficina es un requisito del segmento.
+
+60
+
+Anexo A2. Capturas de la competencia
+
+Figura A2.1. Página de SeguroSimple.com con la asistencia de un ejecutivo. Fuente:
+https://www.segurosimple.com/ , consultado el 1 de octubre de 2026.
+
+61
+Figura A2.2. Nota de prensa sobre la web de Rímac como asesor digital. Fuente:
+https://www.businessempresarial.com.pe/rimac-convierte-su-web-en-un-asesor-digital-int
+eligente-que-ya-duplica-la-conversion/ , consultado el 1 de octubre de 2026.
+
+Figura A2.3. Página de seguro vehicular de Rímac para cotizar y contratar en línea.
+Fuente: https://www.rimac.com/comprar/seguro-vehicular , consultado el 1 de octubre de
+2026.
+
+Figura A2.4. Página de promociones de Pacífico con el seguro todo riesgo Plan
+Kilómetros. Fuente:https://www.pacifico.com.pe/seguros/vehicular/plan-kilometros ,
+consultado el 1 de octubre de 2026.
+
+62
+
+Figura A2.5. Nota sobre la campaña de Mapfre con compra digital "100 % online o
+asistida". Fuente:
+https://rpp.pe/campanas/contenido-patrocinado/aprovecha-el-mapfre-wow-y-encuentra-tu-seg
+uro-ideal-a-precios-exclusivos-noticia-1597901?ref=rpp , consultado el 1 de octubre de 2026.
+
+63
+
+Figura A2.6. Página de comparación de seguros vehiculares de Comparabien. Fuente:
+https://comparabien.com.pe/blog-consejos/cual-mejor-seguro-vehicular-peru-guia ,
+consultado el 1 de octubre de 2026.
+
+

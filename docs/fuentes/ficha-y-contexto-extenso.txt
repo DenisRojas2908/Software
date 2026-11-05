@@ -1,0 +1,380 @@
+FICHA DE INSCRIPCIÓN DEL PROYECTO
+Formato de Propuesta de Proyecto: Construcción de Software
+
+1. Información General
+•​ Nombre del Proyecto: Sistema de Venta Autónoma de Seguros — SeguroSimple (SVAS)
+•​ Curso: SI707V — Ingeniería de Software
+•​ Grupo N°: 4
+Integrantes
+•​ Espinoza Esteban, Sleyther Sthiber
+•​ Rojas Chamochumby, Denis Alonso
+•​ Sehuin Guevara, Charlie
+•​ Vázquez García, D'Llamila Katherine
+Pila Tecnológica (sugerida)
+•​ Lenguaje de Programación: Java / PHP / Python (elegir según lo que maneje el grupo)
+•​ Base de Datos: MySQL / PostgreSQL
+•​ Framework de Testing: JUnit (Java) / PyTest (Python) / PHPUnit (PHP)
+•​ Frontend (opcional): React / Angular / Vue, o vistas server-side si el curso no lo exige
+•​ Generación de PDF: iText (Java), FPDF/DomPDF (PHP), ReportLab (Python)
+
+2. Descripción y Alcance
+Problema a resolver
+SeguroSimple.com permite al cliente cotizar y comparar seguros vehiculares de las principales aseguradoras
+del mercado (Rímac, Pacífico, La Positiva, Mapfre, HDI y Quálitas) de forma 100% digital, pero la
+contratación no puede completarse de manera autónoma: un asesor debe comunicarse por teléfono o
+WhatsApp para resolver dudas de cobertura y cerrar el trámite, lo que obliga a todo cliente —incluso a
+quienes ya saben qué plan quieren— a pasar por una llamada. Esto genera fricción para el segmento de
+clientes que prefiere comprar sin intervención de un tercero, y no existe una vía alternativa para quienes sí
+valoran el asesoramiento. El sistema busca ofrecer un canal de venta que permita completar la compra del
+seguro de principio a fin sin necesidad de una llamada, dejando la asesoría telefónica/WhatsApp como una
+opción disponible para quien la solicite explícitamente, en vez de un paso obligatorio.
+
+Aseguradoras consideradas en el sistema
+El catálogo de aseguradoras del sistema replica el que SeguroSimple.com ofrece en Perú:
+•​ Rímac Seguros
+•​ Pacífico Seguros
+•​ La Positiva Seguros
+•​ Mapfre Perú
+•​ HDI Seguros Perú
+•​ Quálitas
+El catálogo es configurable desde el panel administrativo: el administrador puede activar o desactivar
+aseguradoras y planes sin tocar el código.
+
+Funcionalidades Principales (MVP)
+
+1.​ Flujo de venta 100% autónomo: selección de plan, datos del cliente y del vehículo, pago y emisión, sin
+intervención obligatoria de un asesor.
+2.​ Opción visible en cada plan para "solicitar asesoría" (llamada o WhatsApp), disponible pero no
+obligatoria.
+3.​ Emisión de póliza con generación de documento descargable (PDF).
+4.​ Registro y gestión de pagos (pago único o en cuotas).
+
+Límites del Proyecto (qué NO hará el sistema)
+•​ No procesará pagos reales con pasarelas bancarias (se simulará el pago).
+•​ No gestionará el ciclo de siniestros (reportes, peritajes, indemnizaciones).
+•​ No incluirá firma electrónica certificada legalmente, solo una simulación del proceso.
+•​ No integrará con sistemas externos reales de la SBS o de las aseguradoras.
+•​ No reemplaza el proceso de suscripción (underwriting): el sistema no evalúa ni decide si un vehículo es
+asegurable, solo refleja esa decisión con datos configurables.
+•​ No reemplaza al asesor humano para casos complejos; solo ofrece la alternativa autónoma para quien
+no lo necesita.
+•​ No incluye venta de otros ramos (salud, vida, hogar, SOAT); el alcance se limita al seguro vehicular.
+
+3. Alineación con las Competencias del Curso
+•​ Principios SOLID: Patrón Strategy para el cálculo de la cotización de cada aseguradora (cada una puede
+tener su propia lógica de tarifa/plan sin modificar el resto del sistema); responsabilidad única
+separando cotización, compra autónoma, asesoría y pagos en módulos independientes.
+•​ Gestión de Configuración: Uso de Git con flujo de ramas (feature branches, pull requests) y tablero
+Kanban para seguimiento de tareas.
+•​ Testing: Plan de pruebas unitarias para el flujo de cotización (casos límite: vehículo no asegurable,
+aseguradora ya contratada), pruebas del módulo de autenticación (credenciales inválidas, acceso a
+vistas de otro rol) y pruebas de integración para el flujo completo de compra autónoma sin asesor.
+•​ Despliegue: Contenedorización con Docker (backend + base de datos) y despliegue en un servidor de
+pruebas o servicio cloud gratuito (Render, Railway, etc.).
+
+4. Cronograma Preliminar (Hitos de Prácticas)
+Hito
+
+Entregable esperado
+
+Semana
+
+Perfil
+
+Entrega del perfil del proyecto, alcance del MVP y cronograma en MS-Project
+
+2
+
+P1
+
+Diagrama de casos de uso y diagrama de clases (Cliente, Vehículo, Cotización,
+Plan, Póliza, Pago, Asesor, Aseguradora)
+
+4
+
+P2
+
+Modelo entidad-relación y diseño de base de datos; wireframes del cotizador
+comparador y del flujo de compra autónoma
+
+6
+
+EP
+
+Prototipo funcional inicial: autenticación con roles y cotizador comparador de
+las 6 aseguradoras funcionando
+
+8
+
+P3
+
+Codificación del flujo de compra autónoma, del módulo de asesoría (solicitud
+y cola de atención) y del módulo de pagos simulados con cronograma de
+cuotas
+
+10
+
+P4
+
+Conectividad completa a BD, generación de póliza en PDF y pruebas unitarias
+del cotizador y del flujo de compra
+
+12
+
+P5
+
+Sistema configurado end-to-end, panel administrativo de reportes, manuales
+de usuario y consolidado de entregables
+
+14
+
+Hito
+
+Entregable esperado
+
+Semana
+
+EF
+
+Sustentación de la codificación completa del sistema
+
+16
+
+CONTEXTO EXTENSO DEL SISTEMA DE VENTA DE SEGUROS SEGUROSIMPLE (SVAS)
+
+1. Visión General del Sistema
+El sistema es una plataforma que digitaliza por completo el proceso de venta de seguros vehiculares
+(bróker), permitiendo que el cliente cotice, compare, seleccione y compre su seguro de forma 100%
+autónoma, sin depender de la llamada de un asesor — algo que hoy SeguroSimple.com no ofrece. El
+sistema está inspirado en el proceso real observado en la web pública de SeguroSimple.com.
+El objetivo no es reemplazar un sistema core de seguros, sino construir un MVP realista que demuestre
+dominio de lógica de negocio, diseño de software y buenas prácticas de ingeniería.
+
+2. Proceso Real de Venta (AS-IS) — SeguroSimple.com
+Fuente: sitio web público de SeguroSimple.com (cotizador, blog, preguntas frecuentes).
+•​ Paso 1 — Registro de datos: el cliente ingresa a la plataforma y llena el formulario con datos del
+vehículo (marca, modelo, año) y datos de contacto (correo, celular), sin necesidad de crear una cuenta.
+•​ Paso 2 — Comparación de opciones: la web muestra al instante las cotizaciones disponibles,
+ordenadas por aseguradora, precio, deducible y coberturas.
+•​ Paso 3 — Llamada del asesor (obligatoria): unos 30 minutos después de cotizar, un asesor llama o
+escribe por WhatsApp para resolver dudas y cerrar el trámite. Este paso es obligatorio en el proceso
+actual — no existe una vía para comprar sin él.
+•​ Paso 4 — Emisión y pago: una vez elegida la aseguradora, se define el método de pago (contado o en
+cuotas) y la póliza electrónica llega por correo.
+El proceso actual siempre culmina en una llamada obligatoria; no existe hoy una vía para comprar sin ella.
+Cerrar esa brecha —permitir una compra 100% autónoma, manteniendo la asesoría como opción— es
+exactamente el objetivo TO-BE de este proyecto.
+
+3. Reglas de Negocio (algunas verificadas, otras propuestas)
+•​ Verificada: el cotizador muestra planes de Rímac, Pacífico, La Positiva, Mapfre, HDI y Quálitas, con
+precio, deducible y coberturas propias de cada uno.
+•​ Verificada: hoy la compra no puede cerrarse sin la intervención de un asesor telefónico/WhatsApp.
+•​ Propuesta (mejora planteada por el equipo): exclusión automática de aseguradoras con las que el
+cliente ya tiene un seguro vigente para ese vehículo.
+•​ Propuesta (mejora planteada por el equipo): simulación de variantes del vehículo (año, modelo) sin
+tener que recotizar desde cero.
+•​ Propuesta (mejora planteada por el equipo): visibilidad de la fecha de vencimiento del seguro actual
+del cliente, si lo tiene.
+•​ Propuesta (nueva, específica de este proyecto): cada plan debe mostrar, junto al botón de compra,
+una opción secundaria de "prefiero que me asesoren" (llamar / escribir por WhatsApp), sin que sea
+obligatoria para continuar.
+
+4. Roles del Sistema
+4.1 Cliente (Usuario final)
+
+•​ Cotizar sin necesidad de registrarse, ingresando solo los datos del vehículo y de contacto (nombre,
+celular, correo).
+•​ Comparar planes de las seis aseguradoras.
+•​ Simular variantes del vehículo sin recotizar desde cero.
+•​ Ver la vigencia de su seguro actual, si lo tiene.
+•​ Crear una cuenta o iniciar sesión para completar la compra de forma autónoma (sin asesor) o para
+solicitar asesoría (llamada/WhatsApp).
+•​ Simular pago (único o en cuotas).
+•​ Descargar su póliza en PDF.
+•​ Consultar el historial de sus pólizas contratadas (requiere cuenta).
+
+4.2 Asesor
+•​ Recibir las solicitudes de asesoría generadas por clientes que eligieron esa opción.
+•​ Ver el detalle de la cotización que originó la solicitud.
+•​ Marcar la solicitud como atendida.
+•​ Ver comisiones estimadas por venta cerrada vía asesoría (si aplica).
+
+4.3 Administrador
+•​ Configurar los planes de cobertura disponibles por aseguradora (nombre, beneficios, precio base).
+•​ Ver reportes de ventas totales, por canal (autónomo vs. asesorado), por plan, por periodo.
+•​ Gestionar usuarios (clientes y asesores).
+•​ Activar o desactivar planes de cobertura.
+
+5. Módulos Funcionales
+5.1 Módulo de Autenticación y Gestión de Usuarios
+•​ Permite cotizar como invitado, sin necesidad de cuenta; solo exige registro o inicio de sesión para
+completar la compra o para acceder al historial de pólizas.
+•​ La cotización hecha como invitado se asocia a la cuenta al momento de registrarse, para no perder el
+avance.
+•​ Login con roles diferenciados (Cliente, Asesor, Administrador); cada rol accede solo a las vistas que le
+corresponden.
+•​ Las cuentas de Asesor y Administrador no se auto-registran: las crea el administrador desde el panel.
+•​ Recuperación de contraseña por correo y cambio de contraseña desde el perfil.
+•​ Contraseñas almacenadas con hash (BCrypt/Argon2), nunca en texto plano.
+•​ Bloqueo temporal de la cuenta tras varios intentos fallidos de inicio de sesión.
+
+5.2 Módulo de Cotización y Comparación
+•​ Datos de entrada: vehículo (marca, modelo, año) y cliente (nombre, correo, teléfono) — sin necesidad
+de crear cuenta.
+•​ Muestra planes de las seis aseguradoras (Rímac, Pacífico, La Positiva, Mapfre, HDI y Quálitas) con
+precio, deducible y coberturas.
+•​ Excluye automáticamente aseguradoras con seguro ya vigente para ese vehículo.
+•​ Permite simular variantes del vehículo sin recotizar desde cero.
+
+5.3 Módulo de Compra Autónoma (el diferencial del proyecto)
+
+•​ Permite completar la selección de plan, el registro/login del cliente, los datos y el pago sin intervención
+de un asesor.
+•​ Muestra, en cada plan, el botón alternativo "prefiero que me asesoren".
+
+5.4 Módulo de Asesoría (opcional, a solicitud del cliente)
+•​ Registra la solicitud de asesoría con el detalle de la cotización.
+•​ Cola de solicitudes visibles para el asesor.
+
+5.5 Módulo de Emisión de Pólizas
+•​ Genera número de póliza único, vigencia (12 meses), certificado y póliza en PDF.
+•​ Estado inicial: "Emitida" (pendiente de pago) o "Activa" (pago confirmado).
+
+5.6 Módulo de Pagos (Simulado)
+•​ Pago único o en cuotas, con cronograma visible antes de confirmar.
+•​ Simula la confirmación y actualiza el estado de la póliza.
+
+5.7 Módulo de Reportes y Panel Administrativo
+•​ Ventas totales por canal (autónomo vs. asesorado), por aseguradora, por plan, por periodo.
+•​ Listado de pólizas próximas a vencer.
+
+6. Flujo General del Sistema (Happy Path — Compra Autónoma)
+1.​ El cliente ingresa los datos de su vehículo y de contacto para cotizar, sin necesidad de registrarse.
+2.​ El sistema descarta aseguradoras con seguro ya vigente y muestra los planes disponibles de las seis
+aseguradoras.
+3.​ El cliente compara, simula variantes si lo desea, y selecciona un plan.
+4.​ El sistema muestra el cronograma de pagos.
+5.​ Para continuar con la compra, el cliente crea una cuenta o inicia sesión (si ya la tiene).
+6.​ El cliente confirma la compra y paga, sin hablar con ningún asesor.
+7.​ El sistema simula el pago y emite la póliza (certificado + póliza en PDF).
+8.​ La póliza queda en el historial del cliente y en los reportes del administrador.
+Flujo alternativo: en cualquier momento antes de pagar, el cliente puede elegir "prefiero que me asesoren"
+en vez de continuar solo — ahí el flujo pasa al Módulo de Asesoría.
+
+7. Estados de una Póliza (Máquina de Estados)
+COTIZADA → EMITIDA (pendiente de pago) → ACTIVA (pago confirmado) → VENCIDA (pasó la vigencia sin
+renovar) → ANULADA (cliente canceló antes de activarse)
+
+8. Ideas para Diferenciarse (Funcionalidades Extra)
+Fáciles de incorporar
+•​ Flujo de compra 100% autónomo (el diferencial central frente a SeguroSimple real).
+•​ Cotizar sin registrarse, reduciendo la fricción de entrada.
+•​ Mensaje claro de "vehículo no asegurable".
+•​ Botón de "prefiero que me asesoren" en cada plan, sin ser obligatorio.
+•​ Listado de pólizas del cliente en un solo lugar.
+
+Esfuerzo medio
+•​ Simulador de variantes del vehículo sin recotizar desde cero.
+•​ Visibilidad de vigencia del seguro actual del cliente.
+•​ Comparador visual de planes (tabla con checks de beneficios).
+Mayor esfuerzo, si sobra tiempo
+•​ Alertas de renovación automáticas.
+•​ Historial de cotizaciones no concretadas, para seguimiento comercial.
+
+9. Posibles Diagramas a Incluir en la Sustentación
+•​ Diagrama de Casos de Uso (por rol: Cliente, Asesor, Administrador).
+•​ Diagrama de Clases: Cliente, Vehículo, Cotización, Póliza, Plan, Pago, Asesor, Aseguradora.
+•​ Diagrama Entidad-Relación.
+•​ Diagrama de Estados (ciclo de vida de una póliza).
+•​ Diagrama de Secuencia: flujo de "Cotizar y Comprar de forma autónoma".
+
+10. Justificación Académica
+•​ Problema real y verificable (no un supuesto): la brecha entre lo que SeguroSimple ofrece hoy y una
+experiencia de compra 100% autónoma, sin llamada obligatoria.
+•​ Buen uso de patrones de diseño (Strategy para cotización por aseguradora, State para el ciclo de vida
+de la póliza).
+•​ Separación clara de responsabilidades entre cotización, compra autónoma, asesoría y pagos.
+•​ Honestidad metodológica: se distingue explícitamente lo verificado en la web pública de lo propuesto
+por el equipo como mejora.
+
+11. Glosario de Términos del Seguro
+Término
+
+Definición
+
+Seguro
+
+Contrato por el cual una persona transfiere un riesgo a una aseguradora, a
+cambio de un pago; la aseguradora se compromete a cubrir las pérdidas si
+ocurre el evento cubierto.
+
+Póliza
+
+Documento contractual que formaliza el seguro: coberturas, exclusiones,
+vigencia, sumas aseguradas y cláusulas.
+
+Prima
+
+Monto que el asegurado paga a la aseguradora, de forma única o periódica, a
+cambio de la cobertura.
+
+Asegurado
+
+Persona o entidad cuyo riesgo está cubierto por la póliza.
+
+Aseguradora
+
+Empresa que asume el riesgo y se obliga a indemnizar.
+
+Tomador / Contratante
+
+Quien contrata la póliza y paga la prima; puede coincidir o no con el
+asegurado.
+
+Beneficiario
+
+Quien recibe la indemnización; puede ser distinto del asegurado.
+
+Siniestro
+
+Evento dañoso previsto en la póliza (accidente, robo, incendio) que activa la
+obligación de la aseguradora.
+
+Indemnización
+
+Pago que efectúa la aseguradora al producirse el siniestro.
+
+Cobertura
+
+Conjunto de riesgos y situaciones que la póliza protege.
+
+Exclusión
+
+Todo aquello que la póliza expresamente no cubre.
+
+Término
+
+Definición
+
+Suma asegurada
+
+Monto máximo que la aseguradora pagará por un siniestro.
+
+Deducible (franquicia)
+
+Parte del daño que asume el asegurado antes de que la aseguradora pague.
+
+Vigencia
+
+Periodo durante el cual la póliza está activa.
+
+Endoso
+
+Modificación formal a una póliza ya emitida.
+
+Suscripción (underwriting)
+
+Proceso de evaluar el riesgo y decidir si se acepta, bajo qué condiciones y con
+qué prima.
+
+

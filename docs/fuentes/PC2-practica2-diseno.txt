@@ -1,0 +1,3768 @@
+UNIVERSIDAD NACIONAL DE INGENIERÍA
+FACULTAD DE INGENIERÍA INDUSTRIAL Y DE SISTEMAS
+
+INGENIERÍA DE SOFTWARE - SI707V
+PROYECTO -“Sistema de Venta Autónoma de Seguros — SeguroSimple
+(SVAS)”
+Grupo N°4
+DOCENTE:
+Msc. Jesus Alberto Cossa Cabanillas
+INTEGRANTES:
+Espinoza Esteban, Sleyther Sthiber
+Flores Huayllaquispe , Dilan Baruc
+Rojas Chamochumby, Denis Alonso
+Sehuin Guevara, Charlie
+Vázquez García, D'Llamila Katherine
+Octubre
+Lima, Perú
+2026-2
+
+2.1 Diagrama de Paquetes
+El diagrama de paquetes presenta la organización lógica del Sistema de Venta Autónoma de Seguros
+Vehiculares (SVAS) y muestra qué partes del sistema dependen de cuáles. Es una vista de alto nivel:
+no describe atributos ni métodos de clases, sino cómo se agrupan las responsabilidades del sistema y
+en qué dirección fluyen las dependencias.
+Este diagrama cumple tres funciones en el proyecto. Primero, hace visible la arquitectura en capas
+definida en la sección 9 del análisis (frontend, backend y base de datos). Segundo, permite verificar
+que el diseño modular exigido por los requisitos RNF-13, RNF-14 y RNF-15 se cumple, es decir, que
+los módulos de cotización, compra, asesoría y retención, y pagos son independientes y que los
+componentes simulados pueden reemplazarse sin alterar el flujo de venta. Tercero, sirve de base
+para el diagrama de clases, que detalla el contenido de cada paquete.
+
+2.1.1. Criterios de organización
+Los paquetes se agruparon con dos criterios combinados, aplicados de forma deliberada: primero
+por capa técnica y, dentro de la capa de negocio, por módulo funcional.
+•​ Arquitectura en capas. El sistema se divide en Presentación, Negocio y Datos e integración,
+más una capa transversal. Las dependencias fluyen de arriba hacia abajo: la presentación usa
+al negocio y el negocio usa a los datos, nunca al revés.
+
+•​ Monolito modular. El backend es una sola aplicación desplegable, organizada en módulos de
+una sola responsabilidad: cotizar, comprar, gestionar asesoría y retención, pagar, emitir
+pólizas y administrar. Cada módulo corresponde a un subproceso de los DFD de nivel 1.
+•​ Alta cohesión y bajo acoplamiento. Cada paquete reúne elementos que cambian por las
+mismas razones, y las dependencias entre paquetes se limitaron a las que el flujo de datos
+del DFD exige.
+•​ Sin dependencias circulares. Ningún paquete depende, directa o indirectamente, de otro
+que dependa de él. El único punto donde aparecía un ciclo posible (cotización y asesoría) se
+resolvió como se explica en la sección 5.
+•​ Lo externo se separa de lo interno. Los usuarios, la base de datos y los sistemas de terceros
+se dibujan fuera de las capas, con el estereotipo «external».
+La pila tecnológica del proyecto es React con TypeScript en el frontend, NestJS con TypeScript en el
+backend y PostgreSQL en Supabase como base de datos.
+
+2.1.2. Descripción de capas y paquetes
+A. Capa de Presentación (frontend)
+Corresponde a la aplicación de una sola página (SPA) desarrollada en React con TypeScript,
+responsiva y pensada primero para el celular (RNF-07). Contiene cinco paquetes, uno por cada área
+de interfaz:
+•​ cotizador: formulario de cotización generado de forma dinámica a partir del catálogo de
+campos y comparativo de planes y primas de las aseguradoras (CU-01).
+•​ seleccion_canal: pantalla donde el cliente elige entre la Opción 1 (compra inmediata
+autónoma) y la Opción 2 (solicitud de asesoría o descuento), según las reglas de derivación
+(RF-08 a RF-10).
+•​ pago_poliza: captura de datos faltantes, pago simulado, descarga de la póliza en PDF y
+consulta del estado de la solicitud (CU-02, RF-26).
+•​ panel_asesor: cola de asesoría y cola de seguimiento de cotizaciones no concretadas (CU-03
+y CU-04).
+•​ panel_admin: gestión del catálogo, los parámetros comerciales y los reportes (CU-05).
+
+B. Capa de Negocio (backend)
+Es la aplicación NestJS con TypeScript, organizada como monolito modular. Concentra las reglas del
+negocio y se divide en dos grupos de paquetes.
+Módulos de negocio. Cada uno atiende un subproceso del DFD de nivel 1:
+•​ cotizacion: valida los datos contra el catálogo de campos, verifica el nicho y la asegurabilidad,
+aplica las reglas de derivación y calcula la prima de cada aseguradora. Contiene el
+subpaquete estrategia, que implementa el patrón Strategy: una interfaz común de cotización
+y una implementación por aseguradora (CU-01, subproceso 1.0).
+•​ compra: gestiona la Opción 1. Reutiliza los datos ya capturados, registra la firma simulada,
+aplica el descuento que corresponda sin acumularlos y genera la orden de compra que activa
+el pago (CU-02, subproceso 2.0).
+•​ asesoria_retencion: agrupa dos subpaquetes que comparten la misma cola de casos y el
+mismo rol de asesor. asesoria atiende la Opción 2: solicitudes del cliente, cola ordenada por
+prioridad y descuento negociado dentro del rango máximo. retencion gestiona el
+
+seguimiento de cotizaciones no concretadas: control de intentos y canal preferido, motivo de
+cierre y enlace de retoma (CU-03 y CU-04, subprocesos 5.0 y 6.0).
+•​ pagos: calcula el monto único o por cuota y registra el pago confirmado por la pasarela
+simulada (subproceso 3.0).
+•​ polizas: solicita la emisión a la aseguradora, genera el PDF de demostración, registra la venta
+con su canal y atiende la consulta de estado (subproceso 4.0).
+•​ administracion: mantiene aseguradoras, planes, campos y parámetros, y genera los reportes
+de ventas por canal, aseguradora y plan (CU-05, subproceso 7.0).
+dominio_compartido. Reune las entidades que usan varios módulos: catalogo (aseguradoras, planes,
+campos requeridos y parámetros como el descuento por primera compra, el rango máximo de
+descuento y el máximo de intentos) y cliente (registro único de cliente y vehículo con su canal
+preferido, que evita volver a pedir los mismos datos). Corresponden a los almacenes D1 y D2 del
+DFD.
+
+C. Capa de Datos e integración
+•​ persistencia: acceso a datos mediante repositorios que usan el cliente de Supabase.
+Garantiza que la compra, el pago y la emisión se registren de forma consistente (RNF-05).
+•​ integracion: contiene los componentes que conectan el sistema con el exterior, cada uno con
+una interfaz común y una implementación simulada en esta versión: pasarela (pago),
+aseguradora (emisión y número de póliza de prueba) y pdf (generación de la póliza con la
+leyenda de documento de demostración).
+
+D Capa transversal
+Incluye seguridad (autenticación y control de acceso por rol: Cliente, Asesor y Administrador,
+aplicado en el backend, RF-31, RF-32 y RNF-10) y comun (trazabilidad de acciones críticas, manejo de
+errores y configuración). Las tres capas dependen de ella.
+
+E Paquetes externos
+•​ usuarios: cliente, asesor y administrador, que usan la capa de presentación.
+•​ base_de_datos: PostgreSQL en Supabase, con los almacenes D1 a D6 y el registro de
+actividad.
+•​ sistemas_externos: aseguradoras y pasarela de pago reales. Quedan fuera de esta versión y
+se integrarán a futuro reemplazando los componentes simulados.
+
+2.1.3. Dependencias entre paquetes
+Las flechas punteadas del diagrama indican dependencia «use» y apuntan al paquete del que se
+depende. La tabla explica cada una y el flujo de datos del DFD que la justifica.
+Origen
+
+Destino
+
+Motivo de la dependencia
+
+usuarios
+
+Presentación
+
+Cliente, asesor y administrador interactúan con la
+interfaz web.
+
+Presentación
+
+Negocio
+
+El frontend consume la API REST del backend
+(HTTPS y JSON).
+
+Origen
+
+Destino
+
+Motivo de la dependencia
+
+Presentación, Negocio
+y Datos
+
+transversal
+
+Todas las capas usan la seguridad por rol y la
+trazabilidad.
+
+asesoria_retencion
+
+cotizacion
+
+Lee la cotización asociada a una solicitud y las
+cotizaciones no concretadas (F41, F45).
+
+compra
+
+cotizacion
+
+Toma el plan y la prima seleccionados y cambia la
+cotización a convertida (F27, F32).
+
+compra
+
+asesoria_retencion
+
+Recibe el descuento negociado que el cliente
+aceptó (F30).
+
+compra
+
+pagos
+
+Entrega la orden de compra para procesar el pago
+(F33).
+
+compra
+
+polizas
+
+Una vez confirmado el pago, dispara la emisión y la
+generación del PDF.
+
+polizas
+
+pagos
+
+Necesita el pago confirmado para habilitar la
+emisión y consultar su estado (F35, F38).
+
+administracion
+
+pagos y polizas
+
+Consolida pagos y ventas para los reportes (F50,
+F51).
+
+cotizacion, compra,
+asesoria_retencion,
+polizas y
+administracion
+
+dominio_compartido
+
+Usan el catálogo, los parámetros y el registro de
+cliente y vehículo (F23, F28, F29, F42, F46).
+
+pagos
+
+pasarela
+
+Registra el pago a través de la pasarela simulada,
+reemplazable (RF-23).
+
+polizas
+
+aseguradora y pdf
+
+Solicita la emisión y genera la póliza descargable
+(RF-22, RF-25).
+
+Negocio
+
+persistencia
+
+Lee y escribe los almacenes de datos mediante
+repositorios.
+
+persistencia
+
+base_de_datos
+
+Se conecta a PostgreSQL en Supabase.
+
+integracion
+
+sistemas_externos
+
+A futuro, los componentes simulados se
+reemplazan por las integraciones reales.
+
+El diagrama no dibuja una flecha de cada módulo hacia persistencia, ni de seguridad y comun hacia
+cada módulo, para no saturar la imagen: se muestran a nivel de capa.
+
+2.1.4. Decisiones de diseño
+Resolución del ciclo entre cotización y asesoría. Cuando un vehículo no es asegurable en línea o
+exige inspección, el módulo de cotización debe derivar el caso a la cola de asesoría. A su vez, asesoría
+necesita leer las cotizaciones. Si ambos módulos se llamaran directamente, aparecería una
+dependencia circular. Para evitarla, la cotización define un puerto (una interfaz) llamado
+
+DerivadorCasos y el módulo de asesoría lo implementa. Así la dependencia queda en un solo
+sentido: asesoría depende de cotización. Es una aplicación del principio de inversión de
+dependencias.
+Componentes de integración reemplazables. Los paquetes pasarela, aseguradora y pdf exponen una
+interfaz común, y en esta versión solo existe la implementación simulada (RN-26). Cambiar a la
+integración real no modifica el flujo de venta, lo que cumple RNF-15.
+Patrón Strategy dentro de cotización. El subpaquete estrategia aplica el principio abierto/cerrado:
+incorporar una aseguradora nueva consiste en agregar una implementación y registrar sus campos en
+el catálogo, sin modificar el servicio de cotización ni las demás estrategias (RNF-13).
+Dominio sin dependencias salientes. El paquete dominio_compartido solo recibe dependencias. No
+depende de la persistencia ni de la interfaz, de modo que las reglas y entidades del negocio pueden
+probarse de forma aislada (RNF-16).
+
+2.2 Diagrama de Clases
+El diagrama de clases representa la estructura estática del dominio del Sistema de Venta Autónoma
+de Seguros Vehiculares (SVAS): las clases que lo componen, sus atributos, sus operaciones más
+relevantes y las relaciones entre ellas. Complementa al diagrama de paquetes (subcapítulo 2.1), que
+mostró la organización por capas y módulos; aquí se baja al nivel de las entidades de negocio que
+esos módulos manipulan.
+El modelo se diseñó para ser implementado con TypeScript y NestJS en el backend y Supabase
+(PostgreSQL) como base de datos. Siguiendo UML estricto, las relaciones entre clases se expresan
+únicamente mediante asociaciones con sus multiplicidades; las claves primarias y foráneas se definen
+después, en el modelo de datos relacional. Cada clase conserva el atributo id como identificador del
+objeto.
+
+2.2.1 Convenciones de notación
+Elemento
+
+Significado
+
+id
+
+Identificador del objeto de la clase.
+
++/-
+
+Visibilidad pública / privada.
+
+?
+
+Atributo opcional (admite valor nulo).
+
+Línea continua con multiplicidades
+
+Asociación entre clases (por ejemplo, 1 a *).
+
+Rombo lleno
+
+Composición: la parte no existe sin el todo.
+
+Rombo vacío
+
+Agregación: la parte tiene existencia propia.
+
+Línea punteada con triángulo vacío
+
+Realización de una interfaz.
+
+Recuadro «enumeration»
+
+Conjunto de valores permitidos para un atributo.
+
+Los colores de las clases indican el paquete lógico al que pertenecen, según la leyenda del diagrama:
+dominio_compartido, seguridad, cotizacion, asesoria_retencion,
+compra/pagos/polizas y cotizacion/estrategia (patrón Strategy).
+
+2.2.2 Descripción del modelo siguiendo el flujo del negocio
+La explicación sigue el orden en que ocurre una venta, desde la configuración previa hasta la emisión
+de la póliza.
+a) Configuración del catálogo de aseguradoras
+Antes de que exista cualquier cotización, el administrador deja configurado con qué aseguradoras
+trabaja el sistema (Rímac, Pacífico, La Positiva, Mapfre y Quálitas) y cómo opera cada una.
+●​ Aseguradora: clase central del catálogo. Sus atributos son id, nombre, activa y
+codigoEstrategia. El atributo activa permite habilitar o deshabilitar una
+aseguradora mediante activar() y desactivar() sin eliminar su información, y
+codigoEstrategia identifica la estrategia de cotización que le corresponde.
+●​ Plan: cada aseguradora ofrece varios planes (relación 1 a *, de agregación). Posee nombre,
+descripcion y activo.
+●​ CampoRequerido: define los datos que cada aseguradora exige para cotizar (nombre,
+tipo, obligatorio, valoresPermitidos, activo). Las aseguradoras piden datos
+distintos: Rímac requiere marca, modelo y año; Pacífico agrega la ubicación; La Positiva
+agrega clase y tipo; Mapfre y Quálitas requieren uso, marca, modelo, año y ubicación. Al
+almacenarse como catálogo y no como código fijo, el administrador puede modificar los
+campos sin cambiar el sistema (RF-02, RF-03 y RN-17).
+●​ ReglaInspeccion: indica, para cada aseguradora y según el uso del vehículo (uso), si se exige
+inspección (requiereInspeccion), conforme a RN-25.
+●​ ParametrosComerciales: registro único de configuración que concentra los valores de
+negocio: descuento de primera compra (descuentoPrimeraCompra, 5 %, RN-08),
+descuento máximo (descuentoMaximo, 10 %, RN-07), maxIntentos (4) y
+diasSeguimiento (7) de RN-10, maxCuotas (RN-14) y vigenciaEnlaceDias
+(RN-12). Centralizarlos evita valores fijos dispersos en el código.
+b) Cálculo de primas: patrón Strategy
+Cada aseguradora calcula su prima con criterios propios. Para no concentrar esa lógica en una
+estructura condicional extensa, el modelo aplica el patrón Strategy:
+●​ EstrategiaCotizacion es una interfaz con la operación cotizar(datos): number?, que
+devuelve la prima o un valor nulo si la aseguradora no puede cotizar.
+
+●​ EstrategiaRimac, EstrategiaPacifico, EstrategiaLaPositiva, EstrategiaMapfre y
+EstrategiaQualitas implementan la interfaz (relación de realización). Cada una posee su
+tarifaBase; Pacífico añade recargoUbicacion y La Positiva recargoClaseTipo,
+porque esos datos influyen en su tarifa.
+●​ Cada Aseguradora se asocia con una única estrategia (1 a 1).
+Con este diseño, incorporar una nueva aseguradora implica agregar una clase que implemente la
+interfaz, sin modificar las existentes (principio abierto/cerrado). En esta versión del sistema las tarifas
+son de prueba (RN-18 a RN-22 y RN-26), de modo que el diseño ya contempla su reemplazo por
+tarifas reales sin alterar el resto del modelo.
+c) Cliente, vehículo y ubicación de uso
+●​ Usuario (paquete seguridad): cuenta de acceso al sistema. Contiene email,
+hashContrasena (la contraseña nunca se guarda en claro), rol (CLIENTE, ASESOR o
+ADMINISTRADOR) y activo. Se relaciona con Cliente en 0..1 a 0..1, porque un cliente
+puede cotizar sin tener cuenta.
+●​ Cliente: datos personales (nombres, numeroDocumento, telefono, email,
+canalPreferido).
+●​ Vehiculo: un cliente puede registrar varios vehículos (1 a *). Almacena uso, marca,
+modelo, anio, clase y tipo, y se asocia con su propietario.
+●​ UbicacionUso: departamento, provincia y distrito donde se utiliza el vehículo. Se modeló
+como clase independiente de Vehiculo porque la ubicación de uso no es una característica
+del vehículo, sino del contexto en que se usa, y es, junto con los datos del vehículo, lo que
+permite cotizar. Se relaciona con Vehiculo por composición (1 a 1): no tiene sentido sin el
+vehículo al que pertenece.
+d) La cotización
+●​ Cotizacion: es la clase central del modelo, pues de ella dependen la asesoría, la compra y el
+pago. Se asocia con el cliente y con el vehículo (muchas cotizaciones por cliente y por
+vehículo) y registra fecha, estado (REGISTRADA, CONVERTIDA o NO_CONCRETADA),
+opcionesHabilitadas y motivoDerivacion. Sus operaciones son
+habilitarOpciones(decision), que define cómo puede continuar el proceso, y
+marcarConvertida() y marcarNoConcretada(), que registran el resultado final.
+●​ PrimaCotizada: resultado de cotizar un plan dentro de una cotización (prima,
+disponible). Se vincula a Cotizacion por composición (si se elimina la cotización,
+desaparecen sus primas) y se asocia con el Plan cotizado (* a 1). Gracias a esta clase el
+cliente puede comparar los planes de todas las aseguradoras en una misma cotización.
+e) Derivación: compra autónoma o asesoría
+Tras cotizar, habilitarOpciones() aplica las reglas de derivación (RN-01 a RN-06) y deja
+habilitadas una o ambas opciones del tipo OpcionVenta: COMPRA_INMEDIATA (Opción 1, compra
+autónoma) o ASESORIA (Opción 2). Cuando se deriva a un asesor, se registra el
+motivoDerivacion (duda, negociación, descuento, inspección o no asegurable).
+f) Asesoría y retención
+
+●​ SolicitudAsesoria: caso asignado a un asesor. Incluye motivo, estado (PENDIENTE,
+EN_ATENCION o CERRADA), canal, origen (SISTEMA o CLIENTE), fechaCreacion,
+resultado y se asocia con el asesor (Usuario con rol ASESOR) que la atiende. La operación
+cerrar(resultado) finaliza el caso. Una cotización puede originar varias solicitudes (1 a
+*).
+●​ Seguimiento: gestiona la retención de un cliente que no concretó la compra. Controla
+intentos, fechaApertura, fechaCierre, motivoCierre y el enlace de
+reactivación (enlaceToken y enlaceExpiraEn, con vigencia de 7 días, RN-12).
+puedeContactar() verifica el límite de 4 intentos o 7 días (RN-10) y
+cerrar(motivo, estado) registra el motivo de cierre (RN-11).
+●​ IntentoContacto: cada gestión realizada (llamada o WhatsApp) con su resultado y el
+asesor que la ejecutó. Se relaciona con Seguimiento por composición, porque un intento
+solo tiene sentido dentro de su seguimiento.
+●​ Descuento: descuento ofrecido sobre un plan de la cotización (tipo: PRIMERA_COMPRA o
+NEGOCIADO, porcentaje, aceptado). Debe respetar el tope del 10 % y no acumularse
+con otros (RN-07, RN-08 y RN-09).
+g) Compra, pago y emisión de la póliza
+●​ OrdenCompra: formaliza la decisión de compra. Registra primaFinal (con el descuento
+aplicado), aceptaCondiciones, firmaSimulada y canalVenta (AUTONOMO,
+ASESORIA o TELEMARKETING, RN-27), y elige una de las PrimaCotizada de la cotización.
+registrarFirma() deja constancia de la firma. Una cotización genera como máximo
+una orden (0..1).
+●​ Pago: una orden se paga en uno o varios pagos, con monto, modo (UNICO o CUOTAS),
+estado (PENDIENTE, CONFIRMADO o RECHAZADO), numeroCuotas y referencia
+(RN-14).
+●​ Cuota: cuando el pago es en cuotas, cada una se registra con numero, monto y estado.
+Se relaciona con Pago por composición.
+●​ Poliza: se emite una vez confirmado el pago (RN-15). Almacena numero, fechaEmision,
+archivoPdf y canalVenta, y se asocia con su orden de compra (0..1 a 1).
+
+2.2.3 Resumen del recorrido
+Aseguradora y Plan quedan configurados por el administrador. El cliente registra su Vehiculo y su
+UbicacionUso, lo que genera una Cotizacion; esta utiliza la estrategia de cada aseguradora para
+producir las PrimaCotizada. El sistema habilita la compra autónoma o la asesoría; en este último caso
+intervienen SolicitudAsesoria, Descuento, Seguimiento e IntentoContacto. La compra se formaliza en
+una OrdenCompra, se cancela mediante Pago (y Cuota, si corresponde) y concluye con la emisión de
+la Poliza.
+
+2.2.4 Enumeraciones
+Los valores permitidos de los atributos de tipo enumerado se agrupan en el recuadro «enumeration»
+del diagrama:
+
+Enumeración
+
+Valores
+
+Rol
+
+CLIENTE, ASESOR, ADMINISTRADOR
+
+UsoVehiculo
+
+PARTICULAR, COMERCIAL_LIGERO, TRANSPORTE_PASAJEROS
+
+CanalContacto
+
+LLAMADA, WHATSAPP
+
+EstadoCotizacion
+
+REGISTRADA, CONVERTIDA, NO_CONCRETADA
+
+OpcionVenta
+
+COMPRA_INMEDIATA, ASESORIA
+
+MotivoAsesoria
+
+DUDA, NEGOCIACION, DESCUENTO, INSPECCION, NO_ASEGURABLE
+
+OrigenCaso
+
+SISTEMA, CLIENTE
+
+EstadoSolicitud
+
+PENDIENTE, EN_ATENCION, CERRADA
+
+TipoDescuento
+
+PRIMERA_COMPRA, NEGOCIADO
+
+EstadoSeguimiento
+
+EN_SEGUIMIENTO, CONVERTIDO, DESCARTADO
+
+MotivoCierre
+
+PRECIO, YA_CONTRATO, NO_RESPONDE, SIN_INTERES, OTRO
+
+ResultadoIntento
+
+CONTACTADO, NO_RESPONDE, RECHAZA, ACEPTA
+
+ModoPago
+
+UNICO, CUOTAS
+
+EstadoPago
+
+PENDIENTE, CONFIRMADO, RECHAZADO
+
+CanalVenta
+
+AUTONOMO, ASESORIA, TELEMARKETING
+
+TipoCampo
+
+TEXTO, NUMERO, LISTA
+
+2.2.5 Decisiones de diseño y alcance
+1.​ UML estricto. Las relaciones se expresan solo con asociaciones y multiplicidades. Las claves
+primarias y foráneas corresponden al modelo de datos y se derivan de estas asociaciones al
+implementar en PostgreSQL (Supabase): por ejemplo, la asociación Cliente 1 — * Vehiculo se
+traduce en una clave foránea en la tabla de vehículos.
+
+2.​ Catálogo configurable. Los campos requeridos, las reglas de inspección y los parámetros
+comerciales son datos y no código, lo que permite ajustar el negocio sin modificar el sistema.
+3.​ Strategy para las aseguradoras. Aísla la lógica de tarifación de cada aseguradora y facilita
+agregar nuevas o reemplazar las tarifas de prueba por reales.
+4.​ Separación de UbicacionUso. Distingue el vehículo (sus características) del lugar donde se
+usa, dato que condiciona la cotización.
+5.​ Asesores. La asociación «asesor» enlaza SolicitudAsesoria con un Usuario de rol ASESOR.
+Descuento e IntentoContacto tienen el mismo vínculo, y OrdenCompra y Descuento se
+asocian con PrimaCotizada y Plan respectivamente; estas asociaciones no se dibujaron para
+no saturar el diagrama.
+6.​ Alcance. El diagrama modela las entidades de dominio. Los servicios, controladores,
+repositorios y puertos de integración (pasarela de pagos, aseguradoras y generación de PDF)
+corresponden al diseño del backend en NestJS descrito en el diagrama de paquetes.
+
+2.3 Diagrama de Secuencia
+2.3.1 CU-01 Cotizar y comparar
+Objetivo del caso de uso
+Permite al cliente ingresar los datos de su vehículo y de contacto, elegir su canal preferido
+y obtener el comparativo de primas de las aseguradoras activas. El formulario se arma con
+el catálogo de campos, los datos se validan en el backend y el sistema decide qué opciones
+habilitar: la compra autónoma (CU-02) y/o la asesoría (CU-03). Si el vehículo no es
+asegurable en línea o exige inspección, el caso se deriva automáticamente a la cola de
+asesoría.
+Actor principal
+
+Cliente (conductor / propietario)
+
+Actor secundario
+
+Aseguradoras (Rímac, Pacífico, La Positiva, Mapfre y Quálitas), mediante la
+interfaz común EstrategiaCotizacion, que en esta versión devuelve tarifas
+de prueba
+
+Precondiciones
+
+Existe al menos una aseguradora activa con sus campos requeridos
+configurados en el catálogo. El cliente no necesita estar registrado para
+cotizar.
+
+Postcondiciones
+
+La cotización queda «registrada» con el vehículo, los datos de contacto, el
+canal preferido y las primas obtenidas. El cliente ve el comparativo con las
+opciones habilitadas. Si no continúa, la cotización queda disponible para
+seguimiento (CU-04). Si el vehículo no es asegurable en línea o exige
+inspección, queda una solicitud en la cola de asesoría.
+
+Requisitos
+
+RF-01 a RF-08 y RF-10
+
+Reglas de negocio
+
+RN-01 a RN-06, RN-17 a RN-22, RN-25
+
+No funcionales
+
+RNF-01 (tiempo de respuesta del comparativo), RNF-07 (mobile-first),
+RNF-08 (no repetir la captura de datos), RNF-11 (canal elegido por el
+cliente)
+
+Componentes que participan
+
+Cada columna del diagrama es uno de estos componentes. Su paquete aparece escrito en
+la cabecera de la columna, entre « ».
+Columna del
+diagrama
+
+Paquete (diagrama
+de paquetes, 2.1)
+
+Qué es
+
+Qué hace en este caso de uso
+
+Cliente
+
+Actor
+
+Persona
+
+Ingresa los datos, revisa el
+comparativo y elige plan y opción.
+
+cotizador
+
+Presentación
+
+Pantalla web (React)
+
+Muestra el formulario dinámico y
+el comparativo de planes y
+primas.
+
+CotizacionController →
+CotizacionService
+
+cotizacion
+
+Controlador y
+servicio
+
+Recibe POST /cotizaciones,
+valida, verifica el nicho, obtiene
+las primas y habilita las opciones.
+
+EstrategiaCotizacion
+
+cotizacion / estrategia
+
+Interfaz (patrón
+Strategy)
+
+Cada implementación calcula la
+prima de su aseguradora o
+devuelve null si no puede cotizar.
+
+DerivadorCasos
+
+Puerto de cotizacion,
+implementado por
+asesoria_retencion
+
+Interfaz
+
+Crea la solicitud en la cola de
+asesoría sin generar dependencia
+circular.
+
+Catálogo y parámetros
+
+dominio_compartido
+
+Servicios de
+catálogo
+
+Entrega los campos requeridos y
+las reglas de inspección.
+
+Repositorios
+
+persistencia
+
+Acceso a la base de
+datos (PostgreSQL
+en Supabase)
+
+Guarda cliente, vehículo,
+cotización y primas.
+
+Clases del diagrama de clases (2.2) que intervienen
+Estas son las clases y operaciones de la sección 2.2 que aparecen en CU-01.
+Clase
+
+Paquete
+
+Papel en CU-01
+
+Aseguradora,
+CampoRequerido
+
+dominio_compartido
+
+Definen qué datos pide cada aseguradora activa; el
+formulario muestra su unión (RN-17 a RN-22).
+
+EstrategiaCotizacion y sus
+5 implementaciones
+
+cotizacion / estrategia
+
+cotizar(datos): number? devuelve la prima de
+
+ReglaInspeccion
+
+dominio_compartido
+
+Indica si la aseguradora exige inspección según el
+uso del vehículo (RN-25).
+
+Cliente, Vehiculo,
+UbicacionUso
+
+dominio_compartido
+
+Registro único que luego se reutiliza en CU-02 y
+CU-03 (RNF-08).
+
+Cotizacion
+
+cotizacion
+
+Queda en estado REGISTRADA;
+habilitarOpciones(decision) aplica RN-01 a
+RN-03.
+
+PrimaCotizada
+
+cotizacion
+
+Prima de cada plan dentro de la cotización; permite
+el comparativo.
+
+SolicitudAsesoria
+
+asesoria_retencion
+
+Se crea con origen SISTEMA cuando el caso se
+deriva (flujos 3a y 5a).
+
+cada aseguradora.
+
+Relación entre los pasos del caso de uso y los diagramas
+El caso de uso tiene 6 pasos y varios flujos alternativos. Se dibujó en 2 diagramas, en el
+mismo orden de los pasos, y los flujos alternativos van dentro de recuadros alt.
+
+Paso del CU-01 (Práctica 1)
+
+Diagrama
+
+Flujos alternativos que muestra
+
+1. Abrir el cotizador
+
+1
+
+—
+
+2. Completar y enviar los datos
+
+1
+
+2a (datos inválidos o incompletos)
+
+3. Verificar el nicho y registrar
+
+1
+
+3b (vehículo fuera del nicho)
+
+4. Obtener las primas
+
+2
+
+3a y 4a (ninguna aseguradora devuelve prima: se
+deriva)
+
+5. Habilitar opciones y mostrar el
+comparativo
+
+2
+
+5a (exige inspección: solo Opción 2)
+
+6. Elegir plan y opción
+
+2
+
+6a (abandona sin elegir: pasa a CU-04)
+
+Cuando solo algunas aseguradoras no cotizan (4a parcial), su estrategia devuelve null
+dentro del recuadro loop y el comparativo indica cuáles no pudieron cotizar.
+
+Figura 2.3.1 CU-01: diagrama de secuencia, pasos 1 a 3 (con los flujos alternativos 2a y 3b).
+
+Figura 2.3.1 CU-01: diagrama de secuencia, pasos 4 a 6 (con los flujos alternativos 3a, 4a, 5a y 6a).
+
+Decisiones de diseño de este caso de uso
+1. El formulario sale del catálogo. Los campos no están fijos en el código: se
+leen de CampoRequerido. Una aseguradora nueva solo agrega sus campos al
+catálogo (RN-17, RNF-13).
+2.
+
+Strategy para las primas. El servicio recorre las estrategias sin saber de
+qué aseguradora es cada una; agregar una aseguradora no modifica
+CotizacionService (principio abierto/cerrado).
+
+3.
+
+Puerto DerivadorCasos. Cotización no llama directamente a asesoría: usa
+una interfaz que asesoría implementa. Así se evita el ciclo entre paquetes
+descrito en 2.1.4.
+
+4.
+
+Validación en el backend. Aunque la pantalla valide, el servicio vuelve a
+validar contra el catálogo antes de guardar (RF-03).
+
+5.
+
+Registro único. Cliente, vehículo y ubicación se guardan una sola vez y se
+reutilizan en CU-02 y CU-03 sin volver a pedirlos (RNF-08).
+
+2.3.2 CU-02 Comprar de forma autónoma
+Objetivo del caso de uso
+Permite al cliente que eligió un plan con la Opción 1 completar la contratación sin
+intervención de un asesor y a cualquier hora. El sistema reutiliza los datos de la cotización,
+pide solo los que faltan, registra la firma simulada y el pago (único o en cuotas), solicita la
+emisión a la aseguradora simulada y genera la póliza en PDF con la leyenda de
+demostración.
+Actor principal
+
+Cliente (conductor / propietario)
+
+Actores secundarios
+
+Pasarela de pago (simulada) y Aseguradora (simulada), a través de
+componentes de integración reemplazables
+
+Precondiciones
+
+El cliente generó una cotización válida (CU-01) con la Opción 1 habilitada; la
+aseguradora y el plan están activos. También puede llegar desde el enlace
+de retoma (CU-04) o tras aceptar un descuento negociado (CU-03).
+
+Postcondiciones
+
+El pago queda «confirmado», la póliza emitida con número de prueba y el
+PDF disponible para descarga. La venta se registra con su canal (RN-27) y
+la cotización pasa a «convertida».
+
+Requisitos
+
+RF-08 a RF-10, RF-19, RF-21 a RF-26, RF-30 y RF-31
+
+Reglas de negocio
+
+RN-06, RN-08, RN-09, RN-14, RN-15, RN-27
+
+No funcionales
+
+RNF-05 (consistencia de la compra), RNF-07 (compra desde el celular),
+RNF-15 (componentes simulados reemplazables), RNF-20 (leyenda de
+demostración)
+
+Componentes que participan
+Cada columna del diagrama es uno de estos componentes. Su paquete aparece escrito en
+la cabecera de la columna, entre « ».
+Columna del
+diagrama
+
+Paquete (diagrama
+de paquetes, 2.1)
+
+Qué es
+
+Qué hace en este caso de uso
+
+Cliente
+
+Actor
+
+Persona
+
+Elige el plan, completa datos,
+firma y paga.
+
+pago_poliza
+
+Presentación
+
+Pantalla web (React)
+
+Resumen, datos faltantes, pago,
+descarga de la póliza y estado.
+
+seguridad
+
+Transversal
+
+Autenticación y
+control de rol
+
+Registro mínimo o inicio de
+sesión; entrega el token con rol
+CLIENTE.
+
+CompraController →
+CompraService
+
+compra
+
+Controlador y
+servicio
+
+Arma el resumen, aplica el
+descuento, pide los datos
+faltantes, crea la orden y coordina
+pago y emisión.
+
+CotizacionService
+
+cotizacion
+
+Servicio
+
+Entrega la cotización elegida y la
+asocia a la cuenta del cliente.
+
+Descuentos
+
+asesoria_retencion
+
+Servicio
+
+Informa si existe un descuento
+negociado aceptado (F30).
+
+Catálogo y parámetros
+
+dominio_compartido
+
+Servicios de
+catálogo y cliente
+
+Descuento por primera compra,
+máximo de cuotas y campos para
+emitir.
+
+PagosService
+
+pagos
+
+Servicio
+
+Envía el cobro a la pasarela y
+registra el pago y sus cuotas.
+
+Pasarela
+
+integracion
+
+Componente
+simulado
+
+Devuelve APROBADO o
+RECHAZADO.
+
+PolizasService
+
+polizas
+
+Servicio
+
+Solicita la emisión, genera el PDF,
+define el canal y registra la venta.
+
+Aseguradora
+
+integracion
+
+Componente
+simulado
+
+Devuelve el número de póliza de
+prueba.
+
+GeneradorPdf
+
+integracion
+
+Componente
+simulado
+
+Genera el PDF con la leyenda de
+documento de demostración.
+
+Repositorios
+
+persistencia
+
+Acceso a la base de
+datos
+
+Guarda orden, pago, cuotas,
+póliza, venta y estado de la
+cotización.
+
+Clases del diagrama de clases (2.2) que intervienen
+Estas son las clases y operaciones de la sección 2.2 que aparecen en CU-02.
+Clase
+
+Paquete
+
+Papel en CU-02
+
+Cotizacion
+
+cotizacion
+
+Se lee el plan elegido y al final se ejecuta
+marcarConvertida().
+
+PrimaCotizada
+
+cotizacion
+
+Prima del plan elegido; base de la prima final.
+
+Descuento
+
+asesoria_retencion
+
+Primera compra (5 %) o negociado; se aplica el
+mayor, sin acumular (RN-09).
+
+ParametrosComerciales
+
+dominio_compartido
+
+descuentoPrimeraCompra y maxCuotas.
+
+Cliente, Vehiculo
+
+dominio_compartido
+
+Datos ya capturados y datos faltantes para emitir.
+
+OrdenCompra
+
+compra
+
+primaFinal, aceptaCondiciones, firmaSimulada
+y canalVenta; registrarFirma().
+
+Pago, Cuota
+
+pagos
+
+Monto, modo (UNICO o CUOTAS) y estado
+(PENDIENTE, CONFIRMADO o RECHAZADO).
+
+Poliza
+
+polizas
+
+Número de prueba, fecha de emisión, archivoPdf y
+canalVenta.
+
+Relación entre los pasos del caso de uso y los diagramas
+El caso de uso tiene 8 pasos. Para que cada figura se lea sin ampliarla, se dibujó en 4
+diagramas de dos pasos cada uno, en el mismo orden del caso de uso.
+Paso del CU-02 (Práctica 1)
+
+Diagrama
+
+Flujos alternativos que muestra
+
+1. Elegir plan y «Comprar ahora»
+
+1
+
+1a (Opción 1 no habilitada); 1b en una nota
+
+2. Identificarse
+
+1
+
+—
+
+3. Completar los datos faltantes
+
+2
+
+3a (datos inválidos o incompletos)
+
+4. Aceptar condiciones, firmar y elegir
+modo de pago
+
+2
+
+4a (igual que 1b: pasa a la Opción 2)
+
+5. Confirmar el pago
+
+3
+
+5a (pago rechazado); 5b en una nota
+
+6. Emitir la póliza
+
+3
+
+6a (falla la emisión: se revierte el pago)
+
+7. Generar el PDF y registrar la venta
+
+4
+
+—
+
+8. Descargar la póliza y consultar el
+estado
+
+4
+
+—
+
+Figura 2.3.2 CU-02: diagrama de secuencia, pasos 1 y 2 (con los flujos alternativos 1a y 1b).
+
+Figura 2.3.2 CU-02: diagrama de secuencia, pasos 3 y 4 (con el flujo alternativo 3a).
+
+Figura 2.3.2 CU-02: diagrama de secuencia, pasos 5 y 6 (con los flujos alternativos 5a, 5b y 6a).
+
+Figura 2.3.2 CU-02: diagrama de secuencia, pasos 7 y 8.
+
+Decisiones de diseño de este caso de uso
+1. Pago y emisión en una sola transacción. El pago, la póliza y el cambio de
+estado se confirman juntos (COMMIT en el paso 7). Si la emisión falla, se
+revierte el pago (RNF-05, flujo 6a).
+2.
+
+Descuentos sin acumular. Se compara el de primera compra con el
+negociado y se aplica el mayor (RN-08, RN-09). En la Opción 1 no hay
+negociación (RN-06).
+
+3.
+
+Componentes simulados detrás de interfaces. Pasarela, Aseguradora y
+GeneradorPdf pueden reemplazarse por las integraciones reales sin
+modificar CompraService (RNF-15).
+
+4.
+
+El canal se define al emitir. PolizasService registra TELEMARKETING,
+ASESORIA o AUTONOMO según el origen de la compra (RN-27), para que
+los reportes de CU-05 cuenten bien cada canal.
+
+5.
+
+Solo se piden los datos faltantes. El sistema calcula la diferencia entre los
+campos necesarios para emitir y los ya capturados en la cotización (RNF-08).
+
+2.3.3 CU-03 Solicitar asesoría / descuento
+Objetivo del caso de uso
+Permite al cliente que prefiere o necesita atención humana pedir a un asesor que aclare
+sus dudas, negocie la prima o le dé un descuento, sin volver a ingresar sus datos. También
+cubre los casos que el sistema deriva automáticamente (inspección o vehículo no
+asegurable en línea). El asesor negocia dentro del descuento máximo y registra el
+resultado: si el cliente acepta, se habilita la compra con la prima negociada (CU-02); si no,
+el caso pasa a seguimiento (CU-04).
+Actor principal
+
+Cliente (conductor / propietario)
+
+Actores secundarios
+
+Asesor (incluye telemarketing), que atiende y negocia. Aseguradora, cuando
+el caso exige cotización manual.
+
+Precondiciones
+
+El cliente generó una cotización válida en CU-01, o el sistema derivó el caso
+por inspección o por vehículo no asegurable. El administrador configuró el
+descuento máximo (CU-05).
+
+Postcondiciones
+
+La solicitud queda en la cola de asesoría con estado «pendiente», su motivo
+y el canal preferido; la cola atiende primero los casos derivados (RN-13). Si
+el cliente acepta, la cotización queda habilitada con la prima negociada; si
+rechaza o no responde, pasa a seguimiento (CU-04).
+
+Requisitos
+
+RF-06 y RF-11 a RF-15
+
+Reglas de negocio
+
+RN-03, RN-04, RN-07, RN-09, RN-13, RN-25
+
+No funcionales
+
+RNF-08 (no repetir la captura de datos), RNF-10 (acceso por rol), RNF-11
+(canal elegido por el cliente), RNF-12 (trazabilidad)
+
+Componentes que participan
+Cada columna del diagrama es uno de estos componentes. Su paquete aparece escrito en
+la cabecera de la columna, entre « ».
+
+Columna del
+diagrama
+
+Paquete (diagrama
+de paquetes, 2.1)
+
+Qué es
+
+Qué hace en este caso de uso
+
+Cliente
+
+Actor
+
+Persona
+
+Elige la Opción 2, indica canal y
+motivo, y recibe el contacto.
+
+Asesor
+
+Actor
+
+Persona
+
+Atiende la cola, contacta al
+cliente fuera del sistema y
+registra descuento y resultado.
+
+cotizador
+
+Presentación
+
+Pantalla web (React)
+
+Formulario de solicitud con los
+datos de la cotización ya
+cargados.
+
+panel_asesor
+
+Presentación
+
+Pantalla web (React)
+
+Muestra la cola de asesoría y el
+detalle del caso.
+
+seguridad
+
+Transversal
+
+Autenticación y
+control de rol
+
+Registro mínimo del cliente; inicio
+de sesión con rol ASESOR.
+
+AsesoriaController →
+AsesoriaService
+
+asesoria_retencion /
+asesoria
+
+Controlador y servicio
+(implementa
+DerivadorCasos)
+
+Registra solicitudes, ordena la
+cola, valida el descuento y
+registra el resultado.
+
+CotizacionService
+
+cotizacion
+
+Servicio
+
+Entrega la cotización y deriva los
+casos automáticos (1a).
+
+Catálogo y parámetros
+
+dominio_compartido
+
+Servicios de catálogo
+
+Entrega el descuento máximo (10
+%).
+
+Repositorios
+
+persistencia
+
+Acceso a la base de
+datos
+
+Guarda solicitudes, descuentos y
+seguimientos.
+
+Clases del diagrama de clases (2.2) que intervienen
+Estas son las clases y operaciones de la sección 2.2 que aparecen en CU-03.
+Clase
+
+Paquete
+
+Papel en CU-03
+
+SolicitudAsesoria
+
+asesoria_retencion
+
+Motivo, estado (PENDIENTE, EN_ATENCION,
+CERRADA), canal y origen (SISTEMA o CLIENTE);
+cerrar(resultado).
+
+Descuento
+
+asesoria_retencion
+
+Tipo NEGOCIADO, porcentaje y aceptado; respeta
+el tope (RN-07) y no se acumula (RN-09).
+
+Cotizacion
+
+cotizacion
+
+Aporta los datos ya capturados del caso: vehículo,
+plan y prima.
+
+ParametrosComerciales
+
+dominio_compartido
+
+descuentoMaximo, el tope de negociación.
+
+Usuario (rol ASESOR)
+
+seguridad
+
+Asesor asociado a la solicitud y al descuento
+registrado.
+
+Seguimiento
+
+asesoria_retencion
+
+Se crea cuando el cliente no acepta o no responde;
+el caso continúa en CU-04.
+
+Relación entre los pasos del caso de uso y los diagramas
+El caso de uso tiene 7 pasos: los 3 primeros los realiza el cliente y los demás el asesor. Se
+dibujó en 3 diagramas, en el mismo orden de los pasos.
+
+Paso del CU-03 (Práctica 1)
+
+Diagrama
+
+Flujos alternativos que muestra
+
+1. Elegir la Opción 2
+
+1
+
+1a (derivación automática desde CU-01)
+
+2. Confirmar canal y motivo
+
+1
+
+2a (falta un dato del canal)
+
+3. Registrar en la cola de asesoría
+
+1
+
+—
+
+4. Abrir la cola y revisar el caso
+
+2
+
+—
+
+5. Contactar y negociar
+
+2
+
+Descuento mayor al máximo (error 422)
+
+6. Registrar el resultado
+
+3
+
+6a (rechaza o no decide) y 6b (no responde)
+
+7. Continuar con la compra
+
+3
+
+—
+
+Figura 2.3.3 CU-03: diagrama de secuencia, pasos 1 a 3 (con los flujos alternativos 1a y 2a).
+
+Figura 2.3.3 CU-03: diagrama de secuencia, pasos 4 y 5 (con la validación del descuento máximo).
+
+Decisiones de diseño de este caso de uso
+1.
+Una sola cola con prioridad. Los casos derivados por el sistema van
+primero y luego los del cliente, por orden de llegada (RN-13); ordenarCola() lo
+aplica al registrar.
+2.
+
+El tope de descuento se valida en el backend. El servicio rechaza
+cualquier porcentaje mayor al de ParametrosComerciales (RN-07) y registra
+asesor, fecha, plan y porcentaje.
+
+3.
+
+Derivación sin dependencia circular. CotizacionService crea los casos a
+través del puerto DerivadorCasos, que AsesoriaService implementa (2.1.4).
+
+4.
+
+No se vuelven a pedir datos. La solicitud se asocia a la cotización, así el
+asesor ve todo lo que el cliente ya ingresó (RNF-08).
+
+5.
+
+El contacto es humano. La llamada o el WhatsApp ocurren fuera del
+sistema; el sistema solo registra el descuento y el resultado (RNF-11,
+RNF-12).
+
+2.3.4 CU-04 Gestionar seguimiento de telemarketing → *Integrante 3*
+Objetivo del caso de uso
+Permite al asesor, en su función de seguimiento (telemarketing), trabajar la cola de
+cotizaciones que el cliente no concretó. El asesor contacta al cliente por su canal preferido,
+le ofrece el descuento por primera compra, registra cada intento y cierra el caso con un
+estado y un motivo. Si el caso se cierra sin compra, el sistema envía un único mensaje con
+un enlace que vale 7 días para retomar la compra autónoma (CU-02).
+
+Actor principal
+
+Asesor (incluye telemarketing; no existe un rol aparte)
+
+Actor secundario
+
+Cliente (recibe el contacto y el mensaje final)
+
+Precondiciones
+
+El asesor está autenticado con rol Asesor. Hay al menos una cotización no
+concretada en la cola con estado «en seguimiento». El administrador
+configuró el descuento por primera compra y el máximo de intentos (CU-05).
+
+Postcondiciones
+
+Cada intento queda registrado con canal, fecha y resultado. El caso sigue «en
+seguimiento» si aún tiene intentos, o queda cerrado («convertido» o
+«descartado») con su motivo. Si se cerró sin compra, se envió un único
+mensaje con enlace de 7 días. Si el cliente compra desde ese enlace, la venta
+se atribuye al canal «telemarketing».
+
+Requisitos
+
+RF-16 a RF-21, RF-29 a RF-32
+
+Reglas de negocio
+
+RN-06, RN-08, RN-09, RN-10, RN-11, RN-12, RN-27
+
+No funcionales
+
+RNF-10 (acceso por rol), RNF-11 (datos personales y canal elegido por el
+cliente), RNF-12 (trazabilidad)
+
+Cómo leer los diagramas de secuencia
+Un diagrama de secuencia muestra, de arriba hacia abajo, quién le pide qué a quién para
+que el caso de uso se cumpla. Cada columna vertical es un actor (persona) o un
+componente del sistema; cada flecha es un mensaje y las flechas punteadas son las
+respuestas. Los diagramas de CU-04 y CU-05 usan estos elementos:
+Elemento
+
+Cómo se ve
+
+Qué significa
+
+Cabecera de color
+
+Recuadro en la parte superior
+de cada columna
+
+Un componente del sistema. El color indica a qué
+paquete del diagrama de paquetes (2.1)
+pertenece; la leyenda de colores está al pie de
+cada diagrama.
+
+Muñeco
+
+Figura humana
+
+Una persona: Asesor, Cliente o Administrador.
+
+Flecha continua
+
+Línea con punta llena
+
+Una petición o una llamada a una operación, por
+ejemplo POST /seguimientos/:id/intentos.
+
+Flecha punteada
+
+Línea discontinua con punta
+abierta
+
+La respuesta o el dato que se devuelve.
+
+Flecha sobre la misma
+columna
+
+Flecha que sale y vuelve a la
+misma línea
+
+El componente hace un cálculo o una validación
+por sí mismo.
+
+Recuadro alt
+
+Marco con una línea
+punteada en medio
+
+Alternativas: se ejecuta una rama u otra según la
+condición escrita entre corchetes. Aquí representan
+los flujos alternativos del caso de uso (3a, 5a,
+7a…).
+
+Recuadro loop
+
+Marco con la palabra loop
+
+Pasos que se repiten.
+
+Nota amarilla
+
+Recuadro con la esquina
+doblada
+
+Una precondición o aclaración.
+
+[D6], [F45]
+
+Texto entre corchetes
+
+El almacén de datos (D) o el flujo (F) del diagrama
+de flujo de datos de la Práctica 1, los mismos
+códigos que usa el diagrama de paquetes (2.1).
+
+Palabras que se repiten
+•
+
+Controlador: recibe la petición que llega desde la pantalla, valida los datos y se
+la pasa al servicio.
+
+•
+
+Servicio: aplica las reglas del negocio (por ejemplo, el límite de 4 intentos).
+
+•
+
+Repositorio: guarda y lee datos en la base de datos.
+
+•
+
+Token: credencial temporal que se entrega al iniciar sesión y que identifica al
+usuario y su rol.
+
+•
+
+Transacción: conjunto de pasos que se guardan todos juntos o no se guarda
+ninguno (RNF-05).
+
+Componentes que participan
+Cada columna del diagrama es uno de estos componentes. El color de la primera columna
+es el mismo que usa la cabecera en el diagrama.
+
+Columna
+diagrama
+
+del
+
+Paquete (diagrama de
+paquetes, 2.1)
+
+Qué es
+
+Qué hace en este caso de uso
+
+Asesor
+
+Actor
+
+Persona
+
+Trabaja la cola desde su panel y
+contacta al cliente fuera del
+sistema.
+
+Cliente
+
+Actor
+
+Persona
+
+Recibe la llamada o el WhatsApp
+y el mensaje final.
+
+panel_asesor
+
+Presentación
+
+Pantalla
+de
+la
+aplicación web (React)
+
+Muestra la cola de seguimiento y
+el detalle del caso.
+
+RetencionController
+
+asesoria_retencion
+retencion
+
+/
+
+Controlador
+
+Recibe las peticiones del panel,
+valida los datos y los entrega al
+servicio.
+
+RetencionService
+
+asesoria_retencion
+retencion
+
+/
+
+Servicio
+
+Aplica las reglas del seguimiento:
+límite
+de
+intentos,
+cierre,
+descuento y enlace.
+
+dominio_compartido
+
+dominio_compartido
+
+Servicios de catálogo
+y de cliente
+
+Entrega los parámetros (4
+intentos, 7 días, 5 %) y dice si el
+cliente tiene descuento por
+primera compra.
+
+Repositorios
+
+persistencia
+
+Acceso a la base de
+datos (PostgreSQL en
+Supabase)
+
+Guarda y lee seguimientos,
+intentos y descuentos, y los datos
+de la cotización (vehículo, plan y
+prima).
+
+NotificadorMensajes
+
+retencion (componente
+simulado)
+
+Componente simulado
+
+Envía al cliente el enlace de
+retoma y el mensaje final por su
+canal preferido.
+
+Clases del diagrama de clases (2.2) que intervienen
+Para que el diagrama de secuencia sea coherente con el resto del diseño, estas son las
+clases y operaciones de la sección 2.2 que aparecen en CU-04. Sus atributos están en 3.1 y
+sus relaciones en 3.2.
+
+Clase
+
+Paquete
+
+Papel en CU-04
+
+Seguimiento
+
+asesoria_retencion
+
+Es el caso de la cola. Guarda estado, intentos, fechas,
+motivo de cierre y enlace. Sus operaciones
+puedeContactar() y cerrar(motivo, estado) aplican RN-10 y
+RN-11.
+
+IntentoContacto
+
+asesoria_retencion
+
+Cada llamada o WhatsApp registrado: canal, fecha,
+resultado y asesor.
+
+Descuento
+
+asesoria_retencion
+
+El descuento por primera compra (5 %) que el cliente
+acepta.
+
+Cotizacion
+
+cotizacion
+
+La cotización no concretada a la que pertenece el caso
+(vehículo, plan y prima).
+
+Cliente
+
+dominio_compartido
+
+Su canal preferido y su número de documento, que sirve
+para saber si ya tuvo póliza.
+
+ParametrosComerciales
+
+dominio_compartido
+
+Los valores de negocio: 4 intentos, 7 días, 5 % y
+vigencia del enlace.
+
+Relación entre los pasos del caso de uso y los diagramas
+El caso de uso tiene 7 pasos y varios flujos alternativos. Se dibujó en 2 diagramas, en el
+mismo orden de los pasos, y los flujos alternativos más importantes van dentro de
+recuadros alt para no repetir el diagrama.
+Paso del CU-04 (Práctica 1)
+
+Diagrama
+
+Flujos alternativos que muestra
+
+1. Abrir la cola de seguimiento
+
+1
+
+—
+
+2. Seleccionar un caso
+
+1
+
+5a (cliente que ya tuvo póliza: sin
+descuento)
+
+3. Contactar por el canal preferido
+
+1
+
+3a (límite de intentos); 3b se indica en una
+nota
+
+4. Registrar el intento
+
+1
+
+3a (4 intentos o 7 días cumplidos)
+
+5. El cliente acepta el descuento
+
+2
+
+—
+
+6. Cerrar el caso con motivo
+
+2
+
+3c (sin interés), 6a (ya contrató) y motivo
+vacío (error 400)
+
+7. Enviar el mensaje final
+
+2
+
+7a (falla el envío)
+
+El flujo 7b (el enlace vence sin compra) no se dibuja porque no hay ninguna acción: el caso
+permanece «descartado», no se registra venta y el cliente puede volver a cotizar en CU-01.
+
+Figura 2.3.4 CU-04: diagrama de secuencia, pasos 1 a 4 (con los flujos alternativos 5a y 3a).
+
+Figura 2.3.4 CU-04: diagrama de secuencia, pasos 5 a 7 (con los flujos alternativos 3c, 6a y 7a).
+
+Decisiones de diseño de este caso de uso
+1. Las reglas viven en el dominio. puedeContactar() y cerrar() son operaciones de
+Seguimiento (diagrama de clases, 2.2); el servicio solo las orquesta. Así las reglas
+RN-10 y RN-11 se pueden probar sin base de datos.
+
+2.
+
+Parámetros desde el catálogo. Los 4 intentos, los 7 días y el 5 % se leen de
+ParametrosComerciales y no están fijos en el código; el administrador los cambia
+en CU-05 sin tocar el sistema (RNF-13).
+
+3.
+
+El contacto no se automatiza. La llamada o el WhatsApp los hace el asesor; el
+sistema registra, valida el límite y envía únicamente el enlace y el mensaje final.
+
+4.
+
+Un solo mensaje final. Evita acosar al cliente y respeta su elección de canal
+(RN-12, RNF-11).
+
+5.
+
+La atribución del canal se decide al pagar. El seguimiento solo prepara el
+enlace; la venta se marca TELEMARKETING cuando CU-02 confirma el pago
+(RN-27).
+
+2.3.5 CU-05 Gestionar catálogo y reportes → *Integrante 3*
+Objetivo del caso de uso
+Permite al administrador mantener, sin modificar el código, el catálogo y los parámetros
+del sistema: activar o desactivar aseguradoras y planes, mantener los campos requeridos
+por aseguradora y configurar el descuento por primera compra, el rango máximo de
+negociación, el máximo de intentos, el máximo de cuotas y la exigencia de inspección.
+También consulta los reportes de ventas por canal, aseguradora y plan. Los cambios se
+aplican a las nuevas cotizaciones y lo ya registrado se conserva.
+Actor principal
+
+Administrador
+
+Actor secundario
+
+Ninguno; los cambios los consumen el cotizador (CU-01) y los casos de
+asesoría y seguimiento (CU-03, CU-04)
+
+Precondiciones
+
+El administrador está autenticado con rol Administrador. Existe al menos una
+aseguradora activa en el catálogo.
+
+Postcondiciones
+
+Los cambios quedan guardados con usuario y fecha y se aplican a nuevas
+cotizaciones, compras y casos. Lo ya registrado no se altera. Al consultar
+reportes no se modifica ningún dato.
+
+Requisitos
+
+RF-27 a RF-32
+
+Reglas de negocio
+
+RN-07, RN-08, RN-10, RN-14, RN-16, RN-17, RN-25
+
+No funcionales
+
+RNF-02 (respuesta ágil), RNF-10 (acceso por rol), RNF-12 (trazabilidad),
+RNF-13 (mantenibilidad)
+
+Componentes que participan
+Columna del diagrama
+
+Paquete (diagrama
+de paquetes, 2.1)
+
+Qué es
+
+Qué hace en este caso de uso
+
+Administrador
+
+Actor
+
+Persona
+
+Configura el catálogo y consulta
+reportes.
+
+panel_admin
+
+Presentación
+
+Pantalla de la
+aplicación web
+(React)
+
+Panel con aseguradoras y
+planes, campos, parámetros y
+reportes.
+
+seguridad
+
+seguridad
+
+Módulo de
+autenticación y control
+de rol
+
+Inicia sesión y verifica que el rol
+sea ADMINISTRADOR.
+
+AdministracionController
+
+administracion
+
+Controlador
+
+Recibe las peticiones del panel,
+valida los datos y los entrega al
+servicio.
+
+AdministracionService
+
+administracion
+
+Servicio
+
+Aplica los cambios y genera el
+reporte consolidado.
+
+CatalogoService
+
+dominio_compartido
+
+Servicio de catálogo
+
+Guarda las aseguradoras,
+planes, campos y parámetros, y
+valida sus reglas.
+
+PagosService
+
+pagos
+
+Servicio
+
+Entrega los pagos confirmados
+del periodo (flujo F50).
+
+PolizasService
+
+polizas
+
+Servicio
+
+Entrega las ventas con su canal
+(flujo F51).
+
+Repositorios
+
+persistencia
+
+Acceso a la base de
+datos (PostgreSQL en
+Supabase)
+
+Lee y escribe el catálogo, los
+pagos y las pólizas.
+
+Clases del diagrama de clases (2.2) que intervienen
+Estas son las clases y operaciones de la sección 2.2 que aparecen en CU-05. Sus atributos
+están en 3.1 y sus relaciones en 3.2.
+Clase
+
+Paquete
+
+Papel en CU-05
+
+Usuario
+
+seguridad
+
+La cuenta del administrador; su atributo rol decide si
+puede entrar al panel.
+
+Aseguradora y Plan
+
+dominio_compartido
+
+Se activan o desactivan (activar() / desactivar()) sin
+borrarlos.
+
+CampoRequerido
+
+dominio_compartido
+
+Los datos que cada aseguradora exige para cotizar;
+se agregan, editan o desactivan.
+
+ReglaInspeccion
+
+dominio_compartido
+
+Si una aseguradora exige inspección según el uso del
+vehículo.
+
+ParametrosComerciales
+
+dominio_compartido
+
+Descuentos, máximo de intentos y de cuotas.
+
+RegistroActividad
+
+comun (propuesta)
+
+Deja constancia de cada cambio con usuario y fecha
+(RNF-12).
+
+Pago, OrdenCompra y Poliza
+
+compra / pagos /
+polizas
+
+De ellas sale el reporte de ventas; canalVenta indica si
+fue autónoma, por asesoría o telemarketing.
+
+Relación entre los pasos del caso de uso y los diagramas
+
+El caso de uso tiene 7 pasos. Se dibujó en 2 diagramas: el primero reúne el acceso y todos
+los cambios de catálogo (los pasos 2 a 5 siguen el mismo camino, por eso se muestran una
+sola vez con sus variantes en recuadros alt), y el segundo muestra los reportes.
+
+Paso del CU-05 (Práctica 1)
+
+Diagrama
+
+Flujos alternativos que muestra
+
+1. Iniciar sesión y abrir el panel
+
+1
+
+1a (usuario sin rol Administrador)
+
+2. Activar o desactivar aseguradora o plan
+
+1
+
+2a (última aseguradora activa)
+
+3. Mantener campos requeridos
+
+1
+
+3a (campo duplicado o inválido), 3b (campo
+con datos)
+
+4. Definir parámetros comerciales
+
+1
+
+4a (valor fuera de rango)
+
+5. Guardar los cambios
+
+1
+
+—
+
+6. Consultar el reporte
+
+2
+
+6a (no hay ventas en el periodo)
+
+7. Cambiar periodo o filtros
+
+2
+
+—
+
+Figura 2.3.5 CU-05: diagrama de secuencia, pasos 1 a 5 (con los flujos alternativos 1a, 2a, 3a, 3b y 4a).
+
+Figura 2.3.5 CU-05: diagrama de secuencia, pasos 6 y 7 (con el flujo alternativo 6a).
+
+Decisiones de diseño de este caso de uso
+1.
+
+Verificación de rol en el backend. El módulo seguridad rechaza las peticiones
+de otros roles aunque la interfaz oculte el botón (RNF-10).
+
+2.
+
+Cambio y rastro en la misma transacción. Cada cambio de catálogo o
+parámetros se guarda junto con su RegistroActividad; si falla uno, se revierte todo
+(RNF-05, RNF-12).
+
+3.
+
+Desactivar, no borrar. Aseguradoras, planes y campos con historial se
+desactivan para no romper cotizaciones ya registradas (RN-16).
+
+4.
+
+Configuración como datos. Campos, inspección y parámetros están en tablas
+del catálogo; una aseguradora nueva equivale a una nueva estrategia más su
+registro en el catálogo (RNF-13).
+
+3. Modelo de base de datos relacional*
+3.1 Entidades y atributos
+El modelo relacional se obtiene del diagrama de clases de la sección 2.2. Una entidad es
+algo del negocio de lo que el sistema debe guardar información de forma permanente; cada
+una pasa a ser una tabla y cada atributo pasa a ser una columna. Esta sección lista las
+entidades y sus atributos; las claves foráneas (los enlaces entre tablas) se explican en la
+sección 3.2, tal como se indicó en 2.2.5 (UML estricto: las claves se definen en el modelo
+relacional).
+
+Criterios usados
+•
+
+Una clase persistente = una entidad. Se tomaron las 19 clases de dominio del
+diagrama de clases y se agregó RegistroActividad (propuesta) para cumplir la
+trazabilidad (RNF-12), con lo que resultan 20 entidades.
+
+•
+
+No son entidades: la interfaz EstrategiaCotizacion y las cinco estrategias
+(EstrategiaRimac, EstrategiaPacifico, EstrategiaLaPositiva, EstrategiaMapfre,
+EstrategiaQualitas). Son lógica de cálculo (código); la tabla Aseguradora solo
+guarda su codigoEstrategia.
+
+•
+
+Identificador. Cada entidad tiene el atributo id como clave primaria.
+
+•
+
+Atributos opcionales. Se marcan con ? (igual que en 2.2.1): admiten valor nulo.
+
+•
+
+Valores enumerados. Los atributos con lista cerrada de valores usan las
+enumeraciones de 2.2.4 (tabla al final de esta sección).
+
+•
+
+Tipos. Los tipos de la columna «Tipo» son conceptuales. Los tipos exactos de
+PostgreSQL, las longitudes y las restricciones son parte de la sección 3.5
+(Integrante 5).
+
+Resumen de las 20 entidades
+N.º
+
+Entidad
+
+Paquete
+
+Origen (requisitos y reglas)
+
+1
+
+Aseguradora
+
+dominio_compartido
+
+RF-27, RN-16
+
+2
+
+Plan
+
+dominio_compartido
+
+RF-27, RN-16
+
+3
+
+CampoRequerido
+
+dominio_compartido
+
+RF-02, RF-03, RF-28, RN-17, RNF-13
+
+4
+
+ReglaInspeccion
+
+dominio_compartido
+
+RF-10, RF-29, RN-25
+
+5
+
+ParametrosComerciales
+
+dominio_compartido
+
+RF-29, RN-07, RN-08, RN-10, RN-12,
+RN-14
+
+6
+
+Usuario
+
+seguridad
+
+RF-31, RF-32, RNF-09, RNF-10
+
+7
+
+Cliente
+
+dominio_compartido
+
+RF-01, RF-07, RNF-08, RNF-11
+
+8
+
+Vehiculo
+
+dominio_compartido
+
+RF-01, RF-02
+
+9
+
+UbicacionUso
+
+dominio_compartido
+
+RF-01, RF-02
+
+10
+
+Cotizacion
+
+cotizacion
+
+RF-07, RF-08, RF-10, RN-01 a RN-06
+
+11
+
+PrimaCotizada
+
+cotizacion
+
+RF-04, RF-05
+
+12
+
+SolicitudAsesoria
+
+asesoria_retencion
+
+RF-11 a RF-15, RN-06
+
+13
+
+Seguimiento
+
+asesoria_retencion
+
+RF-16 a RF-21, RN-10, RN-11, RN-12
+
+14
+
+IntentoContacto
+
+asesoria_retencion
+
+RF-17, RNF-12
+
+15
+
+Descuento
+
+asesoria_retencion
+
+RF-14, RF-20, RN-07, RN-08, RN-09
+
+16
+
+OrdenCompra
+
+compra
+
+RF-09, RF-24, RN-27
+
+17
+
+Pago
+
+pagos
+
+RF-23, RN-14
+
+18
+
+Cuota
+
+pagos
+
+RN-14
+
+19
+
+Poliza
+
+polizas
+
+RF-22, RF-25, RN-15
+
+20
+
+RegistroActividad
+
+comun (propuesta)
+
+RNF-12
+
+Claves foráneas (ver 3.2): Ninguna.
+
+3.1.2 Plan
+Producto que ofrece una aseguradora; es lo que el cliente compara y compra. Paquete:
+dominio_compartido. Origen: RF-27, RN-16.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de datos).
+
+nombre
+
+texto
+
+Nombre del plan.
+
+descripcion
+
+texto
+
+Coberturas o resumen del plan.
+
+activo
+
+verdadero/falso
+
+Indica si se puede cotizar.
+
+Claves foráneas (ver 3.2): aseguradoraId (relación R01).
+
+3.1.3 CampoRequerido
+Dato que una aseguradora exige para cotizar. Es un registro del catálogo y no código fijo,
+para que el administrador lo cambie sin modificar el sistema. Paquete: dominio_compartido.
+Origen: RF-02, RF-03, RF-28, RN-17, RNF-13.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+nombre
+
+texto
+
+Nombre del campo (por ejemplo: marca, modelo, año,
+ubicación).
+
+tipo
+
+enumeración
+TipoCampo
+
+TEXTO, NUMERO o LISTA.
+
+obligatorio
+
+verdadero/falso
+
+Si la aseguradora lo exige.
+
+valoresPermitidos?
+
+lista de texto
+
+Valores válidos cuando el tipo es LISTA.
+
+activo
+
+verdadero/falso
+
+Se desactiva en lugar de eliminarse si ya tiene datos
+(RN-16).
+
+Claves foráneas (ver 3.2): aseguradoraId (R02).
+
+3.1.4 ReglaInspeccion
+Indica, por aseguradora y uso del vehículo, si se exige inspección. Por defecto está activa
+para el transporte de pasajeros (taxi, colectivo y aplicaciones). Paquete:
+dominio_compartido. Origen: RF-10, RF-29, RN-25.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+uso
+
+enumeración
+UsoVehiculo
+
+PARTICULAR, COMERCIAL_LIGERO o
+TRANSPORTE_PASAJEROS.
+
+requiereInspeccion
+
+verdadero/falso
+
+Si ese uso exige inspección en esa aseguradora.
+
+Claves foráneas (ver 3.2): aseguradoraId (R03).
+
+3.1.5 ParametrosComerciales
+Registro único de configuración que concentra los valores del negocio y evita números fijos
+dispersos en el código. Paquete: dominio_compartido. Origen: RF-29, RN-07, RN-08,
+RN-10, RN-12, RN-14.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+descuentoPrimeraCompra
+
+número decimal
+
+Porcentaje de descuento por primera compra (valor
+inicial 5 %, RN-08).
+
+descuentoMaximo
+
+número decimal
+
+Tope de descuento negociable (valor inicial 10 %,
+RN-07).
+
+maxIntentos
+
+número entero
+
+Máximo de intentos de contacto (valor inicial 4, RN-10).
+
+diasSeguimiento
+
+número entero
+
+Días en que se puede contactar (valor inicial 7, RN-10).
+
+maxCuotas
+
+número entero
+
+Máximo de cuotas permitido (RN-14).
+
+vigenciaEnlaceDias
+
+número entero
+
+Días de vigencia del enlace de retoma (valor inicial 7,
+RN-12).
+
+Claves foráneas (ver 3.2): Ninguna. No se relaciona con otras tablas: es una fila de
+configuración.
+
+3.1.6 Usuario
+Cuenta de acceso al sistema. Un cliente puede cotizar sin cuenta; los asesores y
+administradores sí la necesitan. Paquete: seguridad. Origen: RF-31, RF-32, RNF-09,
+RNF-10.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+email
+
+texto
+
+Correo con el que inicia sesión.
+
+hashContrasena
+
+texto
+
+Contraseña protegida con hash (bcrypt); nunca se
+guarda en claro.
+
+rol
+
+enumeración Rol
+
+CLIENTE, ASESOR o ADMINISTRADOR.
+
+activo
+
+verdadero/falso
+
+Si la cuenta puede ingresar.
+
+Claves foráneas (ver 3.2): Ninguna.
+
+3.1.7 Cliente
+Datos personales del comprador, registrados una sola vez para no pedirlos de nuevo
+(registro único de cliente). Paquete: dominio_compartido. Origen: RF-01, RF-07, RNF-08,
+RNF-11.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+nombres
+
+texto
+
+Nombres y apellidos.
+
+numeroDocumento
+
+texto
+
+Documento de identidad; sirve para saber si tuvo póliza
+previa (RN-08).
+
+telefono
+
+texto
+
+Teléfono de contacto.
+
+email
+
+texto
+
+Correo de contacto.
+
+canalPreferido
+
+enumeración
+CanalContacto
+
+LLAMADA o WHATSAPP; es el único canal por el que
+se contacta (RN-10).
+
+Claves foráneas (ver 3.2): usuarioId (R06), opcional.
+
+3.1.8 Vehiculo
+Vehículo que el cliente quiere asegurar. Un cliente puede registrar varios (segmento A: 1 a 2
+autos; segmento B: 1 a 5 vehículos). Paquete: dominio_compartido. Origen: RF-01, RF-02.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+uso
+
+enumeración
+UsoVehiculo
+
+PARTICULAR, COMERCIAL_LIGERO o
+TRANSPORTE_PASAJEROS.
+
+marca
+
+texto
+
+Marca.
+
+modelo
+
+texto
+
+Modelo.
+
+anio
+
+número entero
+
+Año de fabricación.
+
+clase?
+
+texto
+
+Clase del vehículo; solo algunas aseguradoras la piden
+(La Positiva).
+
+tipo?
+
+texto
+
+Tipo del vehículo; solo algunas aseguradoras lo piden
+(La Positiva).
+
+Claves foráneas (ver 3.2): clienteId (R07).
+
+3.1.9 UbicacionUso
+Lugar donde se usa el vehículo. Se separó de Vehiculo porque la ubicación es parte del
+contexto de uso y no una característica del vehículo. Paquete: dominio_compartido.
+Origen: RF-01, RF-02.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+departamento
+
+texto
+
+Departamento de uso.
+
+provincia
+
+texto
+
+Provincia de uso.
+
+distrito
+
+texto
+
+Distrito de uso.
+
+Claves foráneas (ver 3.2): vehiculoId (R08), única.
+
+3.1.10 Cotizacion
+Entidad central: de ella dependen la asesoría, el seguimiento, la compra y el pago.
+Paquete: cotizacion. Origen: RF-07, RF-08, RF-10, RN-01 a RN-06.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+fecha
+
+fecha y hora
+
+Cuándo se registró la cotización.
+
+estado
+
+enumeración
+EstadoCotizacion
+
+REGISTRADA, CONVERTIDA o NO_CONCRETADA.
+
+opcionesHabilitadas
+
+lista de OpcionVenta
+
+COMPRA_INMEDIATA (Opción 1) y/o ASESORIA
+(Opción 2).
+
+motivoDerivacion?
+
+enumeración
+MotivoAsesoria
+
+DUDA, NEGOCIACION, DESCUENTO, INSPECCION o
+NO_ASEGURABLE, cuando se deriva a un asesor.
+
+Claves foráneas (ver 3.2): clienteId (R09) y vehiculoId (R10).
+
+3.1.11 PrimaCotizada
+Resultado de cotizar un plan dentro de una cotización. Permite comparar planes de todas
+las aseguradoras. Paquete: cotizacion. Origen: RF-04, RF-05.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+prima?
+
+número decimal
+
+Prima calculada; vacía si la aseguradora no puede
+cotizar.
+
+disponible
+
+verdadero/falso
+
+Si la aseguradora pudo cotizar ese plan.
+
+Claves foráneas (ver 3.2): cotizacionId (R05) y planId (R04).
+
+3.1.12 SolicitudAsesoria
+Caso asignado a un asesor cuando el cliente pide asesoría o la cotización se deriva.
+Paquete: asesoria_retencion. Origen: RF-11 a RF-15, RN-06.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+motivo
+
+enumeración
+MotivoAsesoria
+
+DUDA, NEGOCIACION, DESCUENTO, INSPECCION o
+NO_ASEGURABLE.
+
+estado
+
+enumeración
+EstadoSolicitud
+
+PENDIENTE, EN_ATENCION o CERRADA.
+
+canal
+
+enumeración
+CanalContacto
+
+LLAMADA o WHATSAPP.
+
+origen
+
+enumeración
+OrigenCaso
+
+SISTEMA (derivación automática) o CLIENTE.
+
+fechaCreacion
+
+fecha y hora
+
+Cuándo se creó el caso.
+
+resultado?
+
+texto
+
+Resultado al cerrar el caso (cerrar(resultado)).
+
+Claves foráneas (ver 3.2): cotizacionId (R11) y asesorId (R12).
+
+3.1.13 Seguimiento
+Gestiona la retención del cliente que no concretó la compra: intentos, cierre y enlace de
+retoma. Es el corazón de CU-04. Paquete: asesoria_retencion. Origen: RF-16 a RF-21,
+RN-10, RN-11, RN-12.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+estado
+
+enumeración
+EstadoSeguimiento
+
+EN_SEGUIMIENTO, CONVERTIDO o DESCARTADO.
+
+intentos
+
+número entero
+
+Cantidad de intentos realizados; el límite es 4 (RN-10).
+
+fechaApertura
+
+fecha y hora
+
+Cuándo entró a la cola; desde aquí corren los 7 días.
+
+fechaCierre?
+
+fecha y hora
+
+Cuándo se cerró el caso.
+
+motivoCierre?
+
+enumeración
+MotivoCierre
+
+PRECIO, YA_CONTRATO, NO_RESPONDE,
+SIN_INTERES u OTRO; obligatorio al cerrar (RN-11).
+
+enlaceToken?
+
+texto
+
+Código aleatorio del enlace de retoma.
+
+enlaceExpiraEn?
+
+fecha y hora
+
+Vencimiento del enlace (7 días, RN-12).
+
+Claves foráneas (ver 3.2): cotizacionId (R13), única.
+
+3.1.14 IntentoContacto
+Cada gestión realizada por el asesor (llamada o WhatsApp) dentro de un seguimiento.
+Paquete: asesoria_retencion. Origen: RF-17, RNF-12.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+canal
+
+enumeración
+CanalContacto
+
+LLAMADA o WHATSAPP.
+
+fecha
+
+fecha y hora
+
+Cuándo se hizo el intento.
+
+resultado
+
+enumeración
+ResultadoIntento
+
+CONTACTADO, NO_RESPONDE, RECHAZA o
+ACEPTA.
+
+Claves foráneas (ver 3.2): seguimientoId (R14) y asesorId (R15).
+
+3.1.15 Descuento
+Descuento ofrecido sobre un plan de la cotización. Respeta el tope y no se acumula con
+otros. Paquete: asesoria_retencion. Origen: RF-14, RF-20, RN-07, RN-08, RN-09.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+tipo
+
+enumeración
+TipoDescuento
+
+PRIMERA_COMPRA o NEGOCIADO.
+
+porcentaje
+
+número decimal
+
+Porcentaje aplicado (5 % primera compra; máximo 10
+%).
+
+aceptado
+
+verdadero/falso
+
+Si el cliente lo aceptó.
+
+Claves foráneas (ver 3.2): cotizacionId (R16), planId (R17) y asesorId (R18).
+
+3.1.16 OrdenCompra
+Formaliza la decisión de compra sobre una de las primas cotizadas. Paquete: compra.
+Origen: RF-09, RF-24, RN-27.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+primaFinal
+
+número decimal
+
+Prima con el descuento aplicado.
+
+aceptaCondiciones
+
+verdadero/falso
+
+El cliente aceptó las condiciones.
+
+firmaSimulada
+
+verdadero/falso
+
+Constancia de la firma simulada (registrarFirma()).
+
+canalVenta
+
+enumeración
+CanalVenta
+
+AUTONOMO, ASESORIA o TELEMARKETING
+(RN-27).
+
+Claves foráneas (ver 3.2): cotizacionId (R19), única, y primaCotizadaId (R20), única.
+
+3.1.17 Pago
+Pago simulado de una orden, único o en cuotas. Paquete: pagos. Origen: RF-23, RN-14.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+monto
+
+número decimal
+
+Monto pagado.
+
+modo
+
+enumeración
+ModoPago
+
+UNICO o CUOTAS.
+
+estado
+
+enumeración
+EstadoPago
+
+PENDIENTE, CONFIRMADO o RECHAZADO.
+
+numeroCuotas?
+
+número entero
+
+Solo cuando el modo es CUOTAS; no puede pasar de
+maxCuotas.
+
+referencia
+
+texto
+
+Referencia de la operación simulada.
+
+Claves foráneas (ver 3.2): ordenCompraId (R21).
+
+3.1.18 Cuota
+Cada una de las cuotas de un pago en cuotas. Paquete: pagos. Origen: RN-14.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+numero
+
+número entero
+
+Número de cuota dentro del pago.
+
+monto
+
+número decimal
+
+Monto de la cuota.
+
+estado
+
+enumeración
+EstadoPago
+
+Estado de la cuota (se propone usar la enumeración
+EstadoPago).
+
+Claves foráneas (ver 3.2): pagoId (R22).
+
+3.1.19 Poliza
+Póliza de demostración emitida cuando el pago queda confirmado. No tiene validez legal.
+Paquete: polizas. Origen: RF-22, RF-25, RN-15.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+numero
+
+texto
+
+Número de póliza de prueba.
+
+fechaEmision
+
+fecha y hora
+
+Cuándo se emitió.
+
+archivoPdf
+
+texto
+
+Ubicación del PDF de demostración.
+
+canalVenta
+
+enumeración
+CanalVenta
+
+Canal al que se atribuye la venta; alimenta los reportes
+de CU-05.
+
+Claves foráneas (ver 3.2): ordenCompraId (R23), única.
+
+3.1.20 RegistroActividad
+Bitácora de acciones críticas: quién hizo qué y cuándo. No aparece en el diagrama de
+clases (2.2); se propone porque el diagrama de paquetes (base_de_datos) y el RNF-12
+piden trazabilidad con usuario y fecha. Paquete: comun (propuesta). Origen: RNF-12.
+Atributo
+
+Tipo
+
+Descripción
+
+id
+
+identificador único
+
+Identificador del objeto (clave primaria en la base de
+datos).
+
+accion
+
+texto
+
+Qué se hizo (por ejemplo: desactivar aseguradora,
+registrar intento).
+
+entidad
+
+texto
+
+Entidad afectada.
+
+fecha
+
+fecha y hora
+
+Cuándo ocurrió.
+
+Claves foráneas (ver 3.2): usuarioId (R24).
+
+Enumeraciones
+Valores permitidos para los atributos de lista cerrada (las mismas de la sección 2.2.4).
+Enumeración
+
+Valores
+
+Se usa en
+
+Rol
+
+CLIENTE, ASESOR, ADMINISTRADOR
+
+Usuario
+
+UsoVehiculo
+
+PARTICULAR, COMERCIAL_LIGERO,
+TRANSPORTE_PASAJEROS
+
+Vehiculo, ReglaInspeccion
+
+CanalContacto
+
+LLAMADA, WHATSAPP
+
+Cliente, SolicitudAsesoria,
+IntentoContacto
+
+EstadoCotizacion
+
+REGISTRADA, CONVERTIDA,
+NO_CONCRETADA
+
+Cotizacion
+
+OpcionVenta
+
+COMPRA_INMEDIATA, ASESORIA
+
+Cotizacion
+
+MotivoAsesoria
+
+DUDA, NEGOCIACION, DESCUENTO,
+INSPECCION, NO_ASEGURABLE
+
+Cotizacion, SolicitudAsesoria
+
+OrigenCaso
+
+SISTEMA, CLIENTE
+
+SolicitudAsesoria
+
+EstadoSolicitud
+
+PENDIENTE, EN_ATENCION, CERRADA
+
+SolicitudAsesoria
+
+TipoDescuento
+
+PRIMERA_COMPRA, NEGOCIADO
+
+Descuento
+
+EstadoSeguimiento
+
+EN_SEGUIMIENTO, CONVERTIDO,
+DESCARTADO
+
+Seguimiento
+
+MotivoCierre
+
+PRECIO, YA_CONTRATO, NO_RESPONDE,
+SIN_INTERES, OTRO
+
+Seguimiento
+
+ResultadoIntento
+
+CONTACTADO, NO_RESPONDE, RECHAZA,
+ACEPTA
+
+IntentoContacto
+
+ModoPago
+
+UNICO, CUOTAS
+
+Pago
+
+EstadoPago
+
+PENDIENTE, CONFIRMADO, RECHAZADO
+
+Pago, Cuota
+
+CanalVenta
+
+AUTONOMO, ASESORIA, TELEMARKETING
+
+OrdenCompra, Poliza
+
+TipoCampo
+
+TEXTO, NUMERO, LISTA
+
+CampoRequerido
+
+3.2 Relaciones y cardinalidades
+Una relación une dos entidades y la cardinalidad indica cuántos registros de una entidad
+se enlazan con cuántos de la otra. Se lee en ambos sentidos: «Cliente 1 : * Vehiculo»
+significa que un cliente tiene muchos vehículos y que cada vehículo pertenece a un solo
+cliente. Las cardinalidades y los tipos de relación se toman del diagrama de clases de la
+sección 2.2.
+
+Cómo se pasa de las asociaciones a claves foráneas
+Cardinalidad
+
+Qué se hace en la base de datos
+
+Ejemplo
+
+1 : * (uno a muchos)
+
+La clave foránea (FK) va en la tabla del lado
+«muchos».
+
+Vehiculo.clienteId apunta a
+Cliente.
+
+1 : 1 y 1 : 0..1
+
+FK en la tabla dependiente, marcada como
+única para impedir un segundo registro.
+
+UbicacionUso.vehiculoId es
+única.
+
+0..1 : 0..1
+
+FK única que admite nulo en la tabla que puede
+existir sin la otra.
+
+Cliente.usuarioId (un cliente
+puede no tener cuenta).
+
+* : * (muchos a muchos)
+
+Se necesitaría una tabla intermedia. Este
+modelo no tiene ninguna: la relación entre
+Cotizacion y Plan ya la resuelve la entidad
+PrimaCotizada.
+
+Cotizacion — PrimaCotizada
+— Plan.
+
+Tipos de relación
+Tipo
+
+Significado
+
+Cantidad
+
+Composición (rombo lleno)
+
+La parte no existe sin el todo; si desaparece el todo,
+desaparecen sus partes.
+
+5 (R05, R08, R14, R21,
+R22)
+
+Agregación (rombo vacío)
+
+La parte tiene existencia propia aunque pertenezca
+a un todo.
+
+3 (R01, R02, R03)
+
+Asociación (línea simple)
+
+Las entidades se relacionan pero son
+independientes.
+
+16
+
+Tabla de relaciones y cardinalidades
+N.º
+
+Relación
+
+Cardinalidad
+
+Tipo
+
+Clave foránea
+resultante
+
+Justificación
+
+R01
+
+Aseguradora — Plan
+
+1:*
+
+Agregación
+
+Plan.aseguradoraId
+
+Cada aseguradora ofrece
+varios planes; un plan
+pertenece a una sola. Se
+desactivan, no se borran
+(RN-16).
+
+R02
+
+Aseguradora —
+CampoRequerido
+
+1:*
+
+Agregación
+
+CampoRequerido.asegur
+adoraId
+
+Cada aseguradora exige sus
+propios campos para cotizar
+(RF-02, RN-17).
+
+R03
+
+Aseguradora —
+ReglaInspeccion
+
+1:*
+
+Agregación
+
+ReglaInspeccion.asegura
+doraId
+
+Una regla por aseguradora y
+uso del vehículo (RN-25).
+
+R04
+
+Plan —
+PrimaCotizada
+
+1:*
+
+Asociación
+
+PrimaCotizada.planId
+
+Un plan se cotiza en muchas
+cotizaciones; cada prima
+corresponde a un solo plan.
+
+R05
+
+Cotizacion —
+PrimaCotizada
+
+1:*
+
+Composició
+n
+
+PrimaCotizada.cotizacion
+Id
+
+Una cotización reúne las
+primas de todos los planes;
+sin cotización no existe la
+prima.
+
+R06
+
+Usuario — Cliente
+
+0..1 : 0..1
+
+Asociación
+
+Cliente.usuarioId (única,
+admite nulo)
+
+Un cliente puede cotizar sin
+cuenta; si la tiene, es una
+sola.
+
+R07
+
+Cliente — Vehiculo
+
+1:*
+
+Asociación
+
+Vehiculo.clienteId
+
+Un cliente registra varios
+vehículos (hasta 5 en el
+segmento B).
+
+R08
+
+Vehiculo —
+UbicacionUso
+
+1:1
+
+Composició
+n
+
+UbicacionUso.vehiculoId
+(única)
+
+Cada vehículo tiene una
+ubicación de uso; sin
+vehículo no tiene sentido.
+
+R09
+
+Cliente — Cotizacion
+
+1:*
+
+Asociación
+
+Cotizacion.clienteId
+
+Un cliente puede hacer
+muchas cotizaciones.
+
+R10
+
+Vehiculo —
+Cotizacion
+
+1:*
+
+Asociación
+
+Cotizacion.vehiculoId
+
+Un vehículo puede cotizarse
+varias veces.
+
+R11
+
+Cotizacion —
+SolicitudAsesoria
+
+1:*
+
+Asociación
+
+SolicitudAsesoria.cotizaci
+onId
+
+Una cotización puede originar
+varias solicitudes de
+asesoría.
+
+R12
+
+Usuario (asesor) —
+SolicitudAsesoria
+
+1:*
+
+Asociación
+
+SolicitudAsesoria.asesorI
+d
+
+Un asesor atiende muchas
+solicitudes; cada una tiene un
+asesor.
+
+R13
+
+Cotizacion —
+Seguimiento
+
+1 : 0..1
+
+Asociación
+
+Seguimiento.cotizacionId
+(única)
+
+Solo las cotizaciones no
+concretadas entran a la cola,
+y una sola vez.
+
+R14
+
+Seguimiento —
+IntentoContacto
+
+1:*
+
+Composició
+n
+
+IntentoContacto.seguimie
+ntoId
+
+Un seguimiento tiene hasta 4
+intentos; un intento no existe
+fuera de su seguimiento
+(RN-10).
+
+R15
+
+Usuario (asesor) —
+IntentoContacto
+
+1:*
+
+Asociación
+
+IntentoContacto.asesorId
+
+Cada intento lo ejecuta un
+asesor y queda con su
+nombre (RNF-12).
+
+R16
+
+Cotizacion —
+Descuento
+
+1:*
+
+Asociación
+
+Descuento.cotizacionId
+
+El descuento se asocia a la
+cotización (RN-08, RN-09).
+
+R17
+
+Plan — Descuento
+
+1:*
+
+Asociación
+
+Descuento.planId
+
+El descuento se ofrece sobre
+un plan concreto.
+
+R18
+
+Usuario (asesor) —
+Descuento
+
+1:*
+
+Asociación
+
+Descuento.asesorId
+
+Queda registrado qué asesor
+ofreció el descuento.
+
+R19
+
+Cotizacion —
+OrdenCompra
+
+1 : 0..1
+
+Asociación
+
+OrdenCompra.cotizacionI
+d (única)
+
+Una cotización genera como
+máximo una orden.
+
+R20
+
+PrimaCotizada —
+OrdenCompra
+
+1 : 0..1
+
+Asociación
+
+OrdenCompra.primaCotiz
+adaId (única)
+
+La orden elige una de las
+primas cotizadas.
+
+R21
+
+OrdenCompra —
+Pago
+
+1:*
+
+Composició
+n
+
+Pago.ordenCompraId
+
+Una orden se paga en uno o
+varios pagos.
+
+R22
+
+Pago — Cuota
+
+1:*
+
+Composició
+n
+
+Cuota.pagoId
+
+Un pago en cuotas se divide
+en varias cuotas (RN-14).
+
+R23
+
+OrdenCompra —
+Poliza
+
+1 : 0..1
+
+Asociación
+
+Poliza.ordenCompraId
+(única)
+
+La póliza se emite una vez
+confirmado el pago (RN-15).
+
+R24
+
+Usuario —
+RegistroActividad
+
+1:*
+
+Asociación
+
+RegistroActividad.usuario
+Id
+
+Cada acción registrada
+pertenece a un usuario
+(RNF-12).
+
+Resumen: 24 relaciones (5 composiciones, 3 agregaciones y 16 asociaciones); 6 claves
+foráneas únicas (R06, R08, R13, R19, R20 y R23) y ninguna relación de muchos a muchos.
+
+Diagrama de relaciones y cardinalidades
+
+Figura 3.2 Entidades del SVAS y sus relaciones. El nombre sobre cada línea es la clave foránea, que
+queda en la tabla del lado dependiente.
+
+3.3 Diagrama entidad-relación (DER) → *Integrante 4*
+
+3.4 Normalización → *Integrante 4*
+
+3.5 Diseño físico (tablas, tipos de datos, claves y restricciones) → *Integrante 5*
+
+4. Diseño arquitectónico*
+4.1 Diseño arquitectónico, lógico y físico → *Integrante 5*
+4.2 Diagrama de componentes → *Integrante 5*
+
+

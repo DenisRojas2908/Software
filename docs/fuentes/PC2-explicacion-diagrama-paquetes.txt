@@ -1,0 +1,404 @@
+Explicación del Diagrama de Paquetes — SVAS
+Oct 26, 2026 · @Charlie
+
+1. Propósito del diagrama
+El diagrama de paquetes presenta la organización lógica del Sistema de Venta Autónoma de Seguros
+Vehiculares (SVAS) y muestra qué partes del sistema dependen de cuáles. Es una vista de alto nivel: no
+describe atributos ni métodos de clases, sino cómo se agrupan las responsabilidades del sistema y en
+qué dirección fluyen las dependencias.
+Este diagrama cumple tres funciones en el proyecto. Primero, hace visible la arquitectura en capas
+definida en la sección 9 del análisis (frontend, backend y base de datos). Segundo, permite verificar que
+el diseño modular exigido por los requisitos RNF-13, RNF-14 y RNF-15 se cumple, es decir, que los
+módulos de cotización, compra, asesoría y retención, y pagos son independientes y que los componentes
+simulados pueden reemplazarse sin alterar el flujo de venta. Tercero, sirve de base para el diagrama de
+clases, que detalla el contenido de cada paquete.
+
+2. Criterios de organización
+Los paquetes se agruparon con dos criterios combinados, aplicados de forma deliberada: primero por
+capa técnica y, dentro de la capa de negocio, por módulo funcional.
+•​ Arquitectura en capas. El sistema se divide en Presentación, Negocio y Datos e integración, más
+una capa transversal. Las dependencias fluyen de arriba hacia abajo: la presentación usa al
+negocio y el negocio usa a los datos, nunca al revés.
+•​ Monolito modular. El backend es una sola aplicación desplegable, organizada en módulos de
+una sola responsabilidad: cotizar, comprar, gestionar asesoría y retención, pagar, emitir pólizas y
+administrar. Cada módulo corresponde a un subproceso de los DFD de nivel 1.
+•​ Alta cohesión y bajo acoplamiento. Cada paquete reúne elementos que cambian por las mismas
+razones, y las dependencias entre paquetes se limitaron a las que el flujo de datos del DFD exige.
+•​ Sin dependencias circulares. Ningún paquete depende, directa o indirectamente, de otro que
+dependa de él. El único punto donde aparecía un ciclo posible (cotización y asesoría) se resolvió
+como se explica en la sección 5.
+•​ Lo externo se separa de lo interno. Los usuarios, la base de datos y los sistemas de terceros se
+dibujan fuera de las capas, con el estereotipo «external».
+La pila tecnológica del proyecto es React con TypeScript en el frontend, NestJS con TypeScript en el
+backend y PostgreSQL en Supabase como base de datos.
+
+3. Descripción de capas y paquetes
+3.1 Capa de Presentación (frontend)
+Corresponde a la aplicación de una sola página (SPA) desarrollada en React con TypeScript, responsiva y
+pensada primero para el celular (RNF-07). Contiene cinco paquetes, uno por cada área de interfaz:
+
+•​ cotizador: formulario de cotización generado de forma dinámica a partir del catálogo de campos
+y comparativo de planes y primas de las aseguradoras (CU-01).
+•​ seleccion_canal: pantalla donde el cliente elige entre la Opción 1 (compra inmediata autónoma)
+y la Opción 2 (solicitud de asesoría o descuento), según las reglas de derivación (RF-08 a RF-10).
+•​ pago_poliza: captura de datos faltantes, pago simulado, descarga de la póliza en PDF y consulta
+del estado de la solicitud (CU-02, RF-26).
+•​ panel_asesor: cola de asesoría y cola de seguimiento de cotizaciones no concretadas (CU-03 y
+CU-04).
+•​ panel_admin: gestión del catálogo, los parámetros comerciales y los reportes (CU-05).
+
+3.2 Capa de Negocio (backend)
+Es la aplicación NestJS con TypeScript, organizada como monolito modular. Concentra las reglas del
+negocio y se divide en dos grupos de paquetes.
+Módulos de negocio. Cada uno atiende un subproceso del DFD de nivel 1:
+•​ cotizacion: valida los datos contra el catálogo de campos, verifica el nicho y la asegurabilidad,
+aplica las reglas de derivación y calcula la prima de cada aseguradora. Contiene el subpaquete
+estrategia, que implementa el patrón Strategy: una interfaz común de cotización y una
+implementación por aseguradora (CU-01, subproceso 1.0).
+•​ compra: gestiona la Opción 1. Reutiliza los datos ya capturados, registra la firma simulada, aplica
+el descuento que corresponda sin acumularlos y genera la orden de compra que activa el pago
+(CU-02, subproceso 2.0).
+•​ asesoria_retencion: agrupa dos subpaquetes que comparten la misma cola de casos y el mismo
+rol de asesor. asesoria atiende la Opción 2: solicitudes del cliente, cola ordenada por prioridad y
+descuento negociado dentro del rango máximo. retencion gestiona el seguimiento de
+cotizaciones no concretadas: control de intentos y canal preferido, motivo de cierre y enlace de
+retoma (CU-03 y CU-04, subprocesos 5.0 y 6.0).
+•​ pagos: calcula el monto único o por cuota y registra el pago confirmado por la pasarela simulada
+(subproceso 3.0).
+•​ polizas: solicita la emisión a la aseguradora, genera el PDF de demostración, registra la venta con
+su canal y atiende la consulta de estado (subproceso 4.0).
+•​ administracion: mantiene aseguradoras, planes, campos y parámetros, y genera los reportes de
+ventas por canal, aseguradora y plan (CU-05, subproceso 7.0).
+dominio_compartido. Reune las entidades que usan varios módulos: catalogo (aseguradoras, planes,
+campos requeridos y parámetros como el descuento por primera compra, el rango máximo de descuento
+y el máximo de intentos) y cliente (registro único de cliente y vehículo con su canal preferido, que evita
+volver a pedir los mismos datos). Corresponden a los almacenes D1 y D2 del DFD.
+
+3.3 Capa de Datos e integración
+•​ persistencia: acceso a datos mediante repositorios que usan el cliente de Supabase. Garantiza
+que la compra, el pago y la emisión se registren de forma consistente (RNF-05).
+•​ integracion: contiene los componentes que conectan el sistema con el exterior, cada uno con
+una interfaz común y una implementación simulada en esta versión: pasarela (pago),
+
+aseguradora (emisión y número de póliza de prueba) y pdf (generación de la póliza con la
+leyenda de documento de demostración).
+
+3.4 Capa transversal
+Incluye seguridad (autenticación y control de acceso por rol: Cliente, Asesor y Administrador, aplicado en
+el backend, RF-31, RF-32 y RNF-10) y comun (trazabilidad de acciones críticas, manejo de errores y
+configuración). Las tres capas dependen de ella.
+
+3.5 Paquetes externos
+•​ usuarios: cliente, asesor y administrador, que usan la capa de presentación.
+•​ base_de_datos: PostgreSQL en Supabase, con los almacenes D1 a D6 y el registro de actividad.
+•​ sistemas_externos: aseguradoras y pasarela de pago reales. Quedan fuera de esta versión y se
+integrarán a futuro reemplazando los componentes simulados.
+
+4. Dependencias entre paquetes
+Las flechas punteadas del diagrama indican dependencia «use» y apuntan al paquete del que se
+depende. La tabla explica cada una y el flujo de datos del DFD que la justifica.
+Origen
+
+Destino
+
+Motivo de la dependencia
+
+usuarios
+
+Presentación
+
+Cliente, asesor y administrador interactúan con la
+interfaz web.
+
+Presentación
+
+Negocio
+
+El frontend consume la API REST del backend
+(HTTPS y JSON).
+
+Presentación, Negocio
+y Datos
+
+transversal
+
+Todas las capas usan la seguridad por rol y la
+trazabilidad.
+
+asesoria_retencion
+
+cotizacion
+
+Lee la cotización asociada a una solicitud y las
+cotizaciones no concretadas (F41, F45).
+
+compra
+
+cotizacion
+
+Toma el plan y la prima seleccionados y cambia la
+cotización a convertida (F27, F32).
+
+compra
+
+asesoria_retencion
+
+Recibe el descuento negociado que el cliente
+aceptó (F30).
+
+compra
+
+pagos
+
+Entrega la orden de compra para procesar el pago
+(F33).
+
+compra
+
+polizas
+
+Una vez confirmado el pago, dispara la emisión y la
+generación del PDF.
+
+polizas
+
+pagos
+
+Necesita el pago confirmado para habilitar la
+emisión y consultar su estado (F35, F38).
+
+Origen
+
+Destino
+
+Motivo de la dependencia
+
+administracion
+
+pagos y polizas
+
+Consolida pagos y ventas para los reportes (F50,
+F51).
+
+cotizacion, compra,
+asesoria_retencion,
+polizas y
+administracion
+
+dominio_compartido
+
+Usan el catálogo, los parámetros y el registro de
+cliente y vehículo (F23, F28, F29, F42, F46).
+
+pagos
+
+pasarela
+
+Registra el pago a través de la pasarela simulada,
+reemplazable (RF-23).
+
+polizas
+
+aseguradora y pdf
+
+Solicita la emisión y genera la póliza descargable
+(RF-22, RF-25).
+
+Negocio
+
+persistencia
+
+Lee y escribe los almacenes de datos mediante
+repositorios.
+
+persistencia
+
+base_de_datos
+
+Se conecta a PostgreSQL en Supabase.
+
+integracion
+
+sistemas_externos
+
+A futuro, los componentes simulados se
+reemplazan por las integraciones reales.
+
+El diagrama no dibuja una flecha de cada módulo hacia persistencia, ni de seguridad y comun hacia cada
+módulo, para no saturar la imagen: se muestran a nivel de capa.
+
+5. Decisiones de diseño
+Resolución del ciclo entre cotización y asesoría. Cuando un vehículo no es asegurable en línea o exige
+inspección, el módulo de cotización debe derivar el caso a la cola de asesoría. A su vez, asesoría necesita
+leer las cotizaciones. Si ambos módulos se llamaran directamente, aparecería una dependencia circular.
+Para evitarla, cotización define un puerto (una interfaz) llamado DerivadorCasos y el módulo de asesoría
+lo implementa. Así la dependencia queda en un solo sentido: asesoría depende de cotización. Es una
+aplicación del principio de inversión de dependencias.
+Componentes de integración reemplazables. Los paquetes pasarela, aseguradora y pdf exponen una
+interfaz común, y en esta versión solo existe la implementación simulada (RN-26). Cambiar a la
+integración real no modifica el flujo de venta, lo que cumple RNF-15.
+Patrón Strategy dentro de cotización. El subpaquete estrategia aplica el principio abierto/cerrado:
+incorporar una aseguradora nueva consiste en agregar una implementación y registrar sus campos en el
+catálogo, sin modificar el servicio de cotización ni las demás estrategias (RNF-13).
+Dominio sin dependencias salientes. El paquete dominio_compartido solo recibe dependencias. No
+depende de la persistencia ni de la interfaz, de modo que las reglas y entidades del negocio pueden
+probarse de forma aislada (RNF-16).
+
+Flujo dual separado de la negociación. Los paquetes compra y asesoria_retencion son independientes
+entre sí salvo por un punto: la compra con precio negociado, que compra obtiene de asesoría. Esto
+refleja la decisión de diseño central del proyecto, que no mezcla la venta autónoma con la negociación.
+Correspondencia con NestJS. Cada paquete del backend puede implementarse como un módulo de
+NestJS con su controlador y su servicio, y las dependencias del diagrama se traducen en las
+importaciones entre módulos. Esta correspondencia es una propuesta de implementación, a confirmar al
+pasar al diseño detallado.
+
+6. Trazabilidad con los requisitos
+La tabla relaciona cada paquete con los casos de uso, los subprocesos del DFD, los requisitos funcionales
+y los objetivos específicos que lo originan.
+Paquete
+
+Caso de uso / DFD
+
+Requisitos principales
+
+Objetivo
+
+cotizador (frontend)
+
+CU-01
+
+RF-01, RF-02, RF-05
+
+OE1
+
+seleccion_canal
+(frontend)
+
+CU-02, CU-03
+
+RF-08 a RF-10
+
+OE2
+
+pago_poliza (frontend)
+
+CU-02
+
+RF-23, RF-25, RF-26
+
+OE4
+
+panel_asesor (frontend)
+
+CU-03, CU-04
+
+RF-13 a RF-21
+
+OE2, OE3
+
+panel_admin (frontend)
+
+CU-05
+
+RF-27 a RF-30
+
+OE5
+
+cotizacion
+
+CU-01 · DFD 1.0
+
+RF-01 a RF-08
+
+OE1
+
+compra
+
+CU-02 · DFD 2.0
+
+RF-09, RF-10, RF-24
+
+OE2
+
+asesoria_retencion
+
+CU-03, CU-04 · DFD 5.0 y
+6.0
+
+RF-11 a RF-21
+
+OE2, OE3
+
+pagos
+
+DFD 3.0
+
+RF-23
+
+OE4
+
+polizas
+
+DFD 4.0
+
+RF-22, RF-25, RF-26
+
+OE4
+
+administracion
+
+CU-05 · DFD 7.0
+
+RF-27 a RF-30
+
+OE5
+
+dominio_compartido
+
+Almacenes D1 y D2
+
+RF-02, RF-07, RF-29
+
+OE1
+
+integracion
+
+DFD 3.0 y 4.0
+
+RF-22, RF-23, RF-25 · RNF-15
+
+OE4
+
+persistencia
+
+Almacenes D1 a D6
+
+RNF-05
+
+OE6
+
+seguridad
+
+Transversal
+
+RF-31, RF-32 · RNF-10
+
+Transversal
+
+comun
+
+Transversal
+
+RNF-12
+
+Transversal
+
+7. Conclusión
+El diagrama de paquetes organiza el SVAS en tres capas y una capa transversal, con módulos de negocio
+independientes y dependencias que fluyen siempre de arriba hacia abajo y sin ciclos. La separación entre
+los módulos de cotización, compra, asesoría y retención, y pagos, junto con los componentes de
+integración reemplazables, responde directamente a los requisitos de mantenibilidad y extensibilidad
+(RNF-13 a RNF-15). Cada paquete es trazable a un caso de uso, a un subproceso del DFD y a un objetivo
+específico, lo que permite pasar al diagrama de clases con una división de responsabilidades ya definida.
+
+
