@@ -1,3 +1,5 @@
+@docs/ESTADO.md
+
 # SVAS — Simulación del Sistema de Venta Autónoma de Seguros
 
 Proyecto integrador del curso **Ingeniería de Software (SI707V, UNI-FIIS, 2026-2), Grupo 4**.
@@ -74,9 +76,18 @@ demo/                 herramientas de simulación (solo con DEMO_MODE=true)
 - **Git**: rama por fase `feat/fN-nombre`; commits pequeños en español con prefijo convencional y el CU (`feat(cotizacion): CU-01 comparativo con opciones habilitadas`). Merge a `main` al cerrar la fase con tests en verde. Esto es parte de la competencia "gestión de configuración" del curso.
 - **Definición de terminado de una fase**: (1) criterios de aceptación cumplidos; (2) `npm test` en verde; (3) `npm run dev` levanta todo; (4) el seed permite demostrar la fase; (5) `docs/trazabilidad.md` y `docs/sustentacion.md` actualizados.
 - `docs/trazabilidad.md`: tabla RF / RN / CU → archivo(s) → test(s).
-- `docs/sustentacion.md`: por módulo, 5–8 líneas en lenguaje simple: qué hace, dónde está la regla, qué patrón o principio aplica, y 1–2 preguntas probables del profesor con su respuesta.
+- `docs/sustentacion.md`: por fase, preguntas probables del jurado, respuesta en 3 líneas y archivo donde se ve.
 - Ante dos opciones equivalentes, elige la que **menos código** añade. Simple y que funcione en la demo > "enterprise".
 - No edites `docs/02-especificacion.md` por tu cuenta: si encuentras un hueco, regístralo en `docs/04-decisiones.md` y avísame.
+
+## Memoria y checkpoints
+La memoria del proyecto vive en el repo (en la nube la auto memory no sobrevive entre sesiones).
+- `docs/ESTADO.md` (≤ 40 líneas, se sobrescribe): dónde quedamos y el siguiente paso. Se carga arriba con `@`.
+- `docs/BITACORA.md` (solo se agrega; lo más reciente arriba) · `docs/MAPA.md` (código explicado para quien sabe Python) · `docs/COMO_CAMBIAR.md` (dónde se cambia cada parámetro/texto) · `docs/GUIA_DEMO.md` (desde F7). Lee BITACORA y MAPA solo cuando los necesites.
+- Al iniciar una sesión: skill `retomar`.
+- Checkpoint (skill `checkpoint`): al terminar cada paso importante, al cerrar cada fase (skill `cerrar-fase`), antes de una tarea larga, antes de detenerte y si pasaron más de 60 min desde el último (compara `TZ=America/Lima date` con ESTADO.md).
+- Los checkpoints hacen push a la rama `feat/fN-…`; el merge a `main` solo lo hace `cerrar-fase`, con el CI en verde (D-23).
+- Cambios pedidos por Denis: `/cambio <pedido>`. Auditoría al cerrar F4 y F7: subagente `auditor`. Ensayo de demo: skill `demo` (desde F7).
 
 ## Comandos (los crea la fase 0; mantén esta sección actualizada)
 `npm install` · `npm run dev` · `npm test` · `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` · `npm run build` · `npm start`
