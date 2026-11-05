@@ -34,7 +34,7 @@ Marca o desmarca para **activar/desactivar** una aseguradora o un plan. Lo desac
 ![Campos](capturas/admin-campos-1366.png)
 
 ## 4. Inspección — RF-29, RN-25
-Matriz aseguradora × uso. Marcado = ese uso en esa aseguradora **exige inspección**: el plan solo se vende con asesoría (Opción 2) y el caso se deriva solo a la cola.
+Matriz aseguradora × uso. Marcado = ese uso en esa aseguradora **exige inspección**: sus planes solo se venden con asesoría (Opción 2). Si para ese vehículo **ninguna** aseguradora permite la Opción 1, el caso se deriva solo a la cola de asesoría (motivo inspección).
 
 ![Inspección](capturas/admin-inspeccion-1366.png)
 
@@ -48,7 +48,7 @@ Matriz aseguradora × uso. Marcado = ese uso en esa aseguradora **exige inspecci
 | Máximo de cuotas | 12 | RN-14 (mínimo 2) |
 | Vigencia del enlace de retoma | 7 días | RN-12 |
 
-Los valores fuera de rango se rechazan con el error en el campo.
+Los valores fuera de rango se rechazan: no se guarda nada y debajo del formulario se indica qué parámetro está mal y por qué.
 
 ![Parámetros](capturas/admin-parametros-1366.png)
 
@@ -75,4 +75,4 @@ Con `DEMO_MODE=false` (en `apps/api/.env`) estas herramientas no existen.
 ![Demo](capturas/demo-1366.png)
 
 ## 9. Guion de demo
-Ver `docs/GUIA_DEMO.md` (10 pasos). Ensayo automático: con la app corriendo, `node scripts/guion-demo.cjs capturas-demo`.
+Ver `docs/GUIA_DEMO.md` (10 pasos). Ensayo automático (opcional; requiere Playwright, que viene instalado en la sesión en la nube, no en el proyecto): con la app corriendo, `node scripts/guion-demo.cjs capturas-demo`.
