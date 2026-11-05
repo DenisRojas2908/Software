@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -44,9 +45,11 @@ export function renderizar(
   }
   const fetchFalso = simularApi(respuestas);
   const resultado = render(
-    <MemoryRouter initialEntries={[opciones.ruta ?? '/']}>
-      <ProveedorSesion>{ui}</ProveedorSesion>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter initialEntries={[opciones.ruta ?? '/']}>
+        <ProveedorSesion>{ui}</ProveedorSesion>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
   return { ...resultado, fetchFalso };
 }
