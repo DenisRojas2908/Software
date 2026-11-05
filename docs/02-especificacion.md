@@ -114,7 +114,7 @@ Prioridad 5 = máxima.
 - Primera compra: se evalúa cuando se conoce el `numeroDocumento` (paso de datos faltantes en CU-02, o al entrar por enlace de retoma). Si no hay póliza previa con ese documento → `Descuento { tipo: PRIMERA_COMPRA, porcentaje, aceptado: true, asesorId: null }`.
 - Negociado: `Descuento { tipo: NEGOCIADO, asesorId, planId, porcentaje ≤ max }`; `aceptado = true` cuando el asesor registra que el cliente aceptó.
 - `primaFinal = round(prima × (1 − porcentaje/100), 2)`.
-- `atribuirCanal(origen)` (RN-27): enlace de retoma válido o descuento aceptado en seguimiento → TELEMARKETING; descuento NEGOCIADO aceptado → ASESORIA; si no → AUTONOMO. Se fija al crear la `OrdenCompra` y se copia a la `Poliza` al emitir.
+- `atribuirCanal(origen)` (RN-27): enlace de retoma válido o descuento aceptado en seguimiento → TELEMARKETING; descuento NEGOCIADO aceptado → ASESORIA; si no → AUTONOMO. Al crear la `OrdenCompra` el canal es **provisional**; el que vale se calcula **dentro de la transacción de pago** y se copia a la `Poliza` al emitir (D-28, corregido con autorización de Denis).
 
 ## 7. Estados
 - **Cotizacion**: `REGISTRADA` → `CONVERTIDA` (pago confirmado) | `NO_CONCRETADA` (abandono, o rechazo en asesoría). Una NO_CONCRETADA puede volver a CONVERTIDA si luego compra (por enlace o por su cuenta).
