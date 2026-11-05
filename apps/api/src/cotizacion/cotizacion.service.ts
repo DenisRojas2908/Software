@@ -13,6 +13,7 @@ import { SimuladorFallos } from '../integracion/simulacion/simulador-fallos';
 import { PrismaService } from '../persistencia/prisma.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
 import { verificarPropiedad } from '../seguridad/propiedad';
+import { habilitadaPorAsesoria } from '../compra/dominio/habilitada-por-asesoria';
 import { DERIVADOR_CASOS, DerivadorCasos } from './derivador-casos';
 import { calcularOpciones } from './dominio/calcular-opciones';
 import { evaluarNicho } from './dominio/evaluar-nicho';
@@ -151,8 +152,13 @@ export class CotizacionService {
       include: {
         vehiculo: { include: { cliente: true, ubicacion: true } },
         opciones: true,
-        primas: { include: { plan: { include: { aseguradora: true } } } },
+        // orden estable: aseguradora y luego plan
+        primas: {
+          include: { plan: { include: { aseguradora: true } } },
+          orderBy: [{ plan: { aseguradora: { nombre: 'asc' } } }, { plan: { nombre: 'asc' } }],
+        },
         solicitudes: { orderBy: { fechaCreacion: 'desc' } },
+        descuentos: true,
       },
     });
     if (!c) throw new NotFoundException('Cotización no encontrada');
@@ -180,6 +186,9 @@ export class CotizacionService {
         descripcion: p.plan.descripcion,
         prima: p.prima === null ? null : Number(p.prima),
         ...porPlan[i],
+        // D-30: tras una asesoría aceptada el plan se puede comprar aunque exija inspección
+        habilitadaPorAsesoria:
+          p.prima !== null && habilitadaPorAsesoria(c.solicitudes, c.descuentos, p.planId),
       });
       aseguradoras.set(a.id, grupo);
     });

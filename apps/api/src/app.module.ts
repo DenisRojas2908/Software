@@ -11,6 +11,7 @@ import { CotizacionModule } from './cotizacion/cotizacion.module';
 import { IntegracionModule } from './integracion/integracion.module';
 import { CompraModule } from './compra/compra.module';
 import { PolizasModule } from './polizas/polizas.module';
+import { AsesoriaRetencionModule } from './asesoria-retencion/asesoria-retencion.module';
 
 // D-01: en producción Nest sirve también el build de la SPA → un proceso, una URL.
 const rutaWeb = join(__dirname, '..', '..', 'web', 'dist');
@@ -29,6 +30,7 @@ const servirWeb = existsSync(rutaWeb)
     CotizacionModule,
     CompraModule,
     PolizasModule,
+    AsesoriaRetencionModule,
     AdministracionModule,
   ],
 })
