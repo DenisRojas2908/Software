@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { resolverDescuento } from '../compra/dominio/descuentos';
+import { descuentoRegistrado } from '../compra/dominio/descuentos';
 import { GENERADOR_PDF, GeneradorPdf } from '../integracion/pdf/generador-pdf';
 import { PrismaService } from '../persistencia/prisma.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
@@ -45,20 +45,10 @@ export class PolizaService {
     const pago = o.pagos[0];
     const prima = Number(o.primaCotizada.prima ?? o.primaFinal);
     const primaFinal = Number(o.primaFinal);
-    // Descuento aplicado: se resuelve con los Descuento registrados (RF-20) y la misma regla de la compra (RN-09)
-    const delPlan = (tipo: string) =>
-      o.cotizacion.descuentos.find(
-        (d) => d.tipo === tipo && d.aceptado && d.planId === o.primaCotizada.planId,
-      );
-    const primera = delPlan('PRIMERA_COMPRA');
-    const negociado = delPlan('NEGOCIADO');
-    const parametros = await tx.parametrosComerciales.findFirstOrThrow();
-    const aplicado = resolverDescuento(
-      {
-        primeraCompra: primera ? Number(primera.porcentaje) : null,
-        negociado: negociado ? Number(negociado.porcentaje) : null,
-      },
-      Number(parametros.descuentoMaximo),
+    // RF-20: descuento registrado de esta compra (no se re-evalúa con reglas ni máximos posteriores)
+    const aplicado = descuentoRegistrado(
+      o.cotizacion.descuentos.map((d) => ({ ...d, porcentaje: Number(d.porcentaje) })),
+      o.primaCotizada.planId,
     );
     const porcentaje = aplicado.porcentaje;
     const tipoDescuento = aplicado.tipo;

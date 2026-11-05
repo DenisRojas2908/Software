@@ -34,7 +34,8 @@ export class AsesoriaService {
     d: { cotizacionId: string; motivo: MotivoAsesoria; canal: CanalContacto },
   ) {
     const solicitud = await this.prisma.$transaction(async (tx) => {
-      await this.compras.asociar(tx, d.cotizacionId, usuario); // registro mínimo: la cotización pasa a su cuenta
+      const cot = await this.compras.asociar(tx, d.cotizacionId, usuario); // registro mínimo: la cotización pasa a su cuenta
+      if (cot.estado === 'CONVERTIDA') throw new ConflictException('Esta cotización ya fue comprada'); // 02 §7: estado final
       const abierta = await tx.solicitudAsesoria.findFirst({
         where: { cotizacionId: d.cotizacionId, estado: { not: 'CERRADA' } },
       });
@@ -69,6 +70,8 @@ export class AsesoriaService {
       include: { cotizacion: { include: { vehiculo: { include: { cliente: true } } } } },
     });
     if (!seg) throw new NotFoundException('Seguimiento no encontrado');
+    if (seg.cotizacion.estado === 'CONVERTIDA')
+      throw new ConflictException('Esta cotización ya fue comprada');
     return this.prisma.$transaction(async (tx) => {
       const abierta = await tx.solicitudAsesoria.findFirst({
         where: { cotizacionId: seg.cotizacionId, estado: { not: 'CERRADA' } },

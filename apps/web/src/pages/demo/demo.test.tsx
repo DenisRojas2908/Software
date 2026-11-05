@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react';
-import { Rutas } from '../../App';
-import { renderizar, USUARIO } from '../../test/utilidades';
+import { render, screen } from '@testing-library/react';
+import App, { Rutas } from '../../App';
+import { renderizar, simularApi, USUARIO } from '../../test/utilidades';
 
 const ESTADO = {
   '/api/demo/estado': {
@@ -28,6 +28,31 @@ describe('Página de demo (F8)', () => {
     renderizar(<Rutas demoHabilitado />, { ruta: '/demo', usuario: USUARIO.asesor, api: ESTADO });
     expect(await screen.findByText('Acceso no permitido')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Demo' })).not.toBeInTheDocument();
+  });
+
+  it('RF-32: con DEMO_MODE=true un CLIENTE tampoco ve el menú ni la página', async () => {
+    renderizar(<Rutas demoHabilitado />, { ruta: '/demo', usuario: USUARIO.cliente, api: ESTADO });
+    expect(await screen.findByText('Acceso no permitido')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Demo' })).not.toBeInTheDocument();
+  });
+
+  it('F8: la app decide mostrar "Demo" según /api/salud (demoHabilitado)', async () => {
+    localStorage.setItem('svas.token', 't');
+    simularApi({
+      '/api/salud': { estado: 'ok', simulacion: true, demoHabilitado: true },
+      '/api/auth/yo': USUARIO.admin,
+    });
+    const { unmount } = render(<App />);
+    expect(await screen.findByRole('link', { name: 'Demo' })).toBeInTheDocument();
+    unmount();
+    simularApi({
+      '/api/salud': { estado: 'ok', simulacion: true, demoHabilitado: false },
+      '/api/auth/yo': USUARIO.admin,
+    });
+    render(<App />);
+    expect(await screen.findByRole('link', { name: 'Panel admin' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Demo' })).not.toBeInTheDocument();
+    localStorage.clear();
   });
 
   it('F8: con DEMO_MODE=true el ADMINISTRADOR ve el menú y la página de demo', async () => {

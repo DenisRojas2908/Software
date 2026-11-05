@@ -191,6 +191,10 @@ export class CotizacionService {
         descripcion: p.plan.descripcion,
         prima: p.prima === null ? null : Number(p.prima),
         ...porPlan[i],
+        // CU-03 1a: en un caso derivado (p. ej. prima manual de un no asegurable) se compra solo tras la asesoría
+        ...(c.motivoDerivacion && porPlan[i].compraInmediata
+          ? { compraInmediata: false, motivoBloqueo: 'ASESORIA_PENDIENTE' }
+          : {}),
         // D-30: tras una asesoría aceptada el plan se puede comprar aunque exija inspección
         habilitadaPorAsesoria:
           p.prima !== null && habilitadaPorAsesoria(c.solicitudes, c.descuentos, p.planId),

@@ -17,7 +17,9 @@ import { DemoModule } from './demo/demo.module';
 // D-01: en producción Nest sirve también el build de la SPA → un proceso, una URL.
 function servirWeb() {
   const rutaWeb = join(__dirname, '..', '..', 'web', 'dist');
-  return existsSync(rutaWeb) ? [ServeStaticModule.forRoot({ rootPath: rutaWeb, exclude: ['/api/{*ruta}'] })] : [];
+  return existsSync(rutaWeb)
+    ? [ServeStaticModule.forRoot({ rootPath: rutaWeb, exclude: ['/api/{*ruta}'] })]
+    : [];
 }
 
 // AppModule.forRoot() arma la app leyendo el entorno EN ESE MOMENTO:

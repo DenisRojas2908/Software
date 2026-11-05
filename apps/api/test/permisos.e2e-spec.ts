@@ -29,6 +29,9 @@ describe('RNF-10: endpoints × roles', () => {
     const res = await req.send({});
     if (!rol) expect(res.status).toBe(401);
     else if (!permitidos.includes(rol)) expect(res.status).toBe(403);
-    else expect([401, 403]).not.toContain(res.status);
+    else {
+      expect([401, 403]).not.toContain(res.status);
+      expect(res.status).toBeLessThan(500); // un rol permitido nunca debe provocar un error interno
+    }
   });
 });

@@ -53,4 +53,5 @@ export const etiquetaValor = (v: string) => ETIQUETA_VALOR[v] ?? v.replace(/_/g,
 export const MOTIVO_BLOQUEO: Record<string, string> = {
   NO_COTIZA: 'Esta aseguradora no cotiza este vehículo en línea.',
   INSPECCION: 'Requiere inspección para este uso: solo con asesoría.',
+  ASESORIA_PENDIENTE: 'Tu caso está con un asesor: podrás comprar cuando confirme la propuesta.',
 };
