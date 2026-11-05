@@ -1,0 +1,8 @@
+// Esquema de la BD del SVAS. Los modelos (22 tablas, 16 enums) llegan en F1.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
