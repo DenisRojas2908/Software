@@ -248,6 +248,48 @@ describe('CU-03 Solicitar asesoría / descuento (F5)', () => {
     await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(otro)).expect(409);
   });
 
+  it('02 §7: no se pide asesoría sobre una cotización ya comprada (CONVERTIDA es final)', async () => {
+    const tokens = await tokensDemo(app);
+    const mias = (await http().get('/api/polizas/mias').set(auth(tokens.CLIENTE)).expect(200)).body;
+    const comprada = mias.find((t: { estado: string }) => t.estado === 'CONVERTIDA');
+    await http()
+      .post('/api/asesoria/solicitudes')
+      .set(auth(tokens.CLIENTE))
+      .send({ cotizacionId: comprada.cotizacionId, motivo: 'DUDA', canal: 'WHATSAPP' })
+      .expect(409);
+    expect((await prisma.cotizacion.findUniqueOrThrow({ where: { id: comprada.cotizacionId } })).estado).toBe(
+      'CONVERTIDA',
+    );
+  });
+
+  it('CU-03 1a: con prima manual pero sin ACEPTA del asesor, el cliente todavía no puede comprar', async () => {
+    const cliente = await registrarCliente(app);
+    const cot = await cotizarComoInvitado(app, datosAuto({ anio: 2003 }));
+    const plan = planDe(cot, 'Mapfre', 'Básico');
+    const sol = await http()
+      .post('/api/asesoria/solicitudes')
+      .set(auth(cliente))
+      .send({ cotizacionId: cot.id, motivo: 'DUDA', canal: 'WHATSAPP' })
+      .expect(201);
+    await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(asesor)).expect(201);
+    await http()
+      .post(`/api/asesor/solicitudes/${sol.body.id}/prima`)
+      .set(auth(asesor))
+      .send({ primaCotizadaId: plan.primaCotizadaId, prima: 950 })
+      .expect(201);
+    const det = (await http().get(`/api/cotizaciones/${cot.id}`).set(auth(cliente)).expect(200)).body;
+    expect(planDe(det, 'Mapfre', 'Básico')).toMatchObject({
+      prima: 950,
+      compraInmediata: false,
+      motivoBloqueo: 'ASESORIA_PENDIENTE',
+    });
+    await http()
+      .post('/api/compras')
+      .set(auth(cliente))
+      .send({ cotizacionId: cot.id, primaCotizadaId: plan.primaCotizadaId })
+      .expect(422);
+  });
+
   it('RF-32: otro asesor no puede registrar descuentos en un caso que atiende otro', async () => {
     const cliente = await registrarCliente(app);
     const cot = await cotizarComoInvitado(app);

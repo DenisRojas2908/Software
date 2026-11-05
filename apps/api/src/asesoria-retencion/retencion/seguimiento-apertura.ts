@@ -3,7 +3,12 @@ import { Prisma } from '@prisma/client';
 // CU-03 6a/6b y RF-16: una cotización no concretada entra a la cola de seguimiento (EN_SEGUIMIENTO).
 // Si ya tenía un seguimiento, no se duplica (cotizacion_id es UNIQUE en seguimiento).
 export async function abrirSeguimiento(tx: Prisma.TransactionClient, cotizacionId: string, ahora: Date) {
-  await tx.cotizacion.update({ where: { id: cotizacionId }, data: { estado: 'NO_CONCRETADA' } });
+  // 02 §7: CONVERTIDA es final; solo una cotización sin compra pasa a NO_CONCRETADA y a seguimiento
+  const cambio = await tx.cotizacion.updateMany({
+    where: { id: cotizacionId, estado: { not: 'CONVERTIDA' } },
+    data: { estado: 'NO_CONCRETADA' },
+  });
+  if (cambio.count === 0) return null;
   const existente = await tx.seguimiento.findUnique({ where: { cotizacionId } });
   if (existente?.estado === 'EN_SEGUIMIENTO') return existente;
   if (existente) {

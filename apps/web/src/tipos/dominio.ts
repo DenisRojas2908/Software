@@ -19,7 +19,7 @@ export interface PlanCotizado {
   prima: number | null;
   compraInmediata: boolean;
   asesoria: boolean;
-  motivoBloqueo: 'NO_COTIZA' | 'INSPECCION' | null;
+  motivoBloqueo: 'NO_COTIZA' | 'INSPECCION' | 'ASESORIA_PENDIENTE' | null;
   habilitadaPorAsesoria?: boolean; // D-30
 }
 

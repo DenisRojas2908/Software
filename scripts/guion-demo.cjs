@@ -431,6 +431,15 @@ async function demo(admin, accion) {
     await admin.getByRole('tab', { name: 'Aseguradoras y planes' }).click();
     await admin.getByLabel('Quálitas activa').click();
     await admin.waitForTimeout(800);
+    // RNF-13 / D-11: campo nuevo sin tocar código
+    await admin.getByRole('tab', { name: 'Campos' }).click();
+    await admin.selectOption('select[aria-label="Aseguradora del campo"]', { label: 'Rímac' });
+    await admin.getByLabel('Nombre del campo').fill('color');
+    await admin.selectOption('select[aria-label="Tipo del campo"]', 'LISTA');
+    await admin.getByLabel('Valores permitidos').fill('Rojo, Negro');
+    await admin.locator('form').getByLabel('Obligatorio').check();
+    await admin.getByRole('button', { name: 'Agregar campo' }).click();
+    await admin.waitForTimeout(800);
     await inv.goto(`${BASE}/cotizar`);
     await inv.getByText(/Comparamos/).waitFor();
     registrar(
@@ -439,7 +448,16 @@ async function demo(admin, accion) {
       /Comparamos 4 aseguradoras/.test(await inv.getByText(/Comparamos/).innerText()),
       await inv.getByText(/Comparamos/).innerText(),
     );
+    registrar(
+      9,
+      'campo-nuevo',
+      await inv.getByLabel('Color *').isVisible(),
+      'campo «Color *» en el formulario',
+    );
     await capturar(inv, 9, 'cotizador-sin-qualitas');
+    await admin.getByLabel('Rímac color activo').click(); // desactivar, no borrar
+    await admin.waitForTimeout(600);
+    await admin.getByRole('tab', { name: 'Aseguradoras y planes' }).click();
     await admin.getByLabel('Quálitas activa').click();
     await admin.waitForTimeout(800);
     await admin.getByRole('tab', { name: 'Reportes' }).click();

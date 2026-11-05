@@ -74,7 +74,7 @@ export class RetencionService implements OnModuleInit, OnModuleDestroy {
       {
         ...s,
         canalPreferido: s.cotizacion.vehiculo.cliente.canalPreferido,
-        aceptado: s.intentosContacto.some((i) => i.resultado === 'ACEPTA'),
+        aceptado: s.intentosContacto.some((i) => i.resultado === 'ACEPTA' && i.fecha >= s.fechaApertura), // ventana vigente
       },
       reglas,
     );

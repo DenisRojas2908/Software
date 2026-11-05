@@ -17,4 +17,9 @@ module.exports = {
   setupFiles: ['<rootDir>/test/soporte/entorno.js'],
   globalSetup: sinBd ? undefined : '<rootDir>/test/soporte/preparar-bd.js',
   collectCoverageFrom: ['src/**/*.ts', '!src/main.ts'],
+  // RNF-16: meta ≥ 70 % en el dominio (reglas puras) y en el total
+  coverageThreshold: {
+    global: { lines: 70 },
+    './src/**/dominio/**/*.ts': { lines: 70, branches: 70 },
+  },
 };

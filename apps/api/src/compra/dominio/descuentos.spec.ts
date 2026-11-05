@@ -46,3 +46,16 @@ describe('Descuentos (RN-07, RN-08, RN-09)', () => {
     expect(calcularPrimaFinal(1087.5, 0)).toBe(1087.5);
   });
 });
+
+describe('descuentoRegistrado (RF-20)', () => {
+  it('RF-20: una compra ya hecha conserva el descuento registrado del plan (8 % negociado sobre 5 % primera compra)', () => {
+    const { descuentoRegistrado } = jest.requireActual('./descuentos');
+    const filas = [
+      { tipo: 'PRIMERA_COMPRA', aceptado: true, planId: 'p1', porcentaje: 5 },
+      { tipo: 'NEGOCIADO', aceptado: true, planId: 'p1', porcentaje: 8 },
+      { tipo: 'NEGOCIADO', aceptado: true, planId: 'p2', porcentaje: 9 },
+    ];
+    expect(descuentoRegistrado(filas, 'p1')).toEqual({ tipo: 'NEGOCIADO', porcentaje: 8 });
+    expect(descuentoRegistrado([], 'p1')).toEqual({ tipo: null, porcentaje: 0 });
+  });
+});

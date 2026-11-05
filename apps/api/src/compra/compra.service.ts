@@ -21,7 +21,7 @@ import { PrismaService } from '../persistencia/prisma.service';
 import { PolizaService } from '../polizas/poliza.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
 import { atribuirCanal } from './dominio/atribuir-canal';
-import { calcularPrimaFinal, resolverDescuento } from './dominio/descuentos';
+import { calcularPrimaFinal, descuentoRegistrado, resolverDescuento } from './dominio/descuentos';
 import { CompraNoHabilitadaError, verificarCompraHabilitada } from './dominio/habilitacion';
 import { habilitadaPorAsesoria } from './dominio/habilitada-por-asesoria';
 
@@ -89,7 +89,9 @@ export class CompraService {
 
     // RN-27 (D-29, D-30): banderas para el canal
     const porAsesoria = habilitadaPorAsesoria(c.solicitudes, c.descuentos, orden.primaCotizada.planId);
-    const aceptoEnSeguimiento = !!c.seguimiento?.intentosContacto.some((i) => i.resultado === 'ACEPTA');
+    const aceptoEnSeguimiento = !!c.seguimiento?.intentosContacto.some(
+      (i) => i.resultado === 'ACEPTA' && i.fecha >= c.seguimiento!.fechaApertura, // solo la ventana vigente (reapertura)
+    );
     const desdeEnlaceRetoma =
       (await tx.registroActividad.count({
         where: { accion: 'COMPRA_DESDE_ENLACE', entidad: `Cotizacion#${c.id}` },
@@ -149,6 +151,12 @@ export class CompraService {
     primaCotizadaId: string,
     tokenRetoma?: string,
   ) {
+    // Lectura de reglas fuera de la transacción (no ocupa una segunda conexión del pool)
+    const vehiculo = await this.prisma.vehiculo.findFirst({
+      where: { cotizaciones: { some: { id: cotizacionId } } },
+    });
+    if (!vehiculo) throw new NotFoundException('Cotización no encontrada');
+    const inspeccion = await this.catalogo.aseguradorasConInspeccion(vehiculo.uso);
     const ordenId = await this.prisma.$transaction(async (tx) => {
       await this.asociar(tx, cotizacionId, usuario);
       const c = await tx.cotizacion.findUniqueOrThrow({
@@ -167,8 +175,15 @@ export class CompraService {
       if (c.orden?.pagos.some((p) => p.estado === 'CONFIRMADO'))
         throw new ConflictException('Esta cotización ya fue comprada');
 
+      // CU-03 1a: un caso derivado (inspección / no asegurable) se compra solo cuando la asesoría lo habilita
+      if (c.motivoDerivacion && !habilitadaPorAsesoria(c.solicitudes, c.descuentos, prima.planId)) {
+        throw new UnprocessableEntityException(
+          c.motivoDerivacion === 'INSPECCION'
+            ? 'Este plan requiere inspección: solo puede comprarse con asesoría (Opción 2).'
+            : 'Tu caso está con un asesor: podrás comprar cuando confirme la propuesta.',
+        );
+      }
       // CU-02 1a: ¿se puede comprar este plan?
-      const inspeccion = await this.catalogo.aseguradorasConInspeccion(c.vehiculo.uso);
 
       try {
         verificarCompraHabilitada({
@@ -244,7 +259,12 @@ export class CompraService {
       plan: orden.primaCotizada.plan.nombre,
       coberturas: orden.primaCotizada.plan.descripcion,
       prima: ctx.prima,
-      descuento: ctx.descuento,
+      descuento: pagado
+        ? descuentoRegistrado(
+            c.descuentos.map((d) => ({ ...d, porcentaje: Number(d.porcentaje) })),
+            orden.primaCotizada.planId,
+          )
+        : ctx.descuento,
       primeraCompraEvaluada: !!v.cliente.numeroDocumento,
       primaFinal: pagado ? Number(orden.primaFinal) : ctx.primaFinal,
       canalVenta: pagado ? orden.canalVenta : ctx.canal,
@@ -375,13 +395,14 @@ export class CompraService {
       );
     }
 
+    let polizaId: string;
     try {
-      const polizaId = await this.prisma.$transaction(
+      polizaId = await this.prisma.$transaction(
         async (tx) => {
           const o = await this.cargarOrden(tx, ordenId, usuario);
           if (this.pagoConfirmado(o)) throw new ConflictException('La orden ya fue pagada');
           const c = await this.contexto(tx, o); // se recalcula dentro de la transacción
-          if (c.primaFinal !== ctx.primaFinal) {
+          if (Math.round(c.primaFinal * 100) !== Math.round(ctx.primaFinal * 100)) {
             throw new ConflictException(
               'El precio cambió mientras pagabas; revisa el resumen y vuelve a pagar',
             );
@@ -443,7 +464,6 @@ export class CompraService {
         },
         { timeout: 20_000 },
       );
-      return { ...(await this.resumen(ordenId, usuario)), polizaId };
     } catch (e) {
       // Cualquier falla dentro de la transacción → rollback (no queda pago confirmado ni póliza) + anulación del cobro
       await this.pasarela.anular(cobro.referencia);
@@ -459,5 +479,7 @@ export class CompraService {
         HttpStatus.BAD_GATEWAY,
       );
     }
+    // fuera del try: la compra ya quedó confirmada; un error aquí no debe anular el cobro
+    return { ...(await this.resumen(ordenId, usuario)), polizaId };
   }
 }

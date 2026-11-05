@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 22:16 (Lima) · F9 · Pruebas, calidad y documentación + auditoría final
+- **Qué se hizo**: F8 mergeada (PR #9). Cobertura con umbrales (`npm run test:cobertura`): api 97,8 % líneas (dominio 100 %), web 85,6 %; pruebas web nuevas (inicio de compra, login, pestañas del admin). **Prueba de carga** (autocannon): encontró que cotizar bajo concurrencia agotaba el pool (2/s y errores) por lecturas de catálogo dentro de la transacción → corregido (96/s, p97,5 450 ms, 0 errores); comparativo p97,5 235 ms con 50 conexiones (RNF-01). Manuales de usuario y administrador con 30 capturas reales. **Auditor final**: 0 bloquea, 3 corregir (CONVERTIDA reabierta por asesoría, resumen dentro del try del pago, paso 9 de la guía sin efecto visible) y 10 menores; todos corregidos (D-57…D-60). Guion re-ensayado: 0 fallas, 59 verificaciones.
+- **Errores encontrados y resueltos**: un `prettier --write docs/*.md` reformateó documentos que no se deben tocar (incluido 02-especificacion.md); se revirtió con git antes de commitear y se agregó `docs` a `.prettierignore` (D-60).
+- **Archivos tocados**: `apps/api/{jest.config.js,src/cotizacion,src/compra,src/asesoria-retencion,src/polizas}`, `apps/web/{jest.config.cjs,src/pages/*}`, `docs/{manual-usuario,manual-administrador,GUIA_DEMO,trazabilidad,sustentacion}.md`, `docs/capturas/`, `scripts/guion-demo.cjs`.
+- **Decisiones**: D-57, D-58, D-59, D-60.
+- **Pruebas**: api 327 · web 43. Cubren RNF-16 (umbrales), RNF-01 (carga), 02 §7, CU-03 1a, RF-20.
+- **Para defender**:
+  1. *Prueba de carga* (`sustentacion.md` F9): «¿soporta varios clientes a la vez?» → Se midió, se encontró un cuello de botella real y se corrigió (2 → 96 cotizaciones/s).
+  2. *Calidad verificable*: 370 pruebas, cobertura con umbral en el CI, y 3 auditorías independientes con sus hallazgos corregidos.
+- **Siguiente paso**: mergear F9. F10 con Denis.
+
 ## 2026-11-04 21:55 (Lima) · F8 · Modo simulación y guion de demo
 - **Qué se hizo**: F7 mergeada (PR #8). `AppModule.forRoot()` registra `DemoModule` solo con DEMO_MODE (D-55). Endpoints `/api/demo/*` (solo ADMINISTRADOR) y página Demo. Pruebas obligatorias: 404 con DEMO_MODE=false (también como admin y sin token), 401/403 con DEMO_MODE=true para quien no es admin, menú y ruta ocultos en la web. Skill `demo` ejecutada: `scripts/guion-demo.cjs` recorre los 10 pasos de `GUIA_DEMO.md` → 0 fallas, 58 verificaciones, 66 capturas (360/1366), 54 s.
 - **Errores encontrados y resueltos (en el script, no en la app)**: esperas antes de que cargara la página de datos faltantes; checkboxes controlados (cambian al responder la API) → `click()`; el estado del reloj persistía entre corridas → el script lo reinicia al empezar.

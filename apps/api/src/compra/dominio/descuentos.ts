@@ -35,3 +35,15 @@ export function resolverDescuento(
 export function calcularPrimaFinal(prima: number, porcentaje: number): number {
   return redondear2(prima * (1 - porcentaje / 100));
 }
+
+// RF-20: descuento que se aplicó en una compra ya hecha, a partir de los Descuento registrados del plan
+// (no se re-evalúa: si el cliente compra otra póliza después, la anterior conserva su descuento).
+export function descuentoRegistrado(
+  descuentos: { tipo: TipoDescuento; aceptado: boolean; planId: string; porcentaje: number }[],
+  planId: string,
+): DescuentoResuelto {
+  const del = (tipo: TipoDescuento) =>
+    descuentos.find((x) => x.tipo === tipo && x.aceptado && x.planId === planId)?.porcentaje ?? null;
+  // los porcentajes registrados ya respetaron el máximo vigente al guardarse (RN-07, trigger T2)
+  return resolverDescuento({ primeraCompra: del('PRIMERA_COMPRA'), negociado: del('NEGOCIADO') }, 100);
+}

@@ -67,6 +67,23 @@ export class CotizacionService {
       campos.map((c) => c.nombre),
     );
 
+    // Lecturas del catálogo y cálculo de primas ANTES de abrir la transacción: así la transacción solo escribe
+    // y no ocupa una segunda conexión del pool (hallazgo de la prueba de carga de F9).
+    // 4. RF-04 / RF-05: prima por aseguradora activa × plan activo
+    const [aseguradoras, inspeccion] = await Promise.all([
+      this.catalogo.aseguradorasActivas(),
+      this.catalogo.aseguradorasConInspeccion(vehiculo.uso),
+    ]);
+    const primas = aseguradoras.flatMap((a) =>
+      a.planes.map((plan) => ({
+        aseguradoraId: a.id,
+        planId: plan.id,
+        prima: this.primaSegura(a.codigoEstrategia, vehiculo, plan),
+      })),
+    );
+    // 5-7. RN-01…RN-04, RN-25: opciones por plan y derivación automática
+    const resultado = calcularOpciones(primas, inspeccion);
+
     return this.prisma.$transaction(async (tx) => {
       // 2. RN-05: nicho → se informa y NO se registra nada
       const previo = await this.registroUnico.buscarCliente(tx, contacto, usuario);
@@ -78,20 +95,6 @@ export class CotizacionService {
 
       // 3. RF-07: registro único de cliente y vehículo
       const { cliente, vehiculo: v } = await this.registroUnico.registrar(tx, contacto, vehiculo, usuario);
-
-      // 4. RF-04 / RF-05: prima por aseguradora activa × plan activo
-      const aseguradoras = await this.catalogo.aseguradorasActivas();
-      const primas = aseguradoras.flatMap((a) =>
-        a.planes.map((plan) => ({
-          aseguradoraId: a.id,
-          planId: plan.id,
-          prima: this.primaSegura(a.codigoEstrategia, vehiculo, plan),
-        })),
-      );
-
-      // 5-7. RN-01…RN-04, RN-25: opciones por plan y derivación automática
-      const inspeccion = await this.catalogo.aseguradorasConInspeccion(vehiculo.uso);
-      const resultado = calcularOpciones(primas, inspeccion);
 
       const cotizacion = await tx.cotizacion.create({
         data: {
@@ -188,6 +191,10 @@ export class CotizacionService {
         descripcion: p.plan.descripcion,
         prima: p.prima === null ? null : Number(p.prima),
         ...porPlan[i],
+        // CU-03 1a: en un caso derivado (p. ej. prima manual de un no asegurable) se compra solo tras la asesoría
+        ...(c.motivoDerivacion && porPlan[i].compraInmediata
+          ? { compraInmediata: false, motivoBloqueo: 'ASESORIA_PENDIENTE' }
+          : {}),
         // D-30: tras una asesoría aceptada el plan se puede comprar aunque exija inspección
         habilitadaPorAsesoria:
           p.prima !== null && habilitadaPorAsesoria(c.solicitudes, c.descuentos, p.planId),
