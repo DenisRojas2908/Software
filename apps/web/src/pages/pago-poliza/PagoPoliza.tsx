@@ -107,7 +107,8 @@ function DatosFaltantes({ o, alGuardar }: { o: ResumenOrden; alGuardar: (o: Resu
 
 function ConfirmarYPagar({ o, alCambiar }: { o: ResumenOrden; alCambiar: (o: ResumenOrden) => void }) {
   const [modo, setModo] = useState<'UNICO' | 'CUOTAS'>('UNICO');
-  const [numeroCuotas, setNumeroCuotas] = useState(6);
+  // Por defecto la opción mínima de cuotas (2); el máximo viene de parametros_comerciales (RN-14, RNF-13)
+  const [numeroCuotas, setNumeroCuotas] = useState(2);
   const [acepta, setAcepta] = useState(false);
   const [firma, setFirma] = useState(false);
   const [cronograma, setCronograma] = useState<number[] | null>(null);

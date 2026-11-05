@@ -80,6 +80,7 @@ describe('Pago y póliza (CU-02)', () => {
     const u = userEvent.setup();
     expect(await screen.findByRole('button', { name: 'Ver cronograma' })).toBeDisabled();
     await u.click(screen.getByLabelText('En cuotas'));
+    await u.selectOptions(screen.getByLabelText(/Número de cuotas/), '6');
     await u.click(screen.getByLabelText(/Acepto las condiciones/));
     await u.click(screen.getByLabelText(/Firmo la solicitud/));
     await u.click(screen.getByRole('button', { name: 'Ver cronograma' }));

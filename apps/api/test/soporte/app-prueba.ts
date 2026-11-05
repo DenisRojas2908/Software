@@ -4,10 +4,15 @@ import request from 'supertest';
 import { configurarApp } from '../../src/app';
 import { AppModule } from '../../src/app.module';
 import { USUARIOS_DEMO } from '../../prisma/seed';
+import { RELOJ, RelojFijo } from '../../src/comun/reloj';
+
+// D-07: las pruebas HTTP usan una fecha fija (5-nov-2026) para comparar primas contra los literales de 02 §10.
+export const FECHA_PRUEBAS = '2026-11-05T15:00:00Z';
 
 // Levanta la API completa (igual que producción) para pruebas HTTP con Supertest.
 export async function crearAppPrueba(ajustar?: (m: ReturnType<typeof Test.createTestingModule>) => void) {
   const builder = Test.createTestingModule({ imports: [AppModule] });
+  builder.overrideProvider(RELOJ).useValue(new RelojFijo(FECHA_PRUEBAS));
   ajustar?.(builder);
   const modulo = await builder.compile();
   const app = configurarApp(modulo.createNestApplication());

@@ -44,7 +44,8 @@ describe('CU-02 Comprar de forma autónoma (F4)', () => {
       .send({ numeroDocumento: '45678123', apellidos: 'Quispe Rojas' })
       .expect(200);
     expect(datos.body.descuento).toEqual({ tipo: 'PRIMERA_COMPRA', porcentaje: 5 });
-    expect(datos.body.primaFinal).toBeCloseTo(plan.prima! * 0.95, 2);
+    expect(plan.prima).toBe(1450); // 02 §10: Rímac Intermedio 2022
+    expect(datos.body.primaFinal).toBe(1377.5); // 1450 × 0,95
 
     // Paso 4: condiciones + firma + 6 cuotas → cronograma (RN-14)
     const conf = await http()
@@ -106,7 +107,7 @@ describe('CU-02 Comprar de forma autónoma (F4)', () => {
       USUARIOS_DEMO.cliente.documento,
     );
     expect(resumen.descuento).toEqual({ tipo: null, porcentaje: 0 });
-    expect(resumen.primaFinal).toBe(plan.prima);
+    expect(resumen.primaFinal).toBe(1012.5); // 02 §10: Mapfre Básico 2022 = 1350 × 0,75, sin descuento
   });
 
   it('CU-02 1a / RF-10: no se puede comprar en Opción 1 un plan que exige inspección (taxi)', async () => {
@@ -159,6 +160,39 @@ describe('CU-02 Comprar de forma autónoma (F4)', () => {
         where: { accion: 'EMISION_FALLIDA', entidad: `OrdenCompra#${id}` },
       }),
     ).toBe(1);
+  });
+
+  it('RN-06: la Opción 1 no admite negociación: un precio enviado por el cliente se ignora', async () => {
+    const token = await registrarCliente(app);
+    const cot = await cotizarComoInvitado(app);
+    const plan = planDe(cot, 'Rímac', 'Básico');
+    const r = await http()
+      .post('/api/compras')
+      .set(auth(token))
+      .send({
+        cotizacionId: cot.id,
+        primaCotizadaId: plan.primaCotizadaId,
+        primaFinal: 1,
+        prima: 1,
+        descuento: 50,
+      })
+      .expect(201);
+    expect(r.body.prima).toBe(1087.5); // 02 §10: 1450 × 0,75
+    expect(r.body.primaFinal).toBe(1087.5); // aún sin DNI: sin descuento
+  });
+
+  it('RN-15 / RN-26: la póliza (con número de prueba) y su PDF solo existen tras el pago confirmado', async () => {
+    const token = await registrarCliente(app);
+    const cot = await cotizarComoInvitado(app);
+    const { id } = await prepararOrden(app, token, cot.id, planDe(cot, 'Pacífico', 'Básico').primaCotizadaId);
+    const antes = await http().get(`/api/compras/${id}`).set(auth(token)).expect(200);
+    expect(antes.body.poliza).toBeNull();
+    const pago = await http()
+      .post(`/api/compras/${id}/pagar`)
+      .set(auth(token))
+      .send({ modo: 'UNICO' })
+      .expect(201);
+    expect(pago.body.poliza.numero).toMatch(/^SVAS-PACIFICO-20261105-[0-9A-F]{6}$/); // RN-26: número de prueba
   });
 
   it('RN-14: no se aceptan 13 cuotas (máximo 12) y se informa por campo', async () => {
