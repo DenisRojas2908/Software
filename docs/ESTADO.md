@@ -1,10 +1,10 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 22:16 (Lima) · rama `feat/f9-pruebas-manuales` · último commit `fa39109`
+2026-11-04 22:21 (Lima) · rama `feat/f10-despliegue` (creada desde `main` tras mergear F9) · `main` en `195396d`
 
 ## Fase y paso actual
-**F9 · Pruebas, calidad y manuales**: lista y auditada (auditor final: 0 bloquea, 3 corregir y 10 menores, todo corregido). En `cerrar-fase` (PR #10 + CI). F0–F8 mergeadas (#1–#9). **Alcance de la sesión (F0–F9) cumplido**; F10 (despliegue) queda para la laptop de Denis.
+**F0–F9 terminadas y mergeadas en `main`** (PR #1–#10, CI verde en ubuntu y windows en todas). **F10 · Despliegue**: paso 0, pendiente con Denis (necesita su laptop y, si piden URL pública, cuentas de Railway/Supabase).
 
 ## Qué funciona y cómo verlo
 - `npm install` → copiar `apps/api/.env.example` a `.env` → `npm run db:reset` → `npm run dev` (http://localhost:5173) o `npm run build` + `npm start` (http://localhost:3000).
@@ -13,7 +13,7 @@
 - `npm test`: api 327 · web 43. `npm run test:cobertura`: api 97,8 % (dominio 100 %), web 85,6 %. Carga: comparativo p97,5 235 ms (c=50); cotizar 96/s, p97,5 450 ms (c=20).
 
 ## Siguiente paso exacto
-Mergear PR #10 con el CI verde. Luego, con Denis: F10 (si piden URL pública: Railway + Supabase con pooler IPv4, D-21) y verificar en su Windows `npm install`, `npm run dev` y `npm run db:reset`.
+Con Denis, en su Windows: `npm install`, crear las bases `svas` y `svas_test`, `npm run db:reset`, `npm run dev` y `npm test` (criterio de F0 en Windows real). Luego F10 (docs/03-plan.md): solo si piden URL pública → Railway + Supabase con pooler en modo sesión (D-21). Checklist del día de la sustentación y plan B local.
 
 ## Decisiones Propuesta que esperan visto bueno
 Ninguna. Últimas Tomadas: D-57…D-60.
@@ -24,4 +24,4 @@ Ninguna. Últimas Tomadas: D-57…D-60.
 - El ensayo automático de la demo necesita Playwright (viene en la nube; no está en el proyecto).
 
 ## Estado del CI
-F0–F8 ✅ ubuntu / ✅ windows. F9: pendiente.
+F0–F9 ✅ ubuntu / ✅ windows.

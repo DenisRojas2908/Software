@@ -4,6 +4,12 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 22:21 (Lima) · Cierre de la sesión F0–F9
+- **Qué se hizo**: PR #10 (F9) mergeado con CI verde. Rama `feat/f10-despliegue` creada desde `main`. Último ensayo del guion sobre el código final: 0 fallas, 59 verificaciones, 33 pantallas.
+- **Estado**: 10 PR mergeados (F0–F9), 3 auditorías independientes (F4, F7, F9) con sus hallazgos corregidos, decisiones D-01…D-60. Pruebas: api 327 · web 43.
+- **Para defender**: la historia de configuración se ve en GitHub (una rama y un PR por fase, CI en dos sistemas operativos antes de cada merge).
+- **Siguiente paso**: verificación en el Windows de Denis y F10 (si se exige URL pública).
+
 ## 2026-11-04 22:16 (Lima) · F9 · Pruebas, calidad y documentación + auditoría final
 - **Qué se hizo**: F8 mergeada (PR #9). Cobertura con umbrales (`npm run test:cobertura`): api 97,8 % líneas (dominio 100 %), web 85,6 %; pruebas web nuevas (inicio de compra, login, pestañas del admin). **Prueba de carga** (autocannon): encontró que cotizar bajo concurrencia agotaba el pool (2/s y errores) por lecturas de catálogo dentro de la transacción → corregido (96/s, p97,5 450 ms, 0 errores); comparativo p97,5 235 ms con 50 conexiones (RNF-01). Manuales de usuario y administrador con 30 capturas reales. **Auditor final**: 0 bloquea, 3 corregir (CONVERTIDA reabierta por asesoría, resumen dentro del try del pago, paso 9 de la guía sin efecto visible) y 10 menores; todos corregidos (D-57…D-60). Guion re-ensayado: 0 fallas, 59 verificaciones.
 - **Errores encontrados y resueltos**: un `prettier --write docs/*.md` reformateó documentos que no se deben tocar (incluido 02-especificacion.md); se revirtió con git antes de commitear y se agregó `docs` a `.prettierignore` (D-60).
