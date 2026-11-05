@@ -57,4 +57,5 @@ export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   { metodo: 'put', ruta: '/api/admin/parametros', permitidos: ADMIN },
   { metodo: 'get', ruta: '/api/admin/actividad', permitidos: ADMIN },
   { metodo: 'get', ruta: '/api/admin/reportes/ventas', permitidos: ADMIN },
+  // F8 · /api/demo/* se prueba aparte en demo.e2e-spec.ts (depende de DEMO_MODE; reset no se ejecuta aquí)
 ];

@@ -11,7 +11,7 @@ export const FECHA_PRUEBAS = '2026-11-05T15:00:00Z';
 
 // Levanta la API completa (igual que producción) para pruebas HTTP con Supertest.
 export async function crearAppPrueba(ajustar?: (m: ReturnType<typeof Test.createTestingModule>) => void) {
-  const builder = Test.createTestingModule({ imports: [AppModule] });
+  const builder = Test.createTestingModule({ imports: [AppModule.forRoot()] });
   builder.overrideProvider(RELOJ).useValue(new RelojFijo(FECHA_PRUEBAS));
   ajustar?.(builder);
   const modulo = await builder.compile();

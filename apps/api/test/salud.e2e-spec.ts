@@ -8,7 +8,7 @@ describe('GET /api/salud', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const modulo = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const modulo = await Test.createTestingModule({ imports: [AppModule.forRoot()] }).compile();
     app = configurarApp(modulo.createNestApplication());
     await app.init();
   });
