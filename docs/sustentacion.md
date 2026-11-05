@@ -30,3 +30,20 @@ Con una FK compuesta `(cotizacion_id, prima_cotizada_id) → prima_cotizada(coti
 
 **¿Dónde están el 5 %, el 10 % y los 4 intentos?**
 Solo en el seed (`prisma/seed.ts:7-14`) y luego en la tabla `parametros_comerciales`, que el admin edita (RNF-13). El código los lee de la BD.
+
+## F2 · Seguridad
+**¿Cómo impiden que un asesor entre al panel de administración?**
+Un guard global revisa cada petición: sin token → 401; con un rol no listado en `@Roles('ADMINISTRADOR')` → 403. La UI oculta el menú, pero la protección real está en el backend.
+Una prueba recorre todos los endpoints protegidos × los 3 roles (RNF-10). → `seguridad/autenticacion.guard.ts`, `test/permisos.e2e-spec.ts`.
+
+**¿Cómo evitan que un cliente vea la póliza de otro?**
+Además del rol, se verifica la propiedad: el recurso debe pertenecer al usuario de la sesión (`verificarPropiedad`). Si no, 403.
+→ `seguridad/propiedad.ts`, `propiedad.spec.ts`.
+
+**¿Cómo guardan las contraseñas?**
+Con bcrypt (hash con sal, 10 rondas): nunca en claro ni se devuelven en la API. La sesión es un JWT que expira (`JWT_EXPIRA`, 2 h).
+→ `seguridad/auth.service.ts`.
+
+**¿Por qué un Reloj propio y no `new Date()`?**
+Para poder adelantar el tiempo en la demo (enlace vencido a los 7 días) y fijarlo en las pruebas. Es un puerto con dos implementaciones (inversión de dependencias).
+→ `comun/reloj.ts`.

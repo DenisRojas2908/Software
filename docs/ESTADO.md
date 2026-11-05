@@ -1,26 +1,27 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 20:41 (Lima) · rama `feat/f1-modelo-datos` · último commit `f4946bb`
+2026-11-04 20:47 (Lima) · rama `feat/f2-seguridad` · último commit `1781ee9`
 
 ## Fase y paso actual
-**F1 · Modelo de datos**: código y tests listos; en `cerrar-fase` (PR #2 + CI). F0 mergeada (PR #1). Alcance: F0 → F9.
+**F2 · Seguridad**: lista; en `cerrar-fase` (PR #3 + CI). F0 (#1) y F1 (#2) mergeadas. Alcance: F0 → F9.
 
 ## Qué funciona y cómo verlo
-- `npm run db:reset` (o `npx prisma migrate deploy` + `npm run db:seed`): 5 aseguradoras, 15 planes, 28 campos, 143 valores, parámetros 5/10/4/7/12/7, 80 pólizas (AUTONOMO 23, ASESORIA 29, TELEMARKETING 28).
-- Usuarios: admin@svas.demo/Admin123!, asesor1/2@svas.demo/Asesor123!, cliente@svas.demo/Cliente123! (póliza previa, DNI 70000001). Aún sin login (F2).
-- `npm test`: 11 pruebas (salud + 10 de restricciones de BD).
+- `npm run dev` → http://localhost:5173/login: ingresar / crear cuenta. Menú y rutas por rol (/mis-tramites, /asesor, /admin).
+- Usuarios: admin@svas.demo/Admin123!, asesor1@svas.demo/Asesor123!, cliente@svas.demo/Cliente123!.
+- API: POST /api/auth/registro, POST /api/auth/login, GET /api/auth/yo, /api/admin/usuarios (GET/POST/PATCH, solo admin).
+- `npm test`: api 41 (incl. 16 casos endpoints × roles) + web 6.
 
 ## Siguiente paso exacto
-Cerrar F1 (PR → CI → merge) y crear `feat/f2-seguridad`: `apps/api/src/seguridad/` (auth.controller, JWT, guards Roles/Propiedad), test endpoints × roles, web login.
+Cerrar F2 (PR → CI → merge) y crear `feat/f3-cotizacion`: `apps/api/src/cotizacion/estrategia/*` (5 estrategias + `primaDePrueba`), `cotizacion/dominio/calcular-opciones.ts`, catálogo/formulario, `POST /api/cotizaciones`.
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna. Nuevas Tomadas: D-44 (pruebas con migrate deploy), D-45 (6 reglas de trigger).
+Ninguna.
 
 ## Riesgos o deudas
-- Prisma bloquea `migrate reset` cuando lo ejecuta un agente de IA: Denis sí puede usar `npm run db:reset`; las pruebas usan deploy + seed (D-44).
-- PDF de las 80 pólizas históricas: no existen en disco; en F4 se regeneran si faltan.
-- Windows real de Denis no verificado a mano (CI windows verde en F0).
+- F2 «cliente A no ve la cotización de B»: probado a nivel de dominio (`propiedad.spec.ts`); la prueba HTTP llega en F3 cuando existan cotizaciones.
+- Token en localStorage (aceptable para la simulación; en producción iría en cookie httpOnly).
+- Windows real de Denis no verificado a mano (CI windows verde).
 
 ## Estado del CI
-F0: ubuntu ✅ · windows ✅. F1: pendiente.
+F0 ✅✅ · F1 ✅✅ (ubuntu/windows). F2: pendiente.

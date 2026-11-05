@@ -44,6 +44,14 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | Trigger | Función de PostgreSQL que se ejecuta sola antes de un INSERT/UPDATE y puede rechazarlo | — (vive en la BD) |
 | Seed | Script que llena la BD con datos de demo | Un `fixtures.py` / `loaddata` |
 | Provider / inyección de dependencias | Nest crea los objetos (p. ej. `PrismaService`) y se los pasa al constructor de quien los pide | Pasar dependencias como parámetros del `__init__`, pero automático |
+| JWT (token) | Texto firmado que el servidor entrega al iniciar sesión; el navegador lo manda en cada petición (`Authorization: Bearer …`). Expira | Una cookie de sesión firmada (itsdangerous) |
+| Guard (Nest) | Clase que decide si una petición puede pasar antes de llegar al controlador (401/403) | Un decorador `@login_required` / una dependencia de FastAPI |
+| Decorador propio (`@Roles('ADMINISTRADOR')`, `@Publico()`) | Marca una ruta con metadatos que luego lee el guard | Un decorador que agrega atributos a la función |
+| Interface (TS) | Contrato de forma: qué campos/métodos debe tener un objeto; no genera código | `typing.Protocol` / una clase abstracta |
+| Contexto de React (`ProveedorSesion`) | Valor compartido por toda la app sin pasarlo de mano en mano (aquí, el usuario logueado) | Una variable global, pero controlada |
+| Hook (`useSesion`, `useState`, `useEffect`) | Función de React que da estado o efectos a un componente; empieza con `use` | — (estado de la página en Streamlit: `st.session_state`) |
+| React Router (`<Route path="/admin">`) | Elige qué componente mostrar según la URL, sin recargar la página | Las rutas de Flask, pero en el navegador |
+| zod (`z.object({...})`) | Esquema que valida datos y devuelve errores por campo; se usa en api y web | pydantic |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -71,3 +79,20 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/api/src/persistencia/prisma.service.ts` | Cliente Prisma inyectable (conexión directa con `@prisma/adapter-pg`) | D-03, RNF-05 |
 | `apps/api/test/soporte/*.js` | Antes de las pruebas: usa `svas_test`, aplica migraciones y recarga el seed | — |
 
+
+### F2 · Seguridad
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/seguridad/autenticacion.guard.ts` | Guard global: lee el JWT, exige sesión salvo `@Publico()`, y rechaza con 403 el rol no listado en `@Roles()` | RF-31, RF-32, RNF-10 |
+| `apps/api/src/seguridad/decoradores.ts` | `@Publico()`, `@Roles(...)`, `@UsuarioActual()` | RF-32 |
+| `apps/api/src/seguridad/propiedad.ts` | `verificarPropiedad()`: un CLIENTE solo accede a lo suyo; lo sin dueño (invitado) se lee por uuid | RF-32, D-36 |
+| `apps/api/src/seguridad/auth.service.ts` | Registro mínimo de CLIENTE (+ Cliente), login con bcrypt, emisión del JWT con expiración, creación de usuarios internos | RF-11, RF-31, RNF-09 |
+| `apps/api/src/administracion/usuarios.controller.ts` | Admin lista, crea (ASESOR/ADMINISTRADOR) y activa/desactiva usuarios, con RegistroActividad en la misma transacción | RF-31, RNF-12 |
+| `apps/api/src/comun/reloj.ts` | Puerto `Reloj` (`RELOJ`): `RelojSistema` (con adelanto de días para la demo) y `RelojFijo` (pruebas) | D-07, D-38 |
+| `apps/api/src/comun/registro-actividad.service.ts` | `registrar(accion, entidad, usuarioId, tx)` con fecha del Reloj | RNF-12 |
+| `apps/api/src/comun/validacion.ts` | `validar(esquemaZod, body)` → 400 con `errores` por campo | RF-03, RNF-08 |
+| `apps/api/test/soporte/endpoints.ts` | Inventario de endpoints protegidos con sus roles: lo recorre `permisos.e2e-spec.ts` | RNF-10 |
+| `apps/web/src/api/cliente.ts` | `api(ruta, {cuerpo})`: llama a `/api`, agrega el token, convierte errores en `ErrorApi` con `errores` por campo | RNF-18 |
+| `apps/web/src/sesion/sesion.tsx` | Contexto de sesión (`useSesion`): usuario, `iniciar`, `cerrar` | RF-31 |
+| `apps/web/src/componentes/RutaProtegida.tsx` · `Encabezado.tsx` | Rutas y menú según rol (la protección real está en el backend) | RF-32 |
+| `apps/web/src/pages/login/Login.tsx` | Ingresar / Crear cuenta (react-hook-form + zod), vuelve a `?volver=` | RF-11, CU-02 paso 2 |
