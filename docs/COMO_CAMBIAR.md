@@ -6,15 +6,15 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 
 | Valor / texto | Valor inicial | ¿Cómo se cambia? | Dónde (archivo:línea) | Fase |
 |---|---|---|---|---|
-| Descuento por primera compra (RN-08) | 5 % | **Admin → Parámetros** (sin código) | Valor inicial: `apps/api/prisma/seed.ts:8` | F1 (seed) · F7 (pantalla) |
-| Descuento máximo de negociación (RN-07) | 10 % | **Admin → Parámetros** | `apps/api/prisma/seed.ts:9` | ✅ F7: /admin → pestaña indicada |
-| Máximo de intentos de seguimiento (RN-10) | 4 | **Admin → Parámetros** | `apps/api/prisma/seed.ts:10` | ✅ F7: /admin → pestaña indicada |
-| Días de seguimiento (RN-10) | 7 | **Admin → Parámetros** | `apps/api/prisma/seed.ts:11` | ✅ F7: /admin → pestaña indicada |
-| Vigencia del enlace de retoma (RN-12) | 7 días | **Admin → Parámetros** | `apps/api/prisma/seed.ts:13` | ✅ F7: /admin → pestaña indicada |
-| Máximo de cuotas (RN-14) | 12 | **Admin → Parámetros** | `apps/api/prisma/seed.ts:12` | ✅ F7: /admin → pestaña indicada |
-| Inspección por aseguradora × uso (RN-25) | TRANSPORTE_PASAJEROS = sí | **Admin → Inspección** (casilla por aseguradora × uso) | `apps/api/prisma/seed.ts:157` | ✅ F7: /admin → pestaña indicada |
-| Campos requeridos y valores permitidos (RN-17…RN-23) | ver 02 §10 | **Admin → Campos** (obligatorio, activo, valores; «Agregar campo» crea uno nuevo, D-11) | `apps/api/prisma/seed.ts:92` (campos) y `:44-60` (valores) | ✅ F7: /admin → pestaña indicada |
-| Activar/desactivar aseguradora o plan (RN-16) | todas activas | **Admin → Aseguradoras y planes** (casillas) | `apps/api/prisma/seed.ts:16` y `:24` | ✅ F7: /admin → pestaña indicada |
+| Descuento por primera compra (RN-08) | 5 % | **Admin → Parámetros** (sin código) | Valor inicial: `apps/api/src/persistencia/seed-datos.ts:8` | F1 (seed) · F7 (pantalla) |
+| Descuento máximo de negociación (RN-07) | 10 % | **Admin → Parámetros** | `apps/api/src/persistencia/seed-datos.ts:9` | ✅ F7: /admin → pestaña indicada |
+| Máximo de intentos de seguimiento (RN-10) | 4 | **Admin → Parámetros** | `apps/api/src/persistencia/seed-datos.ts:10` | ✅ F7: /admin → pestaña indicada |
+| Días de seguimiento (RN-10) | 7 | **Admin → Parámetros** | `apps/api/src/persistencia/seed-datos.ts:11` | ✅ F7: /admin → pestaña indicada |
+| Vigencia del enlace de retoma (RN-12) | 7 días | **Admin → Parámetros** | `apps/api/src/persistencia/seed-datos.ts:13` | ✅ F7: /admin → pestaña indicada |
+| Máximo de cuotas (RN-14) | 12 | **Admin → Parámetros** | `apps/api/src/persistencia/seed-datos.ts:12` | ✅ F7: /admin → pestaña indicada |
+| Inspección por aseguradora × uso (RN-25) | TRANSPORTE_PASAJEROS = sí | **Admin → Inspección** (casilla por aseguradora × uso) | `apps/api/src/persistencia/seed-datos.ts:157` | ✅ F7: /admin → pestaña indicada |
+| Campos requeridos y valores permitidos (RN-17…RN-23) | ver 02 §10 | **Admin → Campos** (obligatorio, activo, valores; «Agregar campo» crea uno nuevo, D-11) | `apps/api/src/persistencia/seed-datos.ts:92` (campos) y `:44-60` (valores) | ✅ F7: /admin → pestaña indicada |
+| Activar/desactivar aseguradora o plan (RN-16) | todas activas | **Admin → Aseguradoras y planes** (casillas) | `apps/api/src/persistencia/seed-datos.ts:16` y `:24` | ✅ F7: /admin → pestaña indicada |
 | Tarifa base y antigüedad máxima por aseguradora (RN-26) | ver 02 §10 | **Código** (tarifa de prueba de la aseguradora simulada) | `apps/api/src/cotizacion/estrategia/estrategias.ts:28` (Rímac), `:35` (Pacífico), `:45` (La Positiva), `:57` (Mapfre), `:64` (Quálitas) | F3 |
 | Factor por plan (Básico/Intermedio/Full) (D-10) | 0,75 / 1,00 / 1,35 | **Código** | `apps/api/src/cotizacion/estrategia/tarifa-prueba.ts:9` | F3 |
 | Factor por uso y por antigüedad | ver 02 §10 | **Código** | `apps/api/src/cotizacion/estrategia/tarifa-prueba.ts:11` (uso) y `:17` (antigüedad) | F3 |
@@ -34,3 +34,4 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 | Textos del mensaje final y del enlace de retoma | texto | **Código** | `apps/api/src/asesoria-retencion/retencion/retencion.service.ts` (`avisar`) | F6 |
 | Frecuencia del job de abandonos/cierres (1 min) y apagarlo | 60 s | Variable `JOB_SEGUIMIENTO=false` lo apaga; el intervalo está en código | `retencion.service.ts` (`onModuleInit`) | F6 |
 | Usuarios asesores y administradores | seed | **Admin → Usuarios** (crear, activar/desactivar) | BD | F7 |
+| Activar/desactivar el modo demo | `DEMO_MODE=true` | Variable de entorno en `apps/api/.env` (requiere reiniciar la API) | `apps/api/src/app.module.ts` (`forRoot`) | F8 |
