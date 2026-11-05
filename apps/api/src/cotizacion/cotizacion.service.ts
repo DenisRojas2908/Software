@@ -9,6 +9,7 @@ import {
   DatosVehiculoRegistro,
   RegistroUnicoService,
 } from '../dominio-compartido/cliente/registro-unico.service';
+import { SimuladorFallos } from '../integracion/simulacion/simulador-fallos';
 import { PrismaService } from '../persistencia/prisma.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
 import { verificarPropiedad } from '../seguridad/propiedad';
@@ -48,6 +49,7 @@ export class CotizacionService {
     @Inject(RELOJ) private readonly reloj: Reloj,
     @Inject(ESTRATEGIAS) estrategias: EstrategiaCotizacion[],
     @Inject(DERIVADOR_CASOS) private readonly derivador: DerivadorCasos,
+    private readonly fallos: SimuladorFallos,
   ) {
     // Strategy: el servicio no sabe qué aseguradora es cada estrategia; las busca por código del catálogo.
     this.estrategias = new Map(estrategias.map((e) => [e.codigo, e]));
@@ -114,6 +116,7 @@ export class CotizacionService {
     const estrategia = this.estrategias.get(codigo);
     if (!estrategia) return null;
     try {
+      if (this.fallos.aseguradoraCaida === codigo) throw new Error('aseguradora caída (simulada)');
       return estrategia.cotizar(datos, plan);
     } catch (e) {
       this.log.warn(`La estrategia ${codigo} no respondió: ${(e as Error).message}`);
