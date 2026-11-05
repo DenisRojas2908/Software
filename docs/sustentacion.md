@@ -68,3 +68,28 @@ No: es la unión de los campos requeridos de las aseguradoras activas (tabla `ca
 **¿Por qué el auto 2009 no lo cotizan Rímac ni La Positiva?**
 Son tarifas de prueba: cada aseguradora tiene una antigüedad máxima (Rímac 15 años, La Positiva 16). 2026 − 2009 = 17 → devuelven `null` y el comparativo las muestra como «no cotizan».
 → `estrategias.ts:28,45`, `estrategias.spec.ts`.
+
+## F4 · Compra autónoma, pagos y pólizas (CU-02)
+**¿Cómo garantizan que la compra sea atómica (RNF-05)?**
+Pago confirmado, cuotas, emisión, póliza, PDF y cambios de estado van en UNA `prisma.$transaction`. Si la aseguradora falla al emitir, la transacción se revierte y además se anula el cobro en la pasarela.
+Hay una prueba que fuerza la falla y verifica que no queda pago confirmado ni póliza. → `compra/compra.service.ts` (`pagar`), `test/compra.e2e-spec.ts`.
+
+**¿Qué pasa si el pago es rechazado?**
+No se emite; se guarda el pago RECHAZADO (para auditoría) y el cliente puede reintentar o cambiar el modo. Además, un índice parcial impide dos pagos confirmados en la misma orden.
+→ `compra.service.ts`, migración `restricciones`.
+
+**¿Cómo se decide el 5 % de primera compra?**
+Cuando el cliente ingresa su DNI (el único momento en que se conoce) se busca si ese documento ya tiene una póliza. Si no la tiene, se registra un `Descuento PRIMERA_COMPRA` con el porcentaje de `parametros_comerciales`. cliente@svas.demo tiene una póliza previa y no lo recibe.
+→ `compra.service.ts` (`contexto`, `completarDatos`), `descuentos.ts`.
+
+**Si el asesor negocia 8 % y el cliente es primerizo (5 %), ¿cuánto se descuenta?**
+8 %: RN-09 dice que no se acumulan y se aplica el mayor, sin pasar el máximo (10 %). Es la función pura `resolverDescuento()` con 8 pruebas.
+→ `compra/dominio/descuentos.ts`.
+
+**¿Cómo cambiarían a una pasarela real?**
+La compra depende del puerto `PasarelaPago`; hoy lo implementa `PasarelaSimulada`. Una real (Niubiz, Culqi…) sería otra clase registrada en `integracion.module.ts`, sin tocar `CompraService` (RNF-15).
+→ `integracion/pasarela/*`.
+
+**¿Por qué el PDF dice "sin validez legal"?**
+RNF-20 y D-19: es una simulación académica. La marca de agua y el pie se dibujan en todas las páginas.
+→ `integracion/pdf/generador-pdfkit.ts`.

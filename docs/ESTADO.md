@@ -1,27 +1,26 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 20:55 (Lima) · rama `feat/f3-cotizacion` · último commit `4b099ee`
+2026-11-04 21:15 (Lima) · rama `feat/f4-compra` · último commit `3738e33`
 
 ## Fase y paso actual
-**F3 · Cotizar y comparar (CU-01)**: lista; en `cerrar-fase` (PR #4 + CI). F0–F2 mergeadas (#1–#3). Alcance: F0 → F9.
+**F4 · Compra autónoma (CU-02)**: lista y auditada (auditor: 0 bloquea, 8 corregir → corregidos, 13 menores → 11 corregidos). En `cerrar-fase` (PR #5 + CI). F0–F3 mergeadas. Alcance: F0 → F9.
+En el árbol de trabajo (sin commit) hay avances de F5/F6: `apps/api/src/asesoria-retencion/`, `integracion/notificador/`, `test/asesoria.e2e-spec.ts`, panel del asesor y selección de canal.
 
 ## Qué funciona y cómo verlo
-- `npm run dev` → http://localhost:5173/cotizar: formulario dinámico; comparativo en /cotizacion/:id.
-- Casos de demo verificados a 360 px: auto 2022 (15 planes), 2009 (Rímac y La Positiva no cotizan), 2003 (no asegurable, derivado), taxi (solo Opción 2), camión (fuera de nicho).
-- Login: admin@svas.demo/Admin123!, asesor1@svas.demo/Asesor123!, cliente@svas.demo/Cliente123!.
-- `npm test`: api 74 + web 12.
+- `npm run dev` → /cotizar → «Comprar ahora» → crear cuenta → DNI → cuotas → «Pagar (simulado)» → descargar PDF; /mis-tramites.
+- cliente@svas.demo/Cliente123! no recibe el 5 % (DNI con póliza previa). Rechazo y emisión fallida se fuerzan con `SimuladorFallos` (panel de demo en F8).
+- `npm test`: api 148 (+12 unitarias de F5/F6 sin commit) · web 19.
 
 ## Siguiente paso exacto
-Cerrar F3 y crear `feat/f4-compra`: `apps/api/src/compra/dominio/{descuentos,atribuir-canal}.ts`, puertos en `integracion/` (pasarela, aseguradora, pdf), `POST /api/compras` … `/pagar` en UNA transacción, PDF, web pago-poliza y mis-trámites.
+Cerrar F4 (PR → CI → merge) y crear `feat/f5-asesoria`: commitear el trabajo adelantado de F5 (quitar `DerivadorCasosTemporal` de `cotizacion.module.ts`, registrar `AsesoriaRetencionModule` en `app.module.ts`, endpoints en `test/soporte/endpoints.ts`).
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna. Nuevas Tomadas: D-46 (registro único de invitados), D-47 (fuera de nicho = 201 con mensaje).
+Ninguna. Nuevas Tomadas: D-48 (modelo del año siguiente), D-49 (usuario inactivo pierde acceso), D-50 (reloj fijo en pruebas).
 
 ## Riesgos o deudas
-- `DerivadorCasosTemporal` solo registra actividad; la solicitud real llega en F5.
-- PDFs de las 80 pólizas históricas: se regeneran al pedirlos (F4).
+- Menores del auditor pendientes: cobertura con `it('RN-xx')` de RN-15 es indirecta vía e2e (aceptable).
 - Windows real de Denis no verificado a mano (CI windows verde).
 
 ## Estado del CI
-F0–F2 ✅ ubuntu / ✅ windows. F3: pendiente.
+F0–F3 ✅ ubuntu / ✅ windows. F4: pendiente.

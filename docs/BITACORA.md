@@ -4,6 +4,18 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 21:15 (Lima) · F4 · Compra autónoma, pagos y pólizas (CU-02) + auditoría
+- **Qué se hizo**: F3 mergeada (PR #4). Dominio: descuentos (RN-07/08/09), `atribuirCanal` (RN-27), habilitación de compra, cronograma de cuotas. Puertos simulados: pasarela, emisor, PDF (pdfkit con marca de agua) y `SimuladorFallos`. `CompraService`: orden editable (D-28), datos faltantes y primera compra, confirmación con firma y cronograma, pago → transacción (pago + cuotas + emisión + póliza + PDF + estados) con rollback y anulación del cobro. Pólizas: descarga con propiedad (regenera las históricas) y «mis trámites». Web: compra paso a paso, mis trámites. Flujo completo verificado en el navegador a 360 px. **Auditor** (subagente, solo lectura): 0 bloquea · 8 corregir · 13 menores. Corregidos los 8 y 11 menores: el guard verifica `activo`, 404/400 en usuarios, `habilitadaPorAsesoria` como regla única del mismo plan, anulación del cobro ante cualquier falla, precio recalculado en la transacción, PDF desde las cuotas guardadas, antigüedad 0 para el año siguiente, reloj fijo en e2e, tests con literales de 02 §10 y RN-06/15/16/23/24/26.
+- **Errores encontrados y resueltos**: pdfkit + zlib abortaba Node dentro de Jest (→ `compress: false`); el pie del PDF bajo el margen generaba páginas sin fin (→ margen 0 al escribir el pie); el resumen pagado mostraba «Sin descuento» (la póliza propia contaba como previa).
+- **Archivos tocados**: `apps/api/src/{compra,pagos,polizas,integracion}/*`, `seguridad/autenticacion.guard.ts`, `administracion/usuarios.controller.ts`, `apps/api/test/{compra,cotizacion,seguridad}.e2e-spec.ts`, `apps/web/src/pages/{pago-poliza,mis-tramites}`.
+- **Decisiones**: D-48, D-49, D-50.
+- **Pruebas**: api 148 (en git) · web 19. Cubren RF-09, RF-20, RF-22…RF-26, RN-06…RN-09, RN-14, RN-15, RN-16, RN-23, RN-24, RN-26, RN-27, RNF-05, D-08, D-30.
+- **Para defender**:
+  1. *Transacción y rollback* (`compra/compra.service.ts`, `pagar`): «¿qué pasa si la aseguradora falla después de cobrar?» → Se revierte todo y se anula el cobro; hay prueba.
+  2. *No acumulación de descuentos* (`compra/dominio/descuentos.ts`): «5 % + 8 %, ¿cuánto?» → 8 % (RN-09), con tope del máximo.
+  3. *Auditoría independiente* (subagente `auditor`): «¿cómo controlan la calidad?» → Un revisor de solo lectura contrasta código y especificación; se corrigieron sus hallazgos antes de mergear.
+- **Siguiente paso**: cerrar F4 y crear F5 con el trabajo adelantado.
+
 ## 2026-11-04 20:55 (Lima) · F3 · Cotizar y comparar (CU-01)
 - **Qué se hizo**: F2 mergeada (PR #3). Dominio puro: 5 estrategias + `primaDePrueba`, `calcularOpciones`, `evaluarNicho`, `unirCampos`/`validarContraCatalogo`, `redondear2`. Servicios: catálogo (formulario, inspección), registro único, `CotizacionService` (una transacción + derivación por puerto). Endpoints `GET /api/catalogo/formulario`, `POST/GET /api/cotizaciones`. Web: cotizador dinámico, comparativo ordenable con Opción 1/2 por plan, pantallas base de compra y asesoría. Los 5 casos de demo se verificaron en el navegador a 360 px.
 - **Archivos tocados**: `apps/api/src/{cotizacion,dominio-compartido,comun/dinero.ts}`, `apps/api/test/cotizacion.e2e-spec.ts`, `apps/web/src/pages/{cotizador,seleccion-canal,pago-poliza}`, `apps/web/src/{tipos,componentes/formato.ts}`.
