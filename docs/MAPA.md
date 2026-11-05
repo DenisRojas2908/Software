@@ -39,6 +39,11 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | Componente React | Función que devuelve la interfaz (HTML) a mostrar | Una función que arma una página (como en Streamlit) |
 | JSX (`<h1>SVAS</h1>` dentro de TS) | Sintaxis para escribir HTML dentro del código; se convierte a llamadas JS | f-strings que generan HTML, pero verificadas |
 | `className="text-xs …"` (Tailwind) | Clases utilitarias de estilo: cada una aplica una propiedad CSS | — |
+| Prisma | ORM: describe las tablas en `schema.prisma` y genera un cliente tipado (`prisma.poliza.findMany()`) | SQLAlchemy / el ORM de Django |
+| Migración | Archivo SQL versionado que lleva la BD de un estado al siguiente (`prisma/migrations/*`) | Alembic / migraciones de Django |
+| Trigger | Función de PostgreSQL que se ejecuta sola antes de un INSERT/UPDATE y puede rechazarlo | — (vive en la BD) |
+| Seed | Script que llena la BD con datos de demo | Un `fixtures.py` / `loaddata` |
+| Provider / inyección de dependencias | Nest crea los objetos (p. ej. `PrismaService`) y se los pasa al constructor de quien los pide | Pasar dependencias como parámetros del `__init__`, pero automático |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -55,4 +60,14 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/web/src/componentes/AvisoSimulacion.tsx` | Franja «Simulación académica» visible en toda la UI | D-19, RNF-20 |
 | `apps/web/vite.config.mts` | Servidor de desarrollo (:5173), reenvía `/api` a Nest (:3000) | — |
 | `.github/workflows/ci.yml` | CI: Ubuntu (Postgres, lint, test, build) y Windows (install, build, test) | D-42 |
+
+### F1 · Persistencia y datos
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/prisma/schema.prisma` | Las 22 tablas y 16 enums; nombres en español (`Cotizacion`), tablas en snake_case (`@@map`) | 02 §9 |
+| `prisma/migrations/*_init/migration.sql` | SQL generado por Prisma: tablas, enums, 25 FK, índices únicos | 02 §9, D-27 |
+| `prisma/migrations/*_restricciones/migration.sql` | CHECK, índice parcial de pago confirmado, triggers T1–T6 y RLS | RN-07, RN-10, RN-11, RN-14, D-24 |
+| `apps/api/prisma/seed.ts` | `sembrar()`: vacía las tablas y carga catálogo, parámetros, usuarios demo y 80 pólizas históricas | 02 §10, RNF-13 |
+| `apps/api/src/persistencia/prisma.service.ts` | Cliente Prisma inyectable (conexión directa con `@prisma/adapter-pg`) | D-03, RNF-05 |
+| `apps/api/test/soporte/*.js` | Antes de las pruebas: usa `svas_test`, aplica migraciones y recarga el seed | — |
 

@@ -1,27 +1,26 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 20:34 (Lima) · rama `feat/f0-arranque` · último commit `8b9c38b`
+2026-11-04 20:41 (Lima) · rama `feat/f1-modelo-datos` · último commit `f4946bb`
 
 ## Fase y paso actual
-**F0 · Arranque**: código terminado. En curso `cerrar-fase` (PR a main + CI). Alcance de la sesión: F0 → F9 (F10 queda para la laptop de Denis).
+**F1 · Modelo de datos**: código y tests listos; en `cerrar-fase` (PR #2 + CI). F0 mergeada (PR #1). Alcance: F0 → F9.
 
 ## Qué funciona y cómo verlo
-- `npm install` → `npm run dev`: API http://localhost:3000/api/salud y web http://localhost:5173 (proxy /api verificado).
-- `npm run build` → `npm start`: un proceso en http://localhost:3000 (SPA + /api). /api inexistente → 404.
-- `npm test`: 2 pruebas (api salud, web aviso). `npm run lint` limpio. Inicio verificado a 360 px sin desborde.
-- Aún no hay usuarios demo (llegan con el seed de F1).
+- `npm run db:reset` (o `npx prisma migrate deploy` + `npm run db:seed`): 5 aseguradoras, 15 planes, 28 campos, 143 valores, parámetros 5/10/4/7/12/7, 80 pólizas (AUTONOMO 23, ASESORIA 29, TELEMARKETING 28).
+- Usuarios: admin@svas.demo/Admin123!, asesor1/2@svas.demo/Asesor123!, cliente@svas.demo/Cliente123! (póliza previa, DNI 70000001). Aún sin login (F2).
+- `npm test`: 11 pruebas (salud + 10 de restricciones de BD).
 
 ## Siguiente paso exacto
-Abrir el PR `feat/f0-arranque` → main, esperar el CI (ubuntu + windows), mergear y crear `feat/f1-modelo-datos`. Luego F1: `apps/api/prisma/schema.prisma` (22 tablas, 16 enums, + `vehiculo.datos_adicionales`).
+Cerrar F1 (PR → CI → merge) y crear `feat/f2-seguridad`: `apps/api/src/seguridad/` (auth.controller, JWT, guards Roles/Propiedad), test endpoints × roles, web login.
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna. D-11, D-21…D-24 y D-25…D-43 están Tomadas.
+Ninguna. Nuevas Tomadas: D-44 (pruebas con migrate deploy), D-45 (6 reglas de trigger).
 
 ## Riesgos o deudas
-- Windows real de Denis no verificado a mano (lo cubre el job windows del CI).
-- Prisma 7: el generador `prisma-client-js` hay que confirmarlo en F1 (puede requerir `prisma-client` + adapter-pg).
-- `incremental` desactivado en apps/api/tsconfig (con `deleteOutDir` dejaba dist vacío).
+- Prisma bloquea `migrate reset` cuando lo ejecuta un agente de IA: Denis sí puede usar `npm run db:reset`; las pruebas usan deploy + seed (D-44).
+- PDF de las 80 pólizas históricas: no existen en disco; en F4 se regeneran si faltan.
+- Windows real de Denis no verificado a mano (CI windows verde en F0).
 
 ## Estado del CI
-Primer run pendiente (al hacer push). ubuntu: — · windows: —
+F0: ubuntu ✅ · windows ✅. F1: pendiente.
