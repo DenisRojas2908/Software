@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 20:41 (Lima) · F1 · Modelo de datos, restricciones y seed
+- **Qué se hizo**: F0 mergeada (PR #1, CI verde en ubuntu y windows). Esquema Prisma con 22 tablas, 16 enums y 25 FK (verificado en el SQL). Migración de restricciones: CHECK, índice parcial, T1–T6 y RLS. PrismaService con adapter pg. Seed completo con historial de 80 pólizas. Jest de la api con BD de pruebas.
+- **Archivos tocados**: `apps/api/prisma/{schema.prisma,seed.ts,migrations/*}`, `apps/api/prisma.config.ts`, `apps/api/src/persistencia/*`, `apps/api/jest.config.js`, `apps/api/test/soporte/*`, `apps/api/test/restricciones-bd.e2e-spec.ts`, `eslint.config.mjs`.
+- **Decisiones**: D-44 (migrate reset bloqueado para agentes → deploy + seed), D-45 (6 reglas de trigger, 8 CREATE TRIGGER).
+- **Pruebas**: 11/11. Cubren a nivel BD: RN-07 (T2), RN-10 (T6), RN-11 (CHECK), RN-14 (T3), FK compuesta, índice parcial, T1, T5, seed.
+- **Para defender**:
+  1. *FK compuesta* (`schema.prisma`, modelo OrdenCompra): «¿cómo evitan comprar con la prima de otra cotización?» → La BD lo rechaza; hay test.
+  2. *Triggers como última barrera* (`*_restricciones/migration.sql`): «¿por qué validar dos veces?» → El dominio da el mensaje; la BD protege de bugs y de consultas manuales.
+  3. *Seed como única fuente de los valores iniciales* (`seed.ts:7-14`): «¿dónde está el 5 %?» → En el seed y luego en `parametros_comerciales`.
+- **Siguiente paso**: cerrar F1 y empezar F2 (seguridad).
+
 ## 2026-11-04 20:34 (Lima) · F0 · Esqueleto del monorepo terminado
 - **Qué se hizo**: decisiones D-11…D-24 tomadas y D-25…D-43 registradas; 02 §6 corregido (canal definitivo en la transacción de pago). Monorepo npm workspaces (NestJS 11 + React 19/Vite 8/Tailwind 4), `GET /api/salud`, inicio con aviso de simulación, ESLint + Prettier, CI ubuntu/windows, README para PowerShell.
 - **Archivos tocados**: `package.json`, `eslint.config.mjs`, `apps/api/**` (main, app, app.module, comun/salud, prisma), `apps/web/**` (App, AvisoSimulacion, Inicio, vite/jest config), `.github/workflows/ci.yml`, `README.md`, `docs/04-decisiones.md`, `docs/02-especificacion.md`, `docs/MAPA.md`, `docs/trazabilidad.md`, `docs/sustentacion.md`.

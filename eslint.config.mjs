@@ -22,8 +22,8 @@ export default tseslint.config(
     rules: { ...reactHooks.configs.recommended.rules },
   },
   {
-    files: ['**/*.cjs'],
-    languageOptions: { globals: globals.node, sourceType: 'commonjs' },
+    files: ['**/*.cjs', 'apps/api/**/*.js'],
+    languageOptions: { globals: { ...globals.node, ...globals.jest }, sourceType: 'commonjs' },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {

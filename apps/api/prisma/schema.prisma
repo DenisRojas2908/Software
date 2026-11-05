@@ -1,8 +1,426 @@
-// Esquema de la BD del SVAS. Los modelos (22 tablas, 16 enums) llegan en F1.
+// Esquema físico del SVAS (02-especificacion §9): 22 tablas, 16 enums, 25 FK.
+// Modelos en español (como los diagramas de PC2); tablas y columnas en snake_case con @@map/@map.
+// Restricciones que Prisma no expresa (CHECK, índice parcial, triggers, RLS) están en la migración
+// `prisma/migrations/*_restricciones/migration.sql`.
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ───────────── Enums (16) ─────────────
+enum Rol {
+  CLIENTE
+  ASESOR
+  ADMINISTRADOR
+}
+
+enum UsoVehiculo {
+  PARTICULAR
+  COMERCIAL_LIGERO
+  TRANSPORTE_PASAJEROS
+}
+
+enum CanalContacto {
+  LLAMADA
+  WHATSAPP
+}
+
+enum EstadoCotizacion {
+  REGISTRADA
+  CONVERTIDA
+  NO_CONCRETADA
+}
+
+enum OpcionVenta {
+  COMPRA_INMEDIATA
+  ASESORIA
+}
+
+enum MotivoAsesoria {
+  DUDA
+  NEGOCIACION
+  DESCUENTO
+  INSPECCION
+  NO_ASEGURABLE
+}
+
+enum OrigenCaso {
+  SISTEMA
+  CLIENTE
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  EN_ATENCION
+  CERRADA
+}
+
+enum TipoDescuento {
+  PRIMERA_COMPRA
+  NEGOCIADO
+}
+
+enum EstadoSeguimiento {
+  EN_SEGUIMIENTO
+  CONVERTIDO
+  DESCARTADO
+}
+
+enum MotivoCierre {
+  PRECIO
+  YA_CONTRATO
+  NO_RESPONDE
+  SIN_INTERES
+  OTRO
+}
+
+enum ResultadoIntento {
+  CONTACTADO
+  NO_RESPONDE
+  RECHAZA
+  ACEPTA
+}
+
+enum ModoPago {
+  UNICO
+  CUOTAS
+}
+
+enum EstadoPago {
+  PENDIENTE
+  CONFIRMADO
+  RECHAZADO
+}
+
+enum CanalVenta {
+  AUTONOMO
+  ASESORIA
+  TELEMARKETING
+}
+
+enum TipoCampo {
+  TEXTO
+  NUMERO
+  LISTA
+}
+
+// ───────────── Catálogo ─────────────
+model Aseguradora {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre           String            @unique
+  activa           Boolean           @default(true)
+  codigoEstrategia String            @unique @map("codigo_estrategia")
+  planes           Plan[]
+  campos           CampoRequerido[]
+  reglasInspeccion ReglaInspeccion[]
+
+  @@map("aseguradora")
+}
+
+model Plan {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre        String
+  descripcion   String
+  activo        Boolean         @default(true)
+  aseguradoraId String          @map("aseguradora_id") @db.Uuid
+  aseguradora   Aseguradora     @relation(fields: [aseguradoraId], references: [id])
+  primas        PrimaCotizada[]
+  descuentos    Descuento[]
+
+  @@unique([aseguradoraId, nombre])
+  @@map("plan")
+}
+
+model CampoRequerido {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre        String
+  tipo          TipoCampo
+  obligatorio   Boolean
+  activo        Boolean          @default(true)
+  aseguradoraId String           @map("aseguradora_id") @db.Uuid
+  aseguradora   Aseguradora      @relation(fields: [aseguradoraId], references: [id])
+  valores       ValorPermitido[]
+
+  @@unique([aseguradoraId, nombre])
+  @@map("campo_requerido")
+}
+
+model ValorPermitido {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  valor            String
+  campoRequeridoId String         @map("campo_requerido_id") @db.Uuid
+  campoRequerido   CampoRequerido @relation(fields: [campoRequeridoId], references: [id], onDelete: Cascade)
+
+  @@unique([campoRequeridoId, valor])
+  @@map("valor_permitido")
+}
+
+model ReglaInspeccion {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uso                UsoVehiculo
+  requiereInspeccion Boolean     @map("requiere_inspeccion")
+  aseguradoraId      String      @map("aseguradora_id") @db.Uuid
+  aseguradora        Aseguradora @relation(fields: [aseguradoraId], references: [id])
+
+  @@unique([aseguradoraId, uso])
+  @@map("regla_inspeccion")
+}
+
+model ParametrosComerciales {
+  id                     String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  descuentoPrimeraCompra Decimal @map("descuento_primera_compra") @db.Decimal(5, 2)
+  descuentoMaximo        Decimal @map("descuento_maximo") @db.Decimal(5, 2)
+  maxIntentos            Int     @map("max_intentos")
+  diasSeguimiento        Int     @map("dias_seguimiento")
+  maxCuotas              Int     @map("max_cuotas")
+  vigenciaEnlaceDias     Int     @map("vigencia_enlace_dias")
+
+  @@map("parametros_comerciales")
+}
+
+// ───────────── Usuarios y clientes ─────────────
+model Usuario {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String              @unique
+  hashContrasena       String              @map("hash_contrasena")
+  rol                  Rol
+  activo               Boolean             @default(true)
+  cliente              Cliente?
+  solicitudesAtendidas SolicitudAsesoria[]
+  intentos             IntentoContacto[]
+  descuentos           Descuento[]
+  actividades          RegistroActividad[]
+
+  @@map("usuario")
+}
+
+model Cliente {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombres         String
+  apellidos       String?
+  numeroDocumento String?       @map("numero_documento")
+  telefono        String
+  email           String?
+  canalPreferido  CanalContacto @map("canal_preferido")
+  usuarioId       String?       @unique @map("usuario_id") @db.Uuid
+  usuario         Usuario?      @relation(fields: [usuarioId], references: [id])
+  vehiculos       Vehiculo[]
+
+  @@index([numeroDocumento])
+  @@map("cliente")
+}
+
+model Vehiculo {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uso              UsoVehiculo
+  marca            String
+  modelo           String
+  anio             Int
+  clase            String?
+  tipo             String?
+  // D-11: valores de campos agregados por el admin que no tienen columna propia
+  datosAdicionales Json          @default("{}") @map("datos_adicionales")
+  clienteId        String        @map("cliente_id") @db.Uuid
+  cliente          Cliente       @relation(fields: [clienteId], references: [id])
+  ubicacion        UbicacionUso?
+  cotizaciones     Cotizacion[]
+
+  @@map("vehiculo")
+}
+
+model UbicacionUso {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  departamento String
+  provincia    String
+  distrito     String
+  vehiculoId   String   @unique @map("vehiculo_id") @db.Uuid
+  vehiculo     Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+
+  @@map("ubicacion_uso")
+}
+
+// ───────────── Cotización ─────────────
+model Cotizacion {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fecha            DateTime            @default(now()) @db.Timestamptz(6)
+  estado           EstadoCotizacion    @default(REGISTRADA)
+  motivoDerivacion MotivoAsesoria?     @map("motivo_derivacion")
+  vehiculoId       String              @map("vehiculo_id") @db.Uuid
+  vehiculo         Vehiculo            @relation(fields: [vehiculoId], references: [id])
+  opciones         CotizacionOpcion[]
+  primas           PrimaCotizada[]
+  solicitudes      SolicitudAsesoria[]
+  seguimiento      Seguimiento?
+  descuentos       Descuento[]
+  orden            OrdenCompra?
+
+  @@index([fecha])
+  @@map("cotizacion")
+}
+
+model CotizacionOpcion {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  opcion       OpcionVenta
+  cotizacionId String      @map("cotizacion_id") @db.Uuid
+  cotizacion   Cotizacion  @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+
+  @@unique([cotizacionId, opcion])
+  @@map("cotizacion_opcion")
+}
+
+model PrimaCotizada {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prima        Decimal?      @db.Decimal(10, 2)
+  disponible   Boolean
+  cotizacionId String        @map("cotizacion_id") @db.Uuid
+  cotizacion   Cotizacion    @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  planId       String        @map("plan_id") @db.Uuid
+  plan         Plan          @relation(fields: [planId], references: [id])
+  ordenes      OrdenCompra[]
+
+  @@unique([cotizacionId, planId])
+  // Destino de la FK compuesta de orden_compra (la prima elegida es de su propia cotización)
+  @@unique([cotizacionId, id])
+  @@map("prima_cotizada")
+}
+
+// ───────────── Asesoría y retención ─────────────
+model SolicitudAsesoria {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  motivo        MotivoAsesoria
+  estado        EstadoSolicitud @default(PENDIENTE)
+  canal         CanalContacto
+  origen        OrigenCaso
+  fechaCreacion DateTime        @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  // D-31: ACEPTA | NO_ACEPTA | NO_RESPONDE (validado en el dominio)
+  resultado     String?
+  cotizacionId  String          @map("cotizacion_id") @db.Uuid
+  cotizacion    Cotizacion      @relation(fields: [cotizacionId], references: [id])
+  asesorId      String?         @map("asesor_id") @db.Uuid
+  asesor        Usuario?        @relation(fields: [asesorId], references: [id])
+
+  @@map("solicitud_asesoria")
+}
+
+model Seguimiento {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estado           EstadoSeguimiento @default(EN_SEGUIMIENTO)
+  intentos         Int               @default(0)
+  fechaApertura    DateTime          @map("fecha_apertura") @db.Timestamptz(6)
+  fechaCierre      DateTime?         @map("fecha_cierre") @db.Timestamptz(6)
+  motivoCierre     MotivoCierre?     @map("motivo_cierre")
+  enlaceToken      String?           @unique @map("enlace_token")
+  enlaceExpiraEn   DateTime?         @map("enlace_expira_en") @db.Timestamptz(6)
+  cotizacionId     String            @unique @map("cotizacion_id") @db.Uuid
+  cotizacion       Cotizacion        @relation(fields: [cotizacionId], references: [id])
+  intentosContacto IntentoContacto[]
+
+  @@map("seguimiento")
+}
+
+model IntentoContacto {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  canal         CanalContacto
+  fecha         DateTime         @db.Timestamptz(6)
+  resultado     ResultadoIntento
+  seguimientoId String           @map("seguimiento_id") @db.Uuid
+  seguimiento   Seguimiento      @relation(fields: [seguimientoId], references: [id], onDelete: Cascade)
+  asesorId      String           @map("asesor_id") @db.Uuid
+  asesor        Usuario          @relation(fields: [asesorId], references: [id])
+
+  @@map("intento_contacto")
+}
+
+model Descuento {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo         TipoDescuento
+  porcentaje   Decimal       @db.Decimal(5, 2)
+  aceptado     Boolean
+  cotizacionId String        @map("cotizacion_id") @db.Uuid
+  cotizacion   Cotizacion    @relation(fields: [cotizacionId], references: [id])
+  planId       String        @map("plan_id") @db.Uuid
+  plan         Plan          @relation(fields: [planId], references: [id])
+  // NULL en la primera compra automática
+  asesorId     String?       @map("asesor_id") @db.Uuid
+  asesor       Usuario?      @relation(fields: [asesorId], references: [id])
+
+  @@map("descuento")
+}
+
+// ───────────── Compra, pago y póliza ─────────────
+model OrdenCompra {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  primaFinal        Decimal       @map("prima_final") @db.Decimal(10, 2)
+  aceptaCondiciones Boolean       @default(false) @map("acepta_condiciones")
+  firmaSimulada     Boolean       @default(false) @map("firma_simulada")
+  // D-28: provisional al crear; el definitivo se fija en la transacción de pago
+  canalVenta        CanalVenta    @map("canal_venta")
+  creadoEn          DateTime      @default(now()) @map("creado_en") @db.Timestamptz(6)
+  // D-27: FK simple a cotizacion + FK compuesta (cotizacion_id, prima_cotizada_id) → prima_cotizada
+  cotizacionId      String        @unique @map("cotizacion_id") @db.Uuid
+  cotizacion        Cotizacion    @relation(fields: [cotizacionId], references: [id])
+  primaCotizadaId   String        @unique @map("prima_cotizada_id") @db.Uuid
+  primaCotizada     PrimaCotizada @relation(fields: [cotizacionId, primaCotizadaId], references: [cotizacionId, id])
+  pagos             Pago[]
+  poliza            Poliza?
+
+  @@map("orden_compra")
+}
+
+model Pago {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  monto         Decimal     @db.Decimal(10, 2)
+  modo          ModoPago
+  estado        EstadoPago  @default(PENDIENTE)
+  numeroCuotas  Int?        @map("numero_cuotas")
+  referencia    String
+  fecha         DateTime    @db.Timestamptz(6)
+  ordenCompraId String      @map("orden_compra_id") @db.Uuid
+  ordenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
+  cuotas        Cuota[]
+
+  @@map("pago")
+}
+
+model Cuota {
+  id     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numero Int
+  monto  Decimal    @db.Decimal(10, 2)
+  estado EstadoPago @default(PENDIENTE)
+  pagoId String     @map("pago_id") @db.Uuid
+  pago   Pago       @relation(fields: [pagoId], references: [id], onDelete: Cascade)
+
+  @@unique([pagoId, numero])
+  @@map("cuota")
+}
+
+model Poliza {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numero        String      @unique
+  fechaEmision  DateTime    @map("fecha_emision") @db.Timestamptz(6)
+  archivoPdf    String      @map("archivo_pdf")
+  canalVenta    CanalVenta  @map("canal_venta")
+  ordenCompraId String      @unique @map("orden_compra_id") @db.Uuid
+  ordenCompra   OrdenCompra @relation(fields: [ordenCompraId], references: [id])
+
+  @@index([fechaEmision])
+  @@map("poliza")
+}
+
+// ───────────── Auditoría ─────────────
+model RegistroActividad {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accion    String
+  entidad   String
+  fecha     DateTime @db.Timestamptz(6)
+  // NULL en acciones de invitado
+  usuarioId String?  @map("usuario_id") @db.Uuid
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([fecha])
+  @@map("registro_actividad")
 }
