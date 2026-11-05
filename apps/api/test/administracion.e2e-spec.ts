@@ -125,6 +125,23 @@ describe('CU-05 Gestionar catálogo, parámetros y reportes (F7)', () => {
     }
   });
 
+  it('RF-28: un campo LISTA nuevo sin valores se rechaza', async () => {
+    const rimac = (await http().get('/api/admin/aseguradoras').set(auth(admin))).body.find(
+      (a: { nombre: string }) => a.nombre === 'Rímac',
+    );
+    const r = await http()
+      .post('/api/admin/campos')
+      .set(auth(admin))
+      .send({ aseguradoraId: rimac.id, nombre: 'gps', tipo: 'LISTA', obligatorio: true, valores: [] })
+      .expect(400);
+    expect(r.body.errores.valores).toBeDefined();
+  });
+
+  it('RF-31: el admin no puede desactivarse a sí mismo (quedaría el sistema sin administración)', async () => {
+    const yo = (await http().get('/api/auth/yo').set(auth(admin)).expect(200)).body;
+    await http().patch(`/api/admin/usuarios/${yo.id}`).set(auth(admin)).send({ activo: false }).expect(409);
+  });
+
   it('RN-25 / RF-29: el admin quita la inspección de Mapfre para taxis y Mapfre pasa a permitir la Opción 1', async () => {
     const mapfre = (await http().get('/api/admin/aseguradoras').set(auth(admin))).body.find(
       (a: { nombre: string }) => a.nombre === 'Mapfre',
@@ -226,7 +243,13 @@ describe('CU-05 Gestionar catálogo, parámetros y reportes (F7)', () => {
       'AUTONOMO',
       'TELEMARKETING',
     ]);
-    expect(r.total.polizas).toBeGreaterThanOrEqual(70);
+    // 02 §10: el seed (sembrado con fecha 2026-11-05) trae exactamente 80 pólizas en los 90 días anteriores
+    expect(r.total.polizas).toBe(80);
+    const suma = await prisma.ordenCompra.aggregate({
+      _sum: { primaFinal: true },
+      where: { poliza: { numero: { contains: '-H' } } },
+    });
+    expect(r.total.primaTotal).toBe(Number(suma._sum.primaFinal));
     const porAseguradora = (
       await http().get('/api/admin/reportes/ventas?agrupar=aseguradora').set(auth(admin)).expect(200)
     ).body;

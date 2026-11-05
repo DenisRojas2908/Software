@@ -11,6 +11,8 @@ module.exports = {
   testRegex: '.*\\.(spec|e2e-spec)\\.ts$',
   transform: { '^.+\\.ts$': 'ts-jest' },
   testEnvironment: 'node',
+  // Las suites comparten la base svas_test y el reloj de la demo: se corren en serie (también con `npx jest`)
+  maxWorkers: 1,
   passWithNoTests: true,
   setupFiles: ['<rootDir>/test/soporte/entorno.js'],
   globalSetup: sinBd ? undefined : '<rootDir>/test/soporte/preparar-bd.js',

@@ -134,7 +134,8 @@ describe('CU-03 Solicitar asesoría / descuento (F5)', () => {
     const pago = await comprar(cliente, cot.id, plan.primaCotizadaId);
     expect(pago.canalVenta).toBe('ASESORIA'); // RN-27
     expect(pago.descuento).toEqual({ tipo: 'NEGOCIADO', porcentaje: 8 }); // RN-09: no se acumula con el 5 %
-    expect(pago.primaFinal).toBeCloseTo(plan.prima! * 0.92, 2);
+    expect(plan.prima).toBe(1957.5); // 02 §10: Rímac Full 2022
+    expect(pago.primaFinal).toBe(1800.9); // 1957.50 × 0,92
     const desc = await prisma.descuento.findFirstOrThrow({
       where: { cotizacionId: cot.id, tipo: 'NEGOCIADO' },
     });
@@ -209,6 +210,42 @@ describe('CU-03 Solicitar asesoría / descuento (F5)', () => {
       estado: 'EN_SEGUIMIENTO',
       intentos: 0,
     });
+  });
+
+  it('D-52 / RN-06: no se puede reescribir una prima publicada ni registrar prima manual en un caso pedido por el cliente', async () => {
+    const cliente = await registrarCliente(app);
+    const cot = await cotizarComoInvitado(app);
+    const sol = await http()
+      .post('/api/asesoria/solicitudes')
+      .set(auth(cliente))
+      .send({ cotizacionId: cot.id, motivo: 'DUDA', canal: 'WHATSAPP' })
+      .expect(201);
+    await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(asesor)).expect(201);
+    const plan = planDe(cot, 'Rímac', 'Full');
+    const r = await http()
+      .post(`/api/asesor/solicitudes/${sol.body.id}/prima`)
+      .set(auth(asesor))
+      .send({ primaCotizadaId: plan.primaCotizadaId, prima: 1000 })
+      .expect(422);
+    expect(r.body.errores.prima).toBeDefined();
+    expect(
+      Number((await prisma.primaCotizada.findUniqueOrThrow({ where: { id: plan.primaCotizadaId } })).prima),
+    ).toBe(1957.5);
+  });
+
+  it('02 §7: dos asesores no pueden tomar el mismo caso (el segundo recibe 409)', async () => {
+    const cliente = await registrarCliente(app);
+    const cot = await cotizarComoInvitado(app);
+    const sol = await http()
+      .post('/api/asesoria/solicitudes')
+      .set(auth(cliente))
+      .send({ cotizacionId: cot.id, motivo: 'DUDA', canal: 'LLAMADA' })
+      .expect(201);
+    const otro = (
+      await http().post('/api/auth/login').send({ email: 'asesor2@svas.demo', contrasena: 'Asesor123!' })
+    ).body.token;
+    await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(asesor)).expect(201);
+    await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(otro)).expect(409);
   });
 
   it('RF-32: otro asesor no puede registrar descuentos en un caso que atiende otro', async () => {
