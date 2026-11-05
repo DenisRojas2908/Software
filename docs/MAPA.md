@@ -61,6 +61,7 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | Puerto / adaptador | Interfaz (puerto, p. ej. `PasarelaPago`) + una implementación intercambiable (adaptador, p. ej. `PasarelaSimulada`) | Una clase abstracta y subclases que se eligen por configuración |
 | `HttpException(…, 402)` | Error que Nest convierte en una respuesta HTTP con ese código | `raise HTTPException(status_code=402)` en FastAPI |
 | `StreamableFile` | Respuesta que envía un archivo (el PDF) por partes | `FileResponse` en FastAPI |
+| `setInterval` en `onModuleInit` | Tarea que Nest ejecuta cada minuto mientras corre la API (job de abandonos) | Un hilo con `schedule`/`APScheduler` |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -151,3 +152,13 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/api/src/asesoria-retencion/retencion/seguimiento-apertura.ts` | `abrirSeguimiento()`: cotización NO_CONCRETADA + Seguimiento EN_SEGUIMIENTO | RF-16, CU-03 6a/6b |
 | `apps/web/src/pages/seleccion-canal/SeleccionCanal.tsx` | «Prefiero que me asesoren»: datos precargados, motivo y canal, confirmación con tiempo estimado | RF-11, RF-12 |
 | `apps/web/src/pages/panel-asesor/{PanelAsesor,ColaAsesoria}.tsx` | Pestañas del asesor; cola con badge «Derivado», detalle sin re-digitar, acciones | RF-13…RF-15 |
+
+### F6 · Seguimiento de telemarketing (CU-04)
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/asesoria-retencion/retencion/dominio/seguimiento.ts` | Clase de dominio `Seguimiento`: `puedeContactar()` (canal preferido, ≤ máximo de intentos, ≤ días), `debeCerrarseAutomaticamente()`, `cerrar()` (exige motivo), `nuevoEnlace()` / `enlaceVigente()` | RN-10, RN-11, RN-12, RNF-11 |
+| `apps/api/src/asesoria-retencion/retencion/retencion.service.ts` | Job de abandonos y cierres automáticos (cada minuto), cola, intentos, aceptar, cerrar con mensaje final único, reenvío, retoma por enlace | CU-04, RF-16…RF-21, D-12, D-29, D-34 |
+| `apps/api/src/asesoria-retencion/retencion/retencion.controller.ts` | `/api/asesor/seguimientos/*` (ASESOR) y `GET /api/retoma/:token` (público) | CU-04 |
+| `apps/api/src/integracion/notificador/*` | Puerto `Notificador` + `NotificadorSimulado` (guarda lo «enviado» para el buzón; la demo puede forzar la falla) | D-06, RNF-15 |
+| `apps/web/src/pages/panel-asesor/ColaSeguimiento.tsx` | Cola con intentos hechos/restantes, registro de intentos solo por el canal preferido, cierre con motivo, reenvío | CU-04 |
+| `apps/web/src/pages/retomar/Retomar.tsx` | Retomar la compra desde el enlace (vigente) o volver a cotizar (vencido) | RN-12, CU-04 7b |

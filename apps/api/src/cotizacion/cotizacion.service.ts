@@ -146,7 +146,8 @@ export class CotizacionService {
   }
 
   // Comparativo (RF-05, RF-08): aseguradoras × planes con prima y opciones habilitadas POR PLAN (D-17).
-  async detalle(id: string, usuario?: UsuarioSesion) {
+  // `porEnlace`: acceso con un enlace de retoma válido (el token hace de credencial, RN-12)
+  async detalle(id: string, usuario?: UsuarioSesion, opciones: { porEnlace?: boolean } = {}) {
     const c = await this.prisma.cotizacion.findUnique({
       where: { id },
       include: {
@@ -162,7 +163,8 @@ export class CotizacionService {
       },
     });
     if (!c) throw new NotFoundException('Cotización no encontrada');
-    verificarPropiedad(usuario, c.vehiculo.cliente.usuarioId, { permitirSinDueno: true }); // RF-32, D-36
+    if (!opciones.porEnlace)
+      verificarPropiedad(usuario, c.vehiculo.cliente.usuarioId, { permitirSinDueno: true }); // RF-32, D-36
 
     const inspeccion = await this.catalogo.aseguradorasConInspeccion(c.vehiculo.uso);
     const primas = c.primas.map((p) => ({

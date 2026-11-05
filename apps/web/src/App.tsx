@@ -14,6 +14,7 @@ import { PanelAdmin } from './pages/panel-admin/PanelAdmin';
 import { IniciarCompra } from './pages/pago-poliza/IniciarCompra';
 import { PagoPoliza } from './pages/pago-poliza/PagoPoliza';
 import { PanelAsesor } from './pages/panel-asesor/PanelAsesor';
+import { Retomar } from './pages/retomar/Retomar';
 import { SeleccionCanal } from './pages/seleccion-canal/SeleccionCanal';
 import { ProveedorSesion } from './sesion/sesion';
 
@@ -37,6 +38,7 @@ export function Rutas({ demoHabilitado = false }: { demoHabilitado?: boolean }) 
           }
         />
         <Route path="/asesoria/:cotizacionId" element={<SeleccionCanal />} />
+        <Route path="/retomar/:token" element={<Retomar />} />
         <Route
           path="/mis-tramites"
           element={

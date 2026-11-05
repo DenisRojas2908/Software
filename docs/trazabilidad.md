@@ -63,3 +63,10 @@ Se actualiza en cada fase. Una fila por requisito o regla implementada.
 | RN-27 (ASESORIA) / D-30 | Compra tras asesoría → canal ASESORIA (con o sin descuento) | `compra/dominio/habilitada-por-asesoria.ts`, `atribuir-canal.ts` | `asesoria.e2e-spec.ts` (CU-03 completo, D-30, D-32) | F5 |
 | D-32 | Prima manual del asesor en no asegurables | `asesoria.service.ts` (`registrarPrima`) | `asesoria.e2e-spec.ts` (CU-03 1a / D-32) | F5 |
 | RNF-10 (F5) | 7 endpoints nuevos × roles | `test/soporte/endpoints.ts` | `permisos.e2e-spec.ts` | F5 |
+| RF-16 / D-12 | Cotización sin compra (> MINUTOS_ABANDONO) → seguimiento EN_SEGUIMIENTO | `retencion/retencion.service.ts` (`procesar`), `seguimiento-apertura.ts` | `seguimiento.e2e-spec.ts` (D-12 / RF-16) | F6 |
+| RF-17 / RN-10 / RNF-11 | Intentos solo por canal preferido, ≤ 4 en 7 días; al llegar al máximo se cierra | `retencion/dominio/seguimiento.ts`, `retencion.service.ts`, trigger T6 | `seguimiento.spec.ts` (RN-10 ×6), `seguimiento.e2e-spec.ts` (RN-10 ×2), `seguimiento.test.tsx` (RN-10) | F6 |
+| RF-18 / RN-11 | Cierre exige motivo; DESCARTADO | `seguimiento.ts` (`cerrar`) | `seguimiento.spec.ts` (RN-11 ×3), `seguimiento.e2e-spec.ts` (RN-11) | F6 |
+| RF-19 | Estados CONVERTIDO / EN_SEGUIMIENTO / DESCARTADO | `retencion.service.ts`, `compra.service.ts` (CONVERTIDO al pagar) | `seguimiento.e2e-spec.ts` (RN-12 / RN-27) | F6 |
+| RF-21 / RN-12 / D-34 | Un solo mensaje final con enlace de 7 días; reenviar si falló | `retencion.service.ts` (`avisar`, `reenviarMensaje`), `integracion/notificador/*` | `seguimiento.e2e-spec.ts` (RN-12, 7a, 7b), `seguimiento.spec.ts` (RN-12), `retomar.test.tsx`, `seguimiento.test.tsx` (7a) | F6 |
+| RN-27 (TELEMARKETING) / D-29 | Compra desde el enlace o tras aceptar en seguimiento → TELEMARKETING | `atribuir-canal.ts`, `compra.service.ts` (`COMPRA_DESDE_ENLACE`) | `seguimiento.e2e-spec.ts` (RN-12 / RN-27, D-29) | F6 |
+| RNF-10 (F6) | 6 endpoints nuevos × roles | `test/soporte/endpoints.ts` | `permisos.e2e-spec.ts` | F6 |

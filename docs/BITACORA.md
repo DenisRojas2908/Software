@@ -4,6 +4,16 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 21:23 (Lima) · F6 · Seguimiento de telemarketing (CU-04)
+- **Qué se hizo**: F5 mergeada (PR #6). Clase de dominio `Seguimiento` (puedeContactar, cierre automático, cerrar con motivo, enlace). `RetencionService`: job de abandonos y cierres, cola con plan sugerido (D-29), intentos (ACEPTA genera enlace), cierre + mensaje final único con enlace de 7 días (D-34), reenvío, retoma pública. Puerto `Notificador` simulado. Web: pestaña Seguimiento y `retomar/:token`.
+- **Archivos tocados**: `apps/api/src/asesoria-retencion/retencion/*`, `apps/api/src/integracion/notificador/*`, `cotizacion.service.ts` (detalle por enlace), `apps/api/test/seguimiento.e2e-spec.ts`, `apps/web/src/pages/{panel-asesor/ColaSeguimiento.tsx,retomar}`.
+- **Decisiones**: sin nuevas (aplica D-12, D-29, D-34, D-37).
+- **Pruebas**: api 229 · web 27. Cubren RF-16…RF-21, RN-10, RN-11, RN-12, RN-27 (TELEMARKETING), RNF-11, D-12, D-29, D-34.
+- **Para defender**:
+  1. *Reglas de tiempo con Reloj* (`retencion/dominio/seguimiento.ts`): «¿cómo prueban los 7 días?» → Reloj fijo que se adelanta; 410 al día 8.
+  2. *Un solo mensaje final* (`retencion.service.ts`, `avisar`): «¿y si el asesor cierra dos veces?» → 409; lo enviado queda en la bitácora de actividad.
+- **Siguiente paso**: cerrar F6 y empezar F7 (administración).
+
 ## 2026-11-04 21:19 (Lima) · F5 · Asesoría y descuento (CU-03)
 - **Qué se hizo**: F4 mergeada (PR #5). `DerivadorCasosAsesoria` reemplaza al temporal (crea la solicitud SISTEMA). `AsesoriaService`: solicitar (con asociación de la cotización), cola RN-13, detalle, tomar, prima manual (D-32), descuento ≤ máximo, resultado (ACEPTA habilita la compra; NO_ACEPTA/NO_RESPONDE → seguimiento). El comparativo habilita «Comprar ahora» tras una asesoría aceptada. Web: selección de canal y panel del asesor. Verificado en el navegador: taxi primero en la cola, detalle a 360 px.
 - **Errores encontrados y resueltos**: el orden de los planes en el comparativo no era determinista (fallaba la prueba RN-16 solo en la suite completa) → `orderBy` aseguradora + plan.
