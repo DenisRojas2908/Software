@@ -4,7 +4,9 @@ import { validar } from '../comun/validacion';
 import { Roles } from '../seguridad/decoradores';
 import { DemoService } from './demo.service';
 
-const esquemaReloj = z.object({ dias: z.coerce.number().int().min(1, 'Al menos 1 día').max(60, 'Máximo 60 días') });
+const esquemaReloj = z.object({
+  dias: z.coerce.number().int().min(1, 'Al menos 1 día').max(60, 'Máximo 60 días'),
+});
 const esquemaFallos = z.object({
   pagoRechazado: z.boolean().optional(),
   emisionFallida: z.boolean().optional(),

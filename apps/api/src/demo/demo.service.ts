@@ -37,7 +37,11 @@ export class DemoService {
     return { ...this.estado(), mensaje: 'Reloj de vuelta a hoy' };
   }
 
-  fijarFallos(d: Partial<Pick<SimuladorFallos, 'pagoRechazado' | 'emisionFallida' | 'envioMensajeFallido' | 'aseguradoraCaida'>>) {
+  fijarFallos(
+    d: Partial<
+      Pick<SimuladorFallos, 'pagoRechazado' | 'emisionFallida' | 'envioMensajeFallido' | 'aseguradoraCaida'>
+    >,
+  ) {
     Object.assign(this.fallos, d);
     return this.estado();
   }
@@ -45,13 +49,25 @@ export class DemoService {
   // D-12: botón de demo que hace lo mismo que el job de cada minuto
   async procesarAbandonos() {
     const r = await this.retencion.procesar();
-    return { ...r, mensaje: `${r.abandonos} cotización(es) pasaron a seguimiento; ${r.cerradosAutomaticamente} seguimiento(s) se cerraron solos` };
+    return {
+      ...r,
+      mensaje: `${r.abandonos} cotización(es) pasaron a seguimiento; ${r.cerradosAutomaticamente} seguimiento(s) se cerraron solos`,
+    };
   }
 
   // D-06 / D-34: lo que el notificador "habría enviado", reconstruido desde la BD (sobrevive a reinicios)
   async buzon() {
     const registros = await this.prisma.registroActividad.findMany({
-      where: { accion: { in: ['MENSAJE_FINAL_ENVIADO', 'MENSAJE_FINAL_FALLIDO', 'ENLACE_RETOMA_ENVIADO', 'ENLACE_RETOMA_FALLIDO'] } },
+      where: {
+        accion: {
+          in: [
+            'MENSAJE_FINAL_ENVIADO',
+            'MENSAJE_FINAL_FALLIDO',
+            'ENLACE_RETOMA_ENVIADO',
+            'ENLACE_RETOMA_FALLIDO',
+          ],
+        },
+      },
       orderBy: { fecha: 'desc' },
       take: 50,
     });

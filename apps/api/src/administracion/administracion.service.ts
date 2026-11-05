@@ -78,8 +78,14 @@ export class AdministracionService {
         errores: { nombre: 'Ya existe' },
       });
     }
-    return this.cambio(adminId, 'CREAR_CAMPO', `CampoRequerido#${d.nombre}`, (tx) =>
-      tx.campoRequerido.create({
+    if (d.tipo === 'LISTA' && d.valores.length === 0) {
+      throw new BadRequestException({
+        mensaje: 'Una lista necesita al menos un valor',
+        errores: { valores: 'Al menos un valor' },
+      });
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const campo = await tx.campoRequerido.create({
         data: {
           aseguradoraId: d.aseguradoraId,
           nombre: d.nombre,
@@ -88,8 +94,10 @@ export class AdministracionService {
           valores: { create: d.valores.map((valor) => ({ valor })) },
         },
         include: { valores: true },
-      }),
-    );
+      });
+      await this.actividad.registrar('CREAR_CAMPO', `CampoRequerido#${campo.id}`, adminId, tx); // RNF-12 (con id)
+      return campo;
+    });
   }
 
   async actualizarCampo(

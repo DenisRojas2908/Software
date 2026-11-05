@@ -38,6 +38,14 @@ describe('Seguimiento (CU-04)', () => {
   it('RN-10: al alcanzar 4 intentos el caso debe cerrarse', () => {
     expect(seg({ intentos: 4 }).debeCerrarseAutomaticamente(dias(1))).toBe(true);
   });
+  it('D-51: si el cliente aceptó, no se cierra solo aunque llegue a 4 intentos o pasen 7 días', () => {
+    expect(seg({ intentos: 4, aceptado: true }).debeCerrarseAutomaticamente(dias(8))).toBe(false);
+  });
+  it('RN-12: al cerrar se respeta el enlace vigente; si venció se genera uno nuevo', () => {
+    const s = seg({ enlaceToken: 'viejo', enlaceExpiraEn: dias(5) });
+    expect(s.enlaceParaCierre('nuevo', dias(1)).enlaceToken).toBe('viejo');
+    expect(s.enlaceParaCierre('nuevo', dias(6)).enlaceToken).toBe('nuevo');
+  });
   it('RN-11: cerrar exige motivo', () => {
     expect(() => seg().cerrar(null, dias(1))).toThrow(MotivoObligatorioError);
   });

@@ -16,6 +16,7 @@ export interface DatosSeguimiento {
   motivoCierre?: MotivoCierre | null;
   enlaceToken?: string | null;
   enlaceExpiraEn?: Date | null;
+  aceptado?: boolean; // hubo un intento ACEPTA: el cliente está comprando con su enlace (D-51)
 }
 
 export class SeguimientoCerradoError extends Error {}
@@ -56,7 +57,9 @@ export class Seguimiento {
   }
 
   // RN-10: al alcanzar el máximo (o vencer el plazo) el caso se cierra automáticamente.
+  // D-51: si el cliente ACEPTÓ, el caso no se descarta como NO_RESPONDE; se cierra al pagar (CONVERTIDO) o lo cierra el asesor.
   debeCerrarseAutomaticamente(ahora: Date): boolean {
+    if (this.d.aceptado) return false;
     return (
       this.d.estado === 'EN_SEGUIMIENTO' &&
       (this.d.intentos >= this.reglas.maxIntentos || ahora >= this.limite)
@@ -72,6 +75,14 @@ export class Seguimiento {
   }
 
   // RN-12: el enlace de retoma vence a los `vigenciaEnlaceDias` días.
+  // RN-12: si ya hay un enlace vigente se respeta (no se invalida el que el cliente recibió)
+  enlaceParaCierre(tokenNuevo: string, ahora: Date) {
+    if (this.d.enlaceToken && Seguimiento.enlaceVigente(this.d.enlaceExpiraEn, ahora)) {
+      return { enlaceToken: this.d.enlaceToken, enlaceExpiraEn: this.d.enlaceExpiraEn! };
+    }
+    return this.nuevoEnlace(tokenNuevo, ahora);
+  }
+
   nuevoEnlace(token: string, ahora: Date) {
     return { enlaceToken: token, enlaceExpiraEn: sumarDias(ahora, this.reglas.vigenciaEnlaceDias) };
   }

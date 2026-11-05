@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { redondear2 } from '../comun/dinero';
+import { resolverDescuento } from '../compra/dominio/descuentos';
 import { GENERADOR_PDF, GeneradorPdf } from '../integracion/pdf/generador-pdf';
 import { PrismaService } from '../persistencia/prisma.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
@@ -45,16 +45,23 @@ export class PolizaService {
     const pago = o.pagos[0];
     const prima = Number(o.primaCotizada.prima ?? o.primaFinal);
     const primaFinal = Number(o.primaFinal);
-    // Descuento aplicado = el que explica la prima final (RN-09: solo uno). Negociado si coincide su %, si no primera compra.
-    const porcentaje = prima > 0 ? redondear2((1 - primaFinal / prima) * 100) : 0;
-    const negociado = o.cotizacion.descuentos.find(
-      (d) =>
-        d.tipo === 'NEGOCIADO' &&
-        d.aceptado &&
-        d.planId === o.primaCotizada.planId &&
-        Number(d.porcentaje) === porcentaje,
+    // Descuento aplicado: se resuelve con los Descuento registrados (RF-20) y la misma regla de la compra (RN-09)
+    const delPlan = (tipo: string) =>
+      o.cotizacion.descuentos.find(
+        (d) => d.tipo === tipo && d.aceptado && d.planId === o.primaCotizada.planId,
+      );
+    const primera = delPlan('PRIMERA_COMPRA');
+    const negociado = delPlan('NEGOCIADO');
+    const parametros = await tx.parametrosComerciales.findFirstOrThrow();
+    const aplicado = resolverDescuento(
+      {
+        primeraCompra: primera ? Number(primera.porcentaje) : null,
+        negociado: negociado ? Number(negociado.porcentaje) : null,
+      },
+      Number(parametros.descuentoMaximo),
     );
-    const tipoDescuento = porcentaje > 0 ? (negociado ? 'NEGOCIADO' : 'PRIMERA_COMPRA') : null;
+    const porcentaje = aplicado.porcentaje;
+    const tipoDescuento = aplicado.tipo;
     return this.pdf.generar({
       numero: p.numero,
       fechaEmision: p.fechaEmision,

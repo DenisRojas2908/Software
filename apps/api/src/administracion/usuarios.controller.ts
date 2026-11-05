@@ -1,4 +1,14 @@
-import { Body, Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { validar } from '../comun/validacion';
 import { RegistroActividadService } from '../comun/registro-actividad.service';
@@ -38,12 +48,21 @@ export class UsuariosController {
   }
 
   @Patch(':id')
-  cambiarActivo(
+  async cambiarActivo(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: unknown,
     @UsuarioActual() admin: UsuarioSesion,
   ) {
     const { activo } = validar(esquemaActivo, body);
+    // RF-31: el admin no puede dejar el sistema sin administradores activos (ni desactivarse a sí mismo)
+    if (!activo) {
+      if (id === admin.id) throw new ConflictException('No puedes desactivar tu propia cuenta');
+      const objetivo = await this.prisma.usuario.findUnique({ where: { id } });
+      const admins = await this.prisma.usuario.count({ where: { rol: 'ADMINISTRADOR', activo: true } });
+      if (objetivo?.rol === 'ADMINISTRADOR' && objetivo.activo && admins <= 1) {
+        throw new ConflictException('Debe quedar al menos un administrador activo');
+      }
+    }
     return this.prisma.$transaction(async (tx) => {
       if (!(await tx.usuario.findUnique({ where: { id } })))
         throw new NotFoundException('Usuario no encontrado');
