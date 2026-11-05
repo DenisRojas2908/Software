@@ -140,3 +140,14 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/web/src/pages/pago-poliza/IniciarCompra.tsx` | Resumen del plan; si no hay sesión, login/registro sin perder la cotización | CU-02 pasos 1–2 |
 | `apps/web/src/pages/pago-poliza/PagoPoliza.tsx` | Datos faltantes → condiciones + firma + modo/cuotas → cronograma → «Pagar (simulado)» → descarga | CU-02 pasos 3–8 |
 | `apps/web/src/pages/mis-tramites/MisTramites.tsx` | Estado de cotización, asesoría, pago (cuotas) y póliza | RF-26 |
+
+### F5 · Asesoría y descuento (CU-03)
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/asesoria-retencion/asesoria/dominio/cola.ts` | `ordenarCola()`: derivados (SISTEMA) primero y luego por llegada; valores de resultado ACEPTA/NO_ACEPTA/NO_RESPONDE | RN-13, D-31 |
+| `apps/api/src/asesoria-retencion/asesoria/derivador-asesoria.ts` | Implementación real del puerto `DerivadorCasos`: crea la SolicitudAsesoria (origen SISTEMA) | RF-06, RN-03, RN-04 |
+| `apps/api/src/asesoria-retencion/asesoria/asesoria.service.ts` | Solicitar (cliente), cola, detalle, tomar, prima manual, descuento ≤ máximo, resultado (ACEPTA habilita la compra; si no, seguimiento) | RF-11…RF-15, RN-07, D-32 |
+| `apps/api/src/asesoria-retencion/asesoria-retencion.module.ts` | Módulo `@Global` que exporta el token `DERIVADOR_CASOS` → cotización lo recibe sin importar este módulo | Inversión de dependencias |
+| `apps/api/src/asesoria-retencion/retencion/seguimiento-apertura.ts` | `abrirSeguimiento()`: cotización NO_CONCRETADA + Seguimiento EN_SEGUIMIENTO | RF-16, CU-03 6a/6b |
+| `apps/web/src/pages/seleccion-canal/SeleccionCanal.tsx` | «Prefiero que me asesoren»: datos precargados, motivo y canal, confirmación con tiempo estimado | RF-11, RF-12 |
+| `apps/web/src/pages/panel-asesor/{PanelAsesor,ColaAsesoria}.tsx` | Pestañas del asesor; cola con badge «Derivado», detalle sin re-digitar, acciones | RF-13…RF-15 |

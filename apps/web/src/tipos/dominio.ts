@@ -20,6 +20,7 @@ export interface PlanCotizado {
   compraInmediata: boolean;
   asesoria: boolean;
   motivoBloqueo: 'NO_COTIZA' | 'INSPECCION' | null;
+  habilitadaPorAsesoria?: boolean; // D-30
 }
 
 export interface AseguradoraCotizada {

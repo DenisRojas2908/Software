@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 21:19 (Lima) · F5 · Asesoría y descuento (CU-03)
+- **Qué se hizo**: F4 mergeada (PR #5). `DerivadorCasosAsesoria` reemplaza al temporal (crea la solicitud SISTEMA). `AsesoriaService`: solicitar (con asociación de la cotización), cola RN-13, detalle, tomar, prima manual (D-32), descuento ≤ máximo, resultado (ACEPTA habilita la compra; NO_ACEPTA/NO_RESPONDE → seguimiento). El comparativo habilita «Comprar ahora» tras una asesoría aceptada. Web: selección de canal y panel del asesor. Verificado en el navegador: taxi primero en la cola, detalle a 360 px.
+- **Errores encontrados y resueltos**: el orden de los planes en el comparativo no era determinista (fallaba la prueba RN-16 solo en la suite completa) → `orderBy` aseguradora + plan.
+- **Archivos tocados**: `apps/api/src/asesoria-retencion/{asesoria,asesoria-retencion.module.ts,retencion/seguimiento-apertura.ts}`, `cotizacion/{cotizacion.module,cotizacion.service}.ts`, `apps/api/test/asesoria.e2e-spec.ts`, `apps/web/src/pages/{seleccion-canal,panel-asesor}`.
+- **Decisiones**: sin nuevas (aplica D-30, D-31, D-32).
+- **Pruebas**: api 184 · web 23. Cubren RF-06, RF-11…RF-15, RN-07, RN-13, RN-27 (ASESORIA), D-30, D-32.
+- **Para defender**:
+  1. *Puerto implementado por otro módulo* (`asesoria-retencion.module.ts`): «¿hay ciclo entre cotización y asesoría?» → No; asesoría implementa la interfaz de cotización.
+  2. *Doble barrera del descuento* (`descuentos.ts` + trigger T2): «¿y si alguien inserta 12 % por SQL?» → La BD lo rechaza.
+- **Siguiente paso**: cerrar F5 y empezar F6 (seguimiento).
+
 ## 2026-11-04 21:15 (Lima) · F4 · Compra autónoma, pagos y pólizas (CU-02) + auditoría
 - **Qué se hizo**: F3 mergeada (PR #4). Dominio: descuentos (RN-07/08/09), `atribuirCanal` (RN-27), habilitación de compra, cronograma de cuotas. Puertos simulados: pasarela, emisor, PDF (pdfkit con marca de agua) y `SimuladorFallos`. `CompraService`: orden editable (D-28), datos faltantes y primera compra, confirmación con firma y cronograma, pago → transacción (pago + cuotas + emisión + póliza + PDF + estados) con rollback y anulación del cobro. Pólizas: descarga con propiedad (regenera las históricas) y «mis trámites». Web: compra paso a paso, mis trámites. Flujo completo verificado en el navegador a 360 px. **Auditor** (subagente, solo lectura): 0 bloquea · 8 corregir · 13 menores. Corregidos los 8 y 11 menores: el guard verifica `activo`, 404/400 en usuarios, `habilitadaPorAsesoria` como regla única del mismo plan, anulación del cobro ante cualquier falla, precio recalculado en la transacción, PDF desde las cuotas guardadas, antigüedad 0 para el año siguiente, reloj fijo en e2e, tests con literales de 02 §10 y RN-06/15/16/23/24/26.
 - **Errores encontrados y resueltos**: pdfkit + zlib abortaba Node dentro de Jest (→ `compress: false`); el pie del PDF bajo el margen generaba páginas sin fin (→ margen 0 al escribir el pie); el resumen pagado mostraba «Sin descuento» (la póliza propia contaba como previa).

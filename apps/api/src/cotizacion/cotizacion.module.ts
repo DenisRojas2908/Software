@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CotizacionController } from './cotizacion.controller';
 import { CotizacionService } from './cotizacion.service';
-import { DERIVADOR_CASOS } from './derivador-casos';
-import { DerivadorCasosTemporal } from './derivador-temporal';
 import { ESTRATEGIAS, EstrategiaCotizacion } from './estrategia/estrategia-cotizacion';
 import { CLASES_ESTRATEGIA } from './estrategia/estrategias';
 
@@ -16,7 +14,7 @@ import { CLASES_ESTRATEGIA } from './estrategia/estrategias';
       useFactory: (...estrategias: EstrategiaCotizacion[]) => estrategias,
       inject: CLASES_ESTRATEGIA,
     },
-    { provide: DERIVADOR_CASOS, useClass: DerivadorCasosTemporal },
+    // DERIVADOR_CASOS lo provee el módulo asesoria-retencion (@Global): inversión de dependencias
     CotizacionService,
   ],
   exports: [CotizacionService],
