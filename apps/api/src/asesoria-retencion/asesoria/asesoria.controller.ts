@@ -69,6 +69,12 @@ export class ColaAsesoriaController {
     return this.asesoria.registrarDescuento(id, u, validar(esquemaDescuento, body));
   }
 
+  // CU-04 3b: desde un seguimiento, el cliente quiere negociar → solicitud de asesoría
+  @Post('seguimientos/:id/asesoria')
+  desdeSeguimiento(@Param('id', ParseUUIDPipe) id: string, @UsuarioActual() u: UsuarioSesion) {
+    return this.asesoria.desdeSeguimiento(id, u);
+  }
+
   @Post('solicitudes/:id/resultado')
   resultado(
     @Param('id', ParseUUIDPipe) id: string,

@@ -188,7 +188,7 @@ export class CompraService {
 
       // RN-12 / RN-27: si entra con un enlace de retoma vigente, la compra se marca como iniciada desde el enlace
       if (tokenRetoma && c.seguimiento?.enlaceToken === tokenRetoma) {
-        if (!c.seguimiento.enlaceExpiraEn || c.seguimiento.enlaceExpiraEn < this.reloj.ahora()) {
+        if (!c.seguimiento.enlaceExpiraEn || c.seguimiento.enlaceExpiraEn <= this.reloj.ahora()) {
           throw new HttpException(
             { mensaje: 'El enlace de retoma venció. Puedes volver a cotizar.' },
             HttpStatus.GONE,
@@ -434,7 +434,7 @@ export class CompraService {
           if (o.cotizacion.seguimiento) {
             await tx.seguimiento.update({
               where: { id: o.cotizacion.seguimiento.id },
-              data: { estado: 'CONVERTIDO', fechaCierre: ahora },
+              data: { estado: 'CONVERTIDO', fechaCierre: ahora, motivoCierre: null }, // D-37
             });
           }
           await this.actividad.registrar('PAGO_CONFIRMADO', `OrdenCompra#${ordenId}`, usuario.id, tx);

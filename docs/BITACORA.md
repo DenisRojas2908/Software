@@ -4,6 +4,17 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 21:42 (Lima) · F7 · Catálogo, parámetros, usuarios y reportes (CU-05) + auditoría F0–F7
+- **Qué se hizo**: F6 mergeada (PR #7). Dominio: `agruparVentas`, `validarParametros`. `AdministracionService`: catálogo, campos y valores (campo nuevo → `datos_adicionales`), inspección, parámetros, actividad y reportes; cada cambio + actividad en una transacción. Web: panel admin con 7 pestañas y Recharts. `GUIA_DEMO.md`. Seed movido a `src/persistencia/seed-datos.ts` con fecha inyectada. Base del modo demo (F8). **Auditor F0–F7**: 2 bloquea (caso aceptado descartado por el job, con el enlace invalidado; prima manual que saltaba el tope), 3 corregir (CU-04 3b, literal 1800.90, suites en paralelo) y 12 menores. Todos corregidos (D-51…D-54).
+- **Errores encontrados y resueltos**: una corrida fallida de Playwright dejó Quálitas desactivada en la BD de desarrollo (se restauró y se verificó de nuevo desde un estado limpio); lint de react-hooks por `setState` dentro de un efecto en Parámetros (se cambió por un formulario hijo con estado inicial).
+- **Archivos tocados**: `apps/api/src/administracion/*`, `asesoria-retencion/*` (correcciones), `compra.service.ts`, `poliza.service.ts`, `persistencia/seed-datos.ts`, `apps/api/test/*`, `apps/web/src/pages/panel-admin/*`, `docs/GUIA_DEMO.md`.
+- **Decisiones**: D-51, D-52, D-53, D-54.
+- **Pruebas**: api 305 · web 30. Cubren RF-27…RF-31, RN-16, RN-25, RNF-12, RNF-13, CU-04 3b, D-51, D-52.
+- **Para defender**:
+  1. *Configuración sin código* (`administracion.service.ts`): «demuéstrenlo» → desactivar Quálitas en /admin y recargar /cotizar.
+  2. *Auditoría independiente*: «¿cómo encontraron errores de lógica?» → El subagente auditor encontró que el job descartaba casos aceptados; se corrigió con prueba (D-51).
+- **Siguiente paso**: cerrar F7 y empezar F8 (modo demo).
+
 ## 2026-11-04 21:23 (Lima) · F6 · Seguimiento de telemarketing (CU-04)
 - **Qué se hizo**: F5 mergeada (PR #6). Clase de dominio `Seguimiento` (puedeContactar, cierre automático, cerrar con motivo, enlace). `RetencionService`: job de abandonos y cierres, cola con plan sugerido (D-29), intentos (ACEPTA genera enlace), cierre + mensaje final único con enlace de 7 días (D-34), reenvío, retoma pública. Puerto `Notificador` simulado. Web: pestaña Seguimiento y `retomar/:token`.
 - **Archivos tocados**: `apps/api/src/asesoria-retencion/retencion/*`, `apps/api/src/integracion/notificador/*`, `cotizacion.service.ts` (detalle por enlace), `apps/api/test/seguimiento.e2e-spec.ts`, `apps/web/src/pages/{panel-asesor/ColaSeguimiento.tsx,retomar}`.

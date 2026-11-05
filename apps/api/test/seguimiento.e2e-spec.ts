@@ -185,7 +185,26 @@ describe('CU-04 Gestionar seguimiento de telemarketing (F6)', () => {
       .set(auth(cliente))
       .send({ cotizacionId: cot.id, primaCotizadaId: plan.primaCotizadaId })
       .expect(201);
-    expect(o.body.canalVenta).toBe('TELEMARKETING');
+    await http()
+      .patch(`/api/compras/${o.body.id}/datos`)
+      .set(auth(cliente))
+      .send({ numeroDocumento: dniUnico(), apellidos: 'Ficticio' })
+      .expect(200);
+    await http()
+      .post(`/api/compras/${o.body.id}/confirmar`)
+      .set(auth(cliente))
+      .send({ aceptaCondiciones: true, firma: true, modo: 'UNICO' })
+      .expect(201);
+    const pago = await http()
+      .post(`/api/compras/${o.body.id}/pagar`)
+      .set(auth(cliente))
+      .send({ modo: 'UNICO' })
+      .expect(201);
+    expect(pago.body.canalVenta).toBe('TELEMARKETING'); // D-28: canal definitivo, fijado en la transacción de pago
+    expect(await prisma.seguimiento.findUniqueOrThrow({ where: { id } })).toMatchObject({
+      estado: 'CONVERTIDO',
+      motivoCierre: null,
+    });
   });
 
   it('RN-12 / CU-04 7b: pasados 8 días el enlace está vencido (410) y no se puede comprar con él', async () => {
@@ -219,6 +238,56 @@ describe('CU-04 Gestionar seguimiento de telemarketing (F6)', () => {
       motivoCierre: 'NO_RESPONDE',
     });
     expect(await mensajes(id, 'MENSAJE_FINAL_ENVIADO')).toBe(1);
+  });
+
+  it('D-51 / RN-12: si el cliente aceptó, el job no lo descarta como NO_RESPONDE ni le cambia el enlace', async () => {
+    const { id } = await cotizacionEnSeguimiento();
+    for (let i = 0; i < 3; i++) {
+      await http()
+        .post(`/api/asesor/seguimientos/${id}/intentos`)
+        .set(auth(asesor))
+        .send({ canal: 'WHATSAPP', resultado: 'NO_RESPONDE' })
+        .expect(201);
+    }
+    await http().post(`/api/asesor/seguimientos/${id}/aceptar`).set(auth(asesor)).expect(201);
+    const token = (await prisma.seguimiento.findUniqueOrThrow({ where: { id } })).enlaceToken;
+    reloj.adelantarDias(3);
+    await retencion.procesar();
+    expect(await prisma.seguimiento.findUniqueOrThrow({ where: { id } })).toMatchObject({
+      estado: 'EN_SEGUIMIENTO',
+      intentos: 4,
+      enlaceToken: token,
+    });
+    await http().get(`/api/retoma/${token}`).expect(200);
+  });
+
+  it('CU-04 3b: si en seguimiento el cliente quiere negociar, el asesor crea la solicitud de asesoría (CU-03)', async () => {
+    const { cot, id } = await cotizacionEnSeguimiento();
+    const r = await http().post(`/api/asesor/seguimientos/${id}/asesoria`).set(auth(asesor)).expect(201);
+    expect(r.body).toMatchObject({ cotizacionId: cot.id, motivo: 'NEGOCIACION', estado: 'PENDIENTE' });
+    const cola = (await http().get('/api/asesor/cola').set(auth(asesor)).expect(200)).body;
+    expect(cola.map((s: { id: string }) => s.id)).toContain(r.body.id);
+  });
+
+  it('RF-16: si una asesoría posterior termina en NO_ACEPTA, un seguimiento ya cerrado vuelve a la cola', async () => {
+    const { cot, id } = await cotizacionEnSeguimiento();
+    await http()
+      .post(`/api/asesor/seguimientos/${id}/cerrar`)
+      .set(auth(asesor))
+      .send({ motivo: 'PRECIO' })
+      .expect(201);
+    const sol = await http().post(`/api/asesor/seguimientos/${id}/asesoria`).set(auth(asesor)).expect(201);
+    await http().post(`/api/asesor/solicitudes/${sol.body.id}/tomar`).set(auth(asesor)).expect(201);
+    await http()
+      .post(`/api/asesor/solicitudes/${sol.body.id}/resultado`)
+      .set(auth(asesor))
+      .send({ resultado: 'NO_ACEPTA' })
+      .expect(201);
+    expect(await prisma.seguimiento.findUniqueOrThrow({ where: { cotizacionId: cot.id } })).toMatchObject({
+      estado: 'EN_SEGUIMIENTO',
+      intentos: 0,
+      motivoCierre: null,
+    });
   });
 
   it('CU-04 paso 1: la cola muestra intentos hechos/restantes, canal y plan sugerido', async () => {

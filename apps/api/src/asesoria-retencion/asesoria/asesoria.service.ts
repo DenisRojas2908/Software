@@ -62,6 +62,33 @@ export class AsesoriaService {
     };
   }
 
+  // CU-04 alt. 3b: en seguimiento el cliente quiere negociar → el asesor le crea una solicitud CU-03
+  async desdeSeguimiento(seguimientoId: string, asesor: UsuarioSesion) {
+    const seg = await this.prisma.seguimiento.findUnique({
+      where: { id: seguimientoId },
+      include: { cotizacion: { include: { vehiculo: { include: { cliente: true } } } } },
+    });
+    if (!seg) throw new NotFoundException('Seguimiento no encontrado');
+    return this.prisma.$transaction(async (tx) => {
+      const abierta = await tx.solicitudAsesoria.findFirst({
+        where: { cotizacionId: seg.cotizacionId, estado: { not: 'CERRADA' } },
+      });
+      if (abierta) return abierta;
+      const s = await tx.solicitudAsesoria.create({
+        data: {
+          cotizacionId: seg.cotizacionId,
+          motivo: 'NEGOCIACION',
+          canal: seg.cotizacion.vehiculo.cliente.canalPreferido,
+          origen: 'CLIENTE',
+          estado: 'PENDIENTE',
+          fechaCreacion: this.reloj.ahora(),
+        },
+      });
+      await this.actividad.registrar('SEGUIMIENTO_A_ASESORIA', `SolicitudAsesoria#${s.id}`, asesor.id, tx);
+      return s;
+    });
+  }
+
   // RF-13 / RN-13: cola con derivados primero y por orden de llegada
   async cola() {
     const solicitudes = await this.prisma.solicitudAsesoria.findMany({
@@ -130,13 +157,14 @@ export class AsesoriaService {
 
   // CU-03 paso 4: tomar el caso (PENDIENTE → EN_ATENCION)
   async tomar(id: string, asesor: UsuarioSesion) {
-    const s = await this.cargar(id);
-    if (s.estado !== 'PENDIENTE') throw new ConflictException('Esta solicitud ya fue tomada o cerrada');
+    await this.cargar(id);
     await this.prisma.$transaction(async (tx) => {
-      await tx.solicitudAsesoria.update({
-        where: { id },
+      // update condicionado: si otro asesor la tomó un instante antes, no se pisa (02 §7)
+      const r = await tx.solicitudAsesoria.updateMany({
+        where: { id, estado: 'PENDIENTE' },
         data: { estado: 'EN_ATENCION', asesorId: asesor.id },
       });
+      if (r.count === 0) throw new ConflictException('Esta solicitud ya fue tomada o cerrada');
       await this.actividad.registrar('TOMAR_SOLICITUD', `SolicitudAsesoria#${id}`, asesor.id, tx);
     });
     return this.detalle(id, asesor);
@@ -155,6 +183,14 @@ export class AsesoriaService {
     const p = await this.prisma.primaCotizada.findUnique({ where: { id: d.primaCotizadaId } });
     if (!p || p.cotizacionId !== s.cotizacionId)
       throw new NotFoundException('El plan no pertenece a esta cotización');
+    // D-52 / RN-06: prima manual solo en casos derivados por el sistema y en planes SIN prima en línea;
+    // una prima publicada solo cambia por primera compra o descuento registrado (RN-07, RN-08).
+    if (s.origen !== 'SISTEMA' || p.prima !== null) {
+      throw new UnprocessableEntityException({
+        mensaje: 'Solo se registra prima manual en casos derivados y en planes sin prima en línea',
+        errores: { prima: 'Este plan ya tiene prima publicada o el caso no fue derivado' },
+      });
+    }
     await this.prisma.$transaction(async (tx) => {
       await tx.primaCotizada.update({ where: { id: p.id }, data: { prima: d.prima, disponible: true } });
       await this.actividad.registrar('PRIMA_MANUAL', `PrimaCotizada#${p.id}`, asesor.id, tx);

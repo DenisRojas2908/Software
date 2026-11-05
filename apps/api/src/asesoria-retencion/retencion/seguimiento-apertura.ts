@@ -5,6 +5,19 @@ import { Prisma } from '@prisma/client';
 export async function abrirSeguimiento(tx: Prisma.TransactionClient, cotizacionId: string, ahora: Date) {
   await tx.cotizacion.update({ where: { id: cotizacionId }, data: { estado: 'NO_CONCRETADA' } });
   const existente = await tx.seguimiento.findUnique({ where: { cotizacionId } });
-  if (existente) return existente;
+  if (existente?.estado === 'EN_SEGUIMIENTO') return existente;
+  if (existente) {
+    // vuelve a la cola con una nueva ventana de intentos y días (RF-16)
+    return tx.seguimiento.update({
+      where: { id: existente.id },
+      data: {
+        estado: 'EN_SEGUIMIENTO',
+        intentos: 0,
+        fechaApertura: ahora,
+        fechaCierre: null,
+        motivoCierre: null,
+      },
+    });
+  }
   return tx.seguimiento.create({ data: { cotizacionId, fechaApertura: ahora } });
 }

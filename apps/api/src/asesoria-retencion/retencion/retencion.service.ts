@@ -70,7 +70,14 @@ export class RetencionService implements OnModuleInit, OnModuleDestroy {
   }
 
   private dominio(s: SeguimientoCompleto, reglas: ReglasSeguimiento) {
-    return new Seguimiento({ ...s, canalPreferido: s.cotizacion.vehiculo.cliente.canalPreferido }, reglas);
+    return new Seguimiento(
+      {
+        ...s,
+        canalPreferido: s.cotizacion.vehiculo.cliente.canalPreferido,
+        aceptado: s.intentosContacto.some((i) => i.resultado === 'ACEPTA'),
+      },
+      reglas,
+    );
   }
 
   private async cargar(id: string, tx: Tx = this.prisma): Promise<SeguimientoCompleto> {
@@ -90,7 +97,7 @@ export class RetencionService implements OnModuleInit, OnModuleDestroy {
         estado: 'REGISTRADA',
         fecha: { lt: limite },
         seguimiento: null,
-        solicitudes: { none: { estado: { not: 'CERRADA' } } },
+        solicitudes: { none: { OR: [{ estado: { not: 'CERRADA' } }, { resultado: 'ACEPTA' }] } }, // D-53
         primas: { some: { disponible: true } },
         OR: [{ orden: null }, { orden: { pagos: { none: { estado: 'CONFIRMADO' } } } }],
       },
@@ -110,8 +117,12 @@ export class RetencionService implements OnModuleInit, OnModuleDestroy {
     let cerrados = 0;
     for (const s of abiertos) {
       if (this.dominio(s, reglas).debeCerrarseAutomaticamente(ahora)) {
-        await this.cerrarYAvisar(s.id, 'NO_RESPONDE', null);
-        cerrados++;
+        try {
+          await this.cerrarYAvisar(s.id, 'NO_RESPONDE', null);
+          cerrados++;
+        } catch (e) {
+          this.log.warn(`No se pudo cerrar el seguimiento ${s.id}: ${(e as Error).message}`); // sigue con los demás
+        }
       }
     }
     return { abandonos: abandonadas.length, cerradosAutomaticamente: cerrados };
@@ -268,7 +279,7 @@ export class RetencionService implements OnModuleInit, OnModuleDestroy {
       }
       await tx.seguimiento.update({
         where: { id },
-        data: { ...cierre, ...dom.nuevoEnlace(this.token(), ahora) },
+        data: { ...cierre, ...dom.enlaceParaCierre(this.token(), ahora) },
       });
       await this.actividad.registrar(
         `CERRAR_SEGUIMIENTO_${cierre.motivoCierre}`,

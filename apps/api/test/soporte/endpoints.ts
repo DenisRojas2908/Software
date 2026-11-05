@@ -36,6 +36,7 @@ export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/prima`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/descuento`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/resultado`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/asesoria`, permitidos: ASESOR },
   // F6 · seguimiento (CU-04)
   { metodo: 'get', ruta: '/api/asesor/seguimientos', permitidos: ASESOR },
   { metodo: 'get', ruta: `/api/asesor/seguimientos/${X}`, permitidos: ASESOR },
@@ -43,4 +44,17 @@ export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/aceptar`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/cerrar`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/reenviar-mensaje`, permitidos: ASESOR },
+  // F7 · administración (CU-05)
+  { metodo: 'get', ruta: '/api/admin/aseguradoras', permitidos: ADMIN },
+  { metodo: 'patch', ruta: `/api/admin/aseguradoras/${X}`, permitidos: ADMIN },
+  { metodo: 'patch', ruta: `/api/admin/planes/${X}`, permitidos: ADMIN },
+  { metodo: 'get', ruta: '/api/admin/campos', permitidos: ADMIN },
+  { metodo: 'post', ruta: '/api/admin/campos', permitidos: ADMIN },
+  { metodo: 'patch', ruta: `/api/admin/campos/${X}`, permitidos: ADMIN },
+  { metodo: 'get', ruta: '/api/admin/reglas-inspeccion', permitidos: ADMIN },
+  { metodo: 'put', ruta: '/api/admin/reglas-inspeccion', permitidos: ADMIN },
+  { metodo: 'get', ruta: '/api/admin/parametros', permitidos: ADMIN },
+  { metodo: 'put', ruta: '/api/admin/parametros', permitidos: ADMIN },
+  { metodo: 'get', ruta: '/api/admin/actividad', permitidos: ADMIN },
+  { metodo: 'get', ruta: '/api/admin/reportes/ventas', permitidos: ADMIN },
 ];

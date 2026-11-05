@@ -127,3 +127,18 @@ Si la compra empezó desde el enlace de retoma (queda registrado `COMPRA_DESDE_E
 **¿Qué garantiza que se envíe un solo mensaje final?**
 Cada envío queda en `registro_actividad` (`MENSAJE_FINAL_ENVIADO` / `_FALLIDO`); si ya hay uno enviado, el sistema rechaza otro. Si falló, se puede reenviar.
 → `retencion.service.ts` (`avisar`), D-34.
+
+## F7 · Catálogo, parámetros, usuarios y reportes (CU-05)
+**¿Cómo demuestran que "agregar o cambiar un campo es solo configuración" (RNF-13)?**
+En vivo: el admin desactiva Quálitas o vuelve obligatorio un campo en /admin y el cotizador cambia al recargar, sin reiniciar ni tocar código. Un campo nuevo (p. ej. «color») aparece en el formulario y su valor se guarda en `vehiculo.datos_adicionales` (D-11).
+→ `administracion/administracion.service.ts`, `test/administracion.e2e-spec.ts`.
+
+**¿Por qué "desactivar" y no "borrar"?**
+RN-16: lo registrado (cotizaciones, pólizas) debe seguir consultable. Un plan desactivado no aparece en nuevas cotizaciones, pero las anteriores lo siguen mostrando.
+
+**¿Cómo garantizan la trazabilidad de los cambios del admin?**
+Cada cambio y su RegistroActividad se guardan en la misma transacción (`cambio()`): o quedan los dos o ninguno. La pestaña Actividad los muestra con usuario y fecha (RNF-12).
+
+**¿De dónde salen los reportes?**
+De las pólizas emitidas (`poliza.canal_venta`, fecha de emisión) agrupadas con la función pura `agruparVentas()`. El seed trae 80 pólizas históricas para que no salgan vacíos.
+→ `administracion/dominio/reportes.ts`.

@@ -32,9 +32,19 @@ export class RelojSistema implements Reloj {
 // Para pruebas: una hora fija que se puede mover a mano.
 export class RelojFijo implements Reloj {
   private actual: Date;
+  private readonly inicial: Date;
 
   constructor(fecha: string | Date) {
+    this.inicial = new Date(fecha);
     this.actual = new Date(fecha);
+  }
+
+  reiniciar(): void {
+    this.actual = new Date(this.inicial);
+  }
+
+  get diasAdelantados(): number {
+    return (this.actual.getTime() - this.inicial.getTime()) / DIA_MS;
   }
 
   ahora(): Date {
