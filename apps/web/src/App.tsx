@@ -11,6 +11,7 @@ import { Inicio } from './pages/inicio/Inicio';
 import { Login } from './pages/login/Login';
 import { MisTramites } from './pages/mis-tramites/MisTramites';
 import { PanelAdmin } from './pages/panel-admin/PanelAdmin';
+import { IniciarCompra } from './pages/pago-poliza/IniciarCompra';
 import { PagoPoliza } from './pages/pago-poliza/PagoPoliza';
 import { PanelAsesor } from './pages/panel-asesor/PanelAsesor';
 import { SeleccionCanal } from './pages/seleccion-canal/SeleccionCanal';
@@ -26,7 +27,15 @@ export function Rutas({ demoHabilitado = false }: { demoHabilitado?: boolean }) 
         <Route path="/login" element={<Login />} />
         <Route path="/cotizar" element={<Cotizador />} />
         <Route path="/cotizacion/:id" element={<Comparativo />} />
-        <Route path="/comprar/:cotizacionId/:primaCotizadaId" element={<PagoPoliza />} />
+        <Route path="/comprar/:cotizacionId/:primaCotizadaId" element={<IniciarCompra />} />
+        <Route
+          path="/compra/:ordenId"
+          element={
+            <RutaProtegida roles={['CLIENTE']}>
+              <PagoPoliza />
+            </RutaProtegida>
+          }
+        />
         <Route path="/asesoria/:cotizacionId" element={<SeleccionCanal />} />
         <Route
           path="/mis-tramites"

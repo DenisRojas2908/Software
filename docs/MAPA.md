@@ -58,6 +58,9 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `$transaction(async (tx) => …)` | Todo lo que se haga con `tx` se guarda junto; si algo falla, se deshace todo | `with session.begin():` en SQLAlchemy |
 | TanStack Query (`useQuery`, `useMutation`) | Pide datos a la API y maneja «cargando», «error» y caché | `requests.get` con caché y estados |
 | react-hook-form (`register`, `setError`) | Conecta los inputs del formulario y sus errores sin escribir estado a mano | Un `Form` de WTForms |
+| Puerto / adaptador | Interfaz (puerto, p. ej. `PasarelaPago`) + una implementación intercambiable (adaptador, p. ej. `PasarelaSimulada`) | Una clase abstracta y subclases que se eligen por configuración |
+| `HttpException(…, 402)` | Error que Nest convierte en una respuesta HTTP con ese código | `raise HTTPException(status_code=402)` en FastAPI |
+| `StreamableFile` | Respuesta que envía un archivo (el PDF) por partes | `FileResponse` en FastAPI |
 | `describe` / `it` / `expect` (Jest) | Agrupa pruebas, define una prueba y verifica un resultado | `class TestX` / `def test_…` / `assert` de pytest |
 
 ## Módulos implementados
@@ -119,3 +122,21 @@ Para quien sabe Python y pandas pero no TypeScript, NestJS ni React. Cada concep
 | `apps/api/src/comun/dinero.ts` | `redondear2()` sin errores de coma flotante | RN-26 |
 | `apps/web/src/pages/cotizador/Cotizador.tsx` | Formulario dinámico desde `/api/catalogo/formulario`; errores por campo | RF-01, RF-02, RF-03 |
 | `apps/web/src/pages/cotizador/Comparativo.tsx` | Tarjetas por plan ordenables por precio; «Comprar ahora» (deshabilitado con motivo) y «Prefiero que me asesoren» | RF-05, RF-08, RF-10 |
+
+### F4 · Compra autónoma, pagos y pólizas (CU-02)
+| Archivo | Qué hace | Requisito |
+|---|---|---|
+| `apps/api/src/compra/dominio/descuentos.ts` | `validarDescuentoNegociado()` (rechaza > máximo), `resolverDescuento()` (el mayor, sin acumular, con tope), `calcularPrimaFinal()` | RN-07, RN-08, RN-09, D-33 |
+| `apps/api/src/compra/dominio/atribuir-canal.ts` | `atribuirCanal()`: TELEMARKETING > ASESORIA > AUTONOMO | RN-27, D-29, D-30 |
+| `apps/api/src/compra/dominio/habilitada-por-asesoria.ts` | `habilitadaPorAsesoria()`: solicitud cerrada ACEPTA o negociado aceptado del mismo plan (única fuente de la regla) | D-30, RN-27 |
+| `apps/api/src/compra/dominio/habilitacion.ts` | `verificarCompraHabilitada()`: sin prima o con inspección (sin asesoría) no se compra | CU-02 1a, RF-10 |
+| `apps/api/src/pagos/dominio/cuotas.ts` | `calcularCronograma()`: cuotas iguales, residuo en la última, ≤ máximo | RN-14, D-13, D-40 |
+| `apps/api/src/compra/compra.service.ts` | Orquesta CU-02: `crearOrden` (asocia la cotización a la cuenta, D-16), `completarDatos` (evalúa primera compra), `confirmar` (condiciones, firma, cronograma), `pagar` (pasarela → transacción: pago + cuotas + emisión + póliza + PDF + estados; si falla, rollback y anulación) | CU-02, RNF-05, D-28 |
+| `apps/api/src/integracion/pasarela/*` | Puerto `PasarelaPago` + `PasarelaSimulada` (aprueba salvo que la demo fuerce el rechazo) | RF-23, D-08, RNF-15 |
+| `apps/api/src/integracion/aseguradora/*` | Puerto `EmisorAseguradora` + `EmisorSimulado` (número de póliza de prueba) | RF-22, RN-26 |
+| `apps/api/src/integracion/pdf/*` | Puerto `GeneradorPdf` + `GeneradorPdfKit` (marca de agua y pie en todas las páginas) | RF-25, RNF-20, D-05 |
+| `apps/api/src/integracion/simulacion/simulador-fallos.ts` | Interruptores de la simulación (pago rechazado, emisión fallida, aseguradora caída) | F8 |
+| `apps/api/src/polizas/poliza.service.ts` | Genera el PDF con datos ya registrados, descarga con propiedad (regenera si falta), «mis trámites» | RF-25, RF-26, RN-15 |
+| `apps/web/src/pages/pago-poliza/IniciarCompra.tsx` | Resumen del plan; si no hay sesión, login/registro sin perder la cotización | CU-02 pasos 1–2 |
+| `apps/web/src/pages/pago-poliza/PagoPoliza.tsx` | Datos faltantes → condiciones + firma + modo/cuotas → cronograma → «Pagar (simulado)» → descarga | CU-02 pasos 3–8 |
+| `apps/web/src/pages/mis-tramites/MisTramites.tsx` | Estado de cotización, asesoría, pago (cuotas) y póliza | RF-26 |

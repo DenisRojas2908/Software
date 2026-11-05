@@ -47,6 +47,10 @@ describe('Seguridad (F2)', () => {
     const u = lista.body.find((x: { email: string }) => x.email === email);
     expect(u).toBeDefined();
     expect(u.hashContrasena).toBeUndefined(); // el listado no expone el hash
+    const prisma = app.get((await import('../src/persistencia/prisma.service')).PrismaService);
+    const guardado = await prisma.usuario.findUniqueOrThrow({ where: { email } });
+    expect(guardado.hashContrasena).toMatch(/^\$2[aby]\$10\$/); // formato bcrypt, costo 10
+    expect(guardado.hashContrasena).not.toContain('Secreta123');
   });
 
   it('RF-11: registro mínimo crea un CLIENTE y devuelve sesión; errores por campo', async () => {
@@ -105,5 +109,33 @@ describe('Seguridad (F2)', () => {
       .send({ activo: false })
       .expect(200);
     await http().post('/api/auth/login').send({ email, contrasena: 'Asesor123!' }).expect(401);
+  });
+
+  it('RF-31: desactivar a un usuario corta su acceso aunque su token aún no haya expirado', async () => {
+    const email = `corte${Date.now()}@svas.demo`;
+    const admin = { Authorization: `Bearer ${tokens.ADMINISTRADOR}` };
+    const creado = await http()
+      .post('/api/admin/usuarios')
+      .set(admin)
+      .send({ email, contrasena: 'Asesor123!', rol: 'ASESOR' })
+      .expect(201);
+    const login = await http().post('/api/auth/login').send({ email, contrasena: 'Asesor123!' }).expect(200);
+    await http().get('/api/auth/yo').set('Authorization', `Bearer ${login.body.token}`).expect(200);
+    await http()
+      .patch(`/api/admin/usuarios/${creado.body.id}`)
+      .set(admin)
+      .send({ activo: false })
+      .expect(200);
+    await http().get('/api/auth/yo').set('Authorization', `Bearer ${login.body.token}`).expect(401);
+  });
+
+  it('RF-31: activar/desactivar un usuario inexistente → 404; id mal formado → 400', async () => {
+    const admin = { Authorization: `Bearer ${tokens.ADMINISTRADOR}` };
+    await http()
+      .patch('/api/admin/usuarios/00000000-0000-4000-8000-000000000000')
+      .set(admin)
+      .send({ activo: false })
+      .expect(404);
+    await http().patch('/api/admin/usuarios/abc').set(admin).send({ activo: false }).expect(400);
   });
 });

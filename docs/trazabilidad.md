@@ -32,3 +32,25 @@ Se actualiza en cada fase. Una fila por requisito o regla implementada.
 | RN-05 | Fuera de nicho: sin cotización ni solicitud | `cotizacion/dominio/evaluar-nicho.ts` | `evaluar-nicho.spec.ts` (×5), `cotizacion.e2e-spec.ts` (RN-05 ×2), `cotizador.test.tsx` (RN-05) | F3 |
 | RNF-12 (cotización) | Cada cotización queda en RegistroActividad | `cotizacion.service.ts` | `cotizacion.e2e-spec.ts` (RNF-12) | F3 |
 | RF-32 (cotización) | Cliente A no ve la cotización de B; invitado no ve la de un cliente con cuenta | `cotizacion.service.ts` (`detalle`), `propiedad.ts` | `cotizacion.e2e-spec.ts` (RF-32 / D-36) | F3 |
+| RF-09 | Opción 1: elegir plan, completar solo datos faltantes, confirmar sin asesor | `compra/compra.service.ts`, `web/pages/pago-poliza/*` | `compra.e2e-spec.ts` (CU-02 completo), `pago-poliza.test.tsx` (RNF-08) | F4 |
+| RF-10 (compra) | No se compra en Opción 1 un plan con inspección | `compra/dominio/habilitacion.ts` | `habilitacion.spec.ts` (RF-10, RN-04), `compra.e2e-spec.ts` (1a) | F4 |
+| RF-20 / RN-08 | Primera compra 5 % por DNI sin póliza previa, registrada en la cotización | `compra.service.ts` (`contexto`, `completarDatos`), `descuentos.ts` | `descuentos.spec.ts` (RN-08 ×2), `compra.e2e-spec.ts` (CU-02 5 %, RN-08 cliente demo), `pago-poliza.test.tsx` (RN-08) | F4 |
+| RN-07 (dominio) | Negociado ≤ máximo: se rechaza al registrar | `descuentos.ts` (`validarDescuentoNegociado`) | `descuentos.spec.ts` (RN-07 ×2) | F4 (uso real en F5) |
+| RN-09 | Primera compra y negociado no se acumulan; el mayor, con tope | `descuentos.ts` (`resolverDescuento`) | `descuentos.spec.ts` (RN-09 ×3) | F4 |
+| RN-14 | Pago único o en cuotas ≤ máximo; cronograma | `pagos/dominio/cuotas.ts` | `cuotas.spec.ts` (RN-14 ×3), `compra.e2e-spec.ts` (RN-14), `pago-poliza.test.tsx` (RN-14) | F4 |
+| RF-22 | Emisión vía puerto con número de prueba | `integracion/aseguradora/*` | `compra.e2e-spec.ts` (número SVAS-RIMAC-…) | F4 |
+| RF-23 | Pago único/cuotas vía pasarela reemplazable | `integracion/pasarela/*`, `compra.service.ts` (`pagar`) | `compra.e2e-spec.ts` (cuotas, 5a) | F4 |
+| RF-24 | Firma simulada obligatoria | `compra.service.ts` (`confirmar`) | `compra.e2e-spec.ts` (RF-24), `pago-poliza.test.tsx` (RF-24) | F4 |
+| RF-25 / RN-15 / RNF-20 | PDF tras pago confirmado, con leyenda de demostración | `integracion/pdf/*`, `polizas/poliza.service.ts`, `polizas.controller.ts` | `compra.e2e-spec.ts` (PDF %PDF, histórica), `pago-poliza.test.tsx` (RF-25) | F4 |
+| RF-26 | El cliente consulta solicitud, pago y póliza | `polizas/poliza.service.ts` (`misTramites`), `web/pages/mis-tramites/MisTramites.tsx` | `compra.e2e-spec.ts` (mis trámites), `mis-tramites.test.tsx` (RF-26) | F4 |
+| RNF-05 | Pago + emisión + póliza + estados en una transacción; rollback si falla la emisión | `compra.service.ts` (`pagar`) | `compra.e2e-spec.ts` (RNF-05 / 6a), `restricciones-bd.e2e-spec.ts` (índice parcial) | F4 |
+| RN-27 (dominio) | Canal por origen de la compra (incluye caso mixto D-30) | `compra/dominio/atribuir-canal.ts` | `atribuir-canal.spec.ts` (×6), `compra.e2e-spec.ts` (AUTONOMO) | F4 (ASESORIA en F5, TELEMARKETING en F6) |
+| D-08 | Pago sin tarjeta, CVV ni datos bancarios | `web/pages/pago-poliza/PagoPoliza.tsx` | `pago-poliza.test.tsx` (D-08) | F4 |
+| RF-32 (compra) | Otra cuenta no ve, paga ni descarga | `compra.service.ts` (`cargarOrden`), `poliza.service.ts` (`rutaPdf`) | `compra.e2e-spec.ts` (RF-32), `permisos.e2e-spec.ts` (7 endpoints nuevos) | F4 |
+| RN-06 | La Opción 1 no admite negociación (el precio enviado por el cliente se ignora) | `compra/compra.service.ts` (`crearOrden`) | `compra.e2e-spec.ts` (RN-06) | F4 |
+| RN-15 / RN-26 | Póliza y PDF solo tras pago confirmado; número de póliza de prueba | `compra.service.ts`, `integracion/aseguradora/emisor-simulado.ts` | `compra.e2e-spec.ts` (RN-15 / RN-26) | F4 |
+| RN-16 | Aseguradora/plan desactivado fuera de nuevas cotizaciones; lo registrado se conserva | `catalogo.service.ts` (`aseguradorasActivas`, `formulario`) | `cotizacion.e2e-spec.ts` (RN-16) | F4 (auditoría) |
+| RN-23 / RN-24 | Conjunto común (Mapfre, Quálitas); Mapfre con Opción 1 y 2 | `prisma/seed.ts`, `calcular-opciones.ts` | `cotizacion.e2e-spec.ts` (RN-23, RN-24) | F4 (auditoría) |
+| D-30 | Compra habilitada por asesoría: solicitud ACEPTA o negociado aceptado del MISMO plan | `compra/dominio/habilitada-por-asesoria.ts` | `habilitada-por-asesoria.spec.ts` (×4) | F4 (auditoría) |
+| D-48 | Modelo del año siguiente cotiza con antigüedad 0 | `cotizacion/estrategia/tarifa-prueba.ts` | `estrategias.spec.ts` (D-48) | F4 (auditoría) |
+| D-49 | Usuario desactivado pierde el acceso al instante | `seguridad/autenticacion.guard.ts` | `seguridad.e2e-spec.ts` (RF-31 corte, 404/400) | F4 (auditoría) |

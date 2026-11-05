@@ -112,6 +112,9 @@ describe('Cotizador (CU-01)', () => {
     const u = userEvent.setup();
     await u.click(await screen.findByRole('button', { name: 'Ver precios' }));
     expect(await screen.findByText('No aseguramos vehículos pesados')).toBeInTheDocument();
+    // no navega: sigue en el formulario
+    expect(screen.getByRole('heading', { name: 'Cotiza tu seguro vehicular' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ver precios' })).toBeInTheDocument();
   });
 });
 

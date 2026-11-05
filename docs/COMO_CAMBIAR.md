@@ -22,8 +22,12 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 | Minutos para considerar abandono (D-12) | 30 | Variable de entorno `MINUTOS_ABANDONO` en `apps/api/.env` | `.env.example` | F6 |
 | Tiempo estimado de contacto (N13) | 30 min | Variable de entorno `MINUTOS_CONTACTO_ESTIMADO` | `.env.example` | F5 |
 | Aviso «Simulación académica» en la UI | texto fijo | **Código** | `apps/web/src/componentes/AvisoSimulacion.tsx:5` | F0 |
-| Leyenda del PDF «Documento de demostración sin validez legal» (RNF-20) | texto fijo | **Código** | generador de PDF simulado | F4 |
+| Leyenda del PDF «Documento de demostración sin validez legal» (RNF-20) | texto fijo | **Código** | `apps/api/src/integracion/pdf/generador-pdf.ts:4` (`LEYENDA_DEMO`); diseño del PDF en `generador-pdfkit.ts` | F4 |
 | Límites de nicho (RN-05): 2 particulares, 5 comerciales/pasajeros; clases fuera (camión, bus, remolcador) | ver RN-05, D-39 | **Código** (definen el alcance del producto, no son parámetros comerciales) | `apps/api/src/cotizacion/dominio/evaluar-nicho.ts:5-6` | F3 |
 | Mensajes de derivación (inspección / no asegurable) | texto | **Código** | `apps/api/src/cotizacion/cotizacion.service.ts` (`MENSAJE_DERIVACION`) | F3 |
 | Etiquetas de campos y valores en la UI | texto | **Código** | `apps/web/src/componentes/formato.ts` | F3 |
 | Aseguradoras y planes que aparecen en el comparativo | catálogo | Admin → activar/desactivar (sin código) | BD | F7 |
+| Forzar pago rechazado / emisión fallida (demo) | apagado | Panel de demo (F8) | `apps/api/src/integracion/simulacion/simulador-fallos.ts` | F4 · F8 |
+| Texto «Pago simulado: no se solicitan datos de tarjeta…» | texto fijo | **Código** | `apps/web/src/pages/pago-poliza/PagoPoliza.tsx` | F4 |
+| Vigencia mostrada de la póliza (12 meses) | 12 meses (02 §7) | **Código** | `apps/api/src/polizas/poliza.service.ts` (`vigenciaHasta`) | F4 |
+| Carpeta donde se guardan los PDF | `apps/api/storage/` | Variable de entorno `STORAGE_DIR` | `apps/api/src/integracion/pdf/generador-pdfkit.ts` | F4 |

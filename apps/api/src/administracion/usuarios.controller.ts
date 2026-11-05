@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
 import { validar } from '../comun/validacion';
 import { RegistroActividadService } from '../comun/registro-actividad.service';
@@ -38,9 +38,15 @@ export class UsuariosController {
   }
 
   @Patch(':id')
-  cambiarActivo(@Param('id') id: string, @Body() body: unknown, @UsuarioActual() admin: UsuarioSesion) {
+  cambiarActivo(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: unknown,
+    @UsuarioActual() admin: UsuarioSesion,
+  ) {
     const { activo } = validar(esquemaActivo, body);
     return this.prisma.$transaction(async (tx) => {
+      if (!(await tx.usuario.findUnique({ where: { id } })))
+        throw new NotFoundException('Usuario no encontrado');
       const u = await tx.usuario.update({
         where: { id },
         data: { activo },
