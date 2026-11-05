@@ -6,8 +6,8 @@ description: Ensaya la demo del SVAS (disponible desde F7). Levanta la app con e
 # Demo
 
 1. Requisito: existe `docs/GUIA_DEMO.md` (se crea al cerrar F7). Si no existe, avisa y termina.
-2. `npm run db:reset` (BD con seed), `npm run build` y `npm start` en segundo plano. Espera a que `http://localhost:3000/api/salud` responda.
-3. Con Playwright (`require('playwright')`, `chromium.launch()` sin opciones; no reinstales), recorre cada paso de la guía con el usuario indicado.
+2. BD con seed: `npm run db:reset` (si lo ejecuta un agente, Prisma lo bloquea: usar `cd apps/api && npx prisma migrate deploy && npx tsx prisma/seed.ts`, D-44). Luego `npm run build` y `DEMO_MODE=true JOB_SEGUIMIENTO=false npm start` en segundo plano. Espera a que `http://localhost:3000/api/salud` responda.
+3. Ejecuta `node scripts/guion-demo.cjs <scratchpad>/demo` (Playwright, `chromium.launch()` sin opciones; no reinstales). Recorre los 10 pasos de la guía y devuelve un JSON con fallas y verificaciones. Si cambia la guía, actualiza el script.
 4. En cada pantalla, captura a **360 px** y **1366 px** de ancho (deviceScaleFactor 1). Guárdalas en el scratchpad, nombradas `paso-NN-<pantalla>-<ancho>.png`.
 5. En cada pantalla verifica:
    - que el aviso «Simulación académica» esté visible;

@@ -22,6 +22,11 @@ export default tseslint.config(
     rules: { ...reactHooks.configs.recommended.rules },
   },
   {
+    // script de ensayo de la demo: corre en Node y evalúa código dentro del navegador
+    files: ['scripts/**/*.cjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
+  {
     files: ['**/*.cjs', 'apps/api/**/*.js'],
     languageOptions: { globals: { ...globals.node, ...globals.jest }, sourceType: 'commonjs' },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
