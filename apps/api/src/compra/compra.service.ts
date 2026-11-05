@@ -69,7 +69,11 @@ export class CompraService {
     let primeraCompra: number | null = null;
     if (documento) {
       const previas = await tx.poliza.count({
-        where: { ordenCompra: { cotizacion: { vehiculo: { cliente: { numeroDocumento: documento } } } } },
+        // la póliza de esta misma orden no cuenta como "previa"
+        where: {
+          ordenCompraId: { not: orden.id },
+          ordenCompra: { cotizacion: { vehiculo: { cliente: { numeroDocumento: documento } } } },
+        },
       });
       if (previas === 0) primeraCompra = Number(parametros.descuentoPrimeraCompra);
     }

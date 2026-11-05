@@ -62,6 +62,7 @@ describe('CU-02 Comprar de forma autónoma (F4)', () => {
       .expect(201);
     expect(pago.body.estado).toBe('PAGADA');
     expect(pago.body.canalVenta).toBe('AUTONOMO'); // RN-27
+    expect(pago.body.descuento).toEqual({ tipo: 'PRIMERA_COMPRA', porcentaje: 5 }); // sigue visible tras emitir
     expect(pago.body.pagos[0].cuotas.map((q: { estado: string }) => q.estado)).toEqual([
       'CONFIRMADO',
       'PENDIENTE',
