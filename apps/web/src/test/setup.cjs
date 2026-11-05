@@ -3,3 +3,9 @@ require('@testing-library/jest-dom');
 const util = require('node:util');
 // react-router necesita TextEncoder, que jsdom no trae.
 Object.assign(globalThis, { TextEncoder: util.TextEncoder, TextDecoder: util.TextDecoder });
+// Recharts (ResponsiveContainer) usa ResizeObserver, que jsdom no trae.
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
