@@ -3,7 +3,7 @@ const { execSync } = require('node:child_process');
 
 module.exports = async () => {
   require('./entorno.js');
-  const env = { ...process.env, DATABASE_URL: process.env.DATABASE_URL };
+  const env = { ...process.env, DATABASE_URL: process.env.DATABASE_URL, FECHA_SEED: '2026-11-05T15:00:00Z' }; // D-50
   execSync('npx prisma migrate deploy', { stdio: 'ignore', env });
   execSync('npx tsx prisma/seed.ts', { stdio: 'inherit', env });
 };
