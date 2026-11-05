@@ -23,9 +23,9 @@ import { UsuarioSesion } from '../seguridad/decoradores';
 import { atribuirCanal } from './dominio/atribuir-canal';
 import { calcularPrimaFinal, resolverDescuento } from './dominio/descuentos';
 import { CompraNoHabilitadaError, verificarCompraHabilitada } from './dominio/habilitacion';
+import { habilitadaPorAsesoria } from './dominio/habilitada-por-asesoria';
 
 type Tx = Prisma.TransactionClient | PrismaService;
-export const RESULTADO_ACEPTA = 'ACEPTA'; // D-31
 
 const INCLUIR_ORDEN = {
   cotizacion: {
@@ -88,8 +88,7 @@ export class CompraService {
     const prima = orden.primaCotizada.prima === null ? null : Number(orden.primaCotizada.prima);
 
     // RN-27 (D-29, D-30): banderas para el canal
-    const habilitadaPorAsesoria =
-      c.solicitudes.some((s) => s.estado === 'CERRADA' && s.resultado === RESULTADO_ACEPTA) || !!negociado;
+    const porAsesoria = habilitadaPorAsesoria(c.solicitudes, c.descuentos, orden.primaCotizada.planId);
     const aceptoEnSeguimiento = !!c.seguimiento?.intentosContacto.some((i) => i.resultado === 'ACEPTA');
     const desdeEnlaceRetoma =
       (await tx.registroActividad.count({
@@ -98,7 +97,7 @@ export class CompraService {
     const canal: CanalVenta = atribuirCanal({
       desdeEnlaceRetoma,
       aceptoEnSeguimiento,
-      habilitadaPorAsesoria,
+      habilitadaPorAsesoria: porAsesoria,
     });
 
     return {
@@ -108,7 +107,7 @@ export class CompraService {
       descuento,
       primaFinal: prima === null ? 0 : calcularPrimaFinal(prima, descuento.porcentaje),
       canal,
-      habilitadaPorAsesoria,
+      habilitadaPorAsesoria: porAsesoria,
       datosFaltantes: [!documento && 'numeroDocumento', !c.vehiculo.cliente.apellidos && 'apellidos'].filter(
         Boolean,
       ) as string[],
@@ -170,9 +169,7 @@ export class CompraService {
 
       // CU-02 1a: ¿se puede comprar este plan?
       const inspeccion = await this.catalogo.aseguradorasConInspeccion(c.vehiculo.uso);
-      const habilitadaPorAsesoria =
-        c.solicitudes.some((s) => s.estado === 'CERRADA' && s.resultado === RESULTADO_ACEPTA) ||
-        c.descuentos.some((d) => d.tipo === 'NEGOCIADO' && d.aceptado);
+
       try {
         verificarCompraHabilitada({
           prima: prima.prima === null ? null : Number(prima.prima),
@@ -182,7 +179,7 @@ export class CompraService {
               : inspeccion.has(prima.plan.aseguradoraId)
                 ? 'INSPECCION'
                 : null,
-          habilitadaPorAsesoria,
+          habilitadaPorAsesoria: habilitadaPorAsesoria(c.solicitudes, c.descuentos, prima.planId),
         });
       } catch (e) {
         if (e instanceof CompraNoHabilitadaError) throw new UnprocessableEntityException(e.message);
@@ -211,6 +208,10 @@ export class CompraService {
       const orden = c.orden
         ? await tx.ordenCompra.update({ where: { id: c.orden.id }, data: datos })
         : await tx.ordenCompra.create({ data: { ...datos, cotizacionId, creadoEn: this.reloj.ahora() } });
+      await tx.descuento.updateMany({
+        where: { cotizacionId, tipo: 'PRIMERA_COMPRA' },
+        data: { planId: prima.planId },
+      });
       // Precio y canal provisionales con las reglas actuales (el definitivo se fija al pagar, D-28)
       const completa = await tx.ordenCompra.findUniqueOrThrow({
         where: { id: orden.id },
@@ -380,6 +381,11 @@ export class CompraService {
           const o = await this.cargarOrden(tx, ordenId, usuario);
           if (this.pagoConfirmado(o)) throw new ConflictException('La orden ya fue pagada');
           const c = await this.contexto(tx, o); // se recalcula dentro de la transacción
+          if (c.primaFinal !== ctx.primaFinal) {
+            throw new ConflictException(
+              'El precio cambió mientras pagabas; revisa el resumen y vuelve a pagar',
+            );
+          }
           const ahora = this.reloj.ahora();
           // D-28: el canal y la prima definitivos se fijan aquí
           await tx.ordenCompra.update({
@@ -439,9 +445,10 @@ export class CompraService {
       );
       return { ...(await this.resumen(ordenId, usuario)), polizaId };
     } catch (e) {
-      if (e instanceof HttpException) throw e;
-      // 6a: falla la emisión → rollback (no queda pago confirmado ni póliza) + anulación del cobro
+      // Cualquier falla dentro de la transacción → rollback (no queda pago confirmado ni póliza) + anulación del cobro
       await this.pasarela.anular(cobro.referencia);
+      if (e instanceof HttpException) throw e;
+      // 6a: falla la emisión
       await this.actividad.registrar('EMISION_FALLIDA', `OrdenCompra#${ordenId}`, usuario.id);
       this.log.warn(`Emisión fallida en la orden ${ordenId}: ${(e as Error).message}`);
       throw new HttpException(

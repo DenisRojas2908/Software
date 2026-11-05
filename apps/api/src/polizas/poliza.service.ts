@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { calcularCronograma } from '../pagos/dominio/cuotas';
+import { redondear2 } from '../comun/dinero';
 import { GENERADOR_PDF, GeneradorPdf } from '../integracion/pdf/generador-pdf';
 import { PrismaService } from '../persistencia/prisma.service';
 import { UsuarioSesion } from '../seguridad/decoradores';
@@ -21,7 +21,10 @@ const INCLUIR_POLIZA = {
     include: {
       cotizacion: { include: { vehiculo: { include: { cliente: true } }, descuentos: true } },
       primaCotizada: { include: { plan: { include: { aseguradora: true } } } },
-      pagos: { where: { estado: 'CONFIRMADO' as const } },
+      pagos: {
+        where: { estado: 'CONFIRMADO' as const },
+        include: { cuotas: { orderBy: { numero: 'asc' as const } } },
+      },
     },
   },
 } satisfies Prisma.PolizaInclude;
@@ -42,13 +45,16 @@ export class PolizaService {
     const pago = o.pagos[0];
     const prima = Number(o.primaCotizada.prima ?? o.primaFinal);
     const primaFinal = Number(o.primaFinal);
-    const descuento = o.cotizacion.descuentos.find(
+    // Descuento aplicado = el que explica la prima final (RN-09: solo uno). Negociado si coincide su %, si no primera compra.
+    const porcentaje = prima > 0 ? redondear2((1 - primaFinal / prima) * 100) : 0;
+    const negociado = o.cotizacion.descuentos.find(
       (d) =>
+        d.tipo === 'NEGOCIADO' &&
         d.aceptado &&
         d.planId === o.primaCotizada.planId &&
-        Math.abs(prima * (1 - Number(d.porcentaje) / 100) - primaFinal) < 0.02,
+        Number(d.porcentaje) === porcentaje,
     );
-    const maxCuotas = pago?.numeroCuotas ?? 1;
+    const tipoDescuento = porcentaje > 0 ? (negociado ? 'NEGOCIADO' : 'PRIMERA_COMPRA') : null;
     return this.pdf.generar({
       numero: p.numero,
       fechaEmision: p.fechaEmision,
@@ -61,11 +67,10 @@ export class PolizaService {
       vehiculo: `${v.marca} ${v.modelo} ${v.anio}`,
       uso: v.uso,
       primaBase: prima,
-      descuento: descuento ? `${Number(descuento.porcentaje)} % (${descuento.tipo})` : 'Sin descuento',
+      descuento: tipoDescuento ? `${porcentaje} % (${tipoDescuento})` : 'Sin descuento',
       primaFinal,
       modoPago: pago?.modo === 'CUOTAS' ? `En ${pago.numeroCuotas} cuotas` : 'Pago único',
-      cronograma:
-        pago?.modo === 'CUOTAS' ? calcularCronograma(primaFinal, maxCuotas, maxCuotas) : [primaFinal],
+      cronograma: pago?.cuotas.length ? pago.cuotas.map((q) => Number(q.monto)) : [primaFinal], // filas guardadas (D-40)
       canalVenta: p.canalVenta,
     });
   }

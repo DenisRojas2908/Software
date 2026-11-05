@@ -70,6 +70,10 @@ describe('Estrategias de cotización (RF-04, RN-26)', () => {
     for (const E of todas) expect(new E(reloj).cotizar(auto({ anio: 2003 }), plan('Básico'))).toBeNull();
   });
 
+  it('D-48: un modelo del año siguiente (2027) cotiza como 0 años → Rímac Intermedio 1595.00 (factor 1,10)', () => {
+    expect(new EstrategiaRimac(reloj).cotizar(auto({ anio: 2027 }), plan('Intermedio'))).toBe(1595);
+  });
+
   it('D-10: un plan sin factor de tarifa no cotiza', () => {
     expect(new EstrategiaMapfre(reloj).cotizar(auto(), plan('Premium'))).toBeNull();
   });

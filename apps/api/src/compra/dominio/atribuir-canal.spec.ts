@@ -12,10 +12,7 @@ describe('atribuirCanal (RN-27)', () => {
   it('RN-27: aceptó el descuento en seguimiento → TELEMARKETING', () => {
     expect(atribuirCanal({ ...base, aceptoEnSeguimiento: true })).toBe('TELEMARKETING');
   });
-  it('RN-27: descuento negociado aceptado en asesoría → ASESORIA', () => {
-    expect(atribuirCanal({ ...base, habilitadaPorAsesoria: true })).toBe('ASESORIA');
-  });
-  it('D-30: taxi derivado por inspección, asesoría ACEPTA sin descuento → ASESORIA', () => {
+  it('RN-27 / D-30: compra habilitada por la asesoría (con o sin descuento) → ASESORIA', () => {
     expect(atribuirCanal({ ...base, habilitadaPorAsesoria: true })).toBe('ASESORIA');
   });
   it('D-30 caso mixto: asesoría con 8 % pero la compra empezó desde el enlace de retoma → TELEMARKETING', () => {

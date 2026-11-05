@@ -34,8 +34,9 @@ export function primaDePrueba(
   recargoPropio = 1,
 ): number | null {
   const factorPlan = FACTOR_PLAN[plan.nombre];
-  const antiguedad = anioActual - anio;
-  if (factorPlan === undefined || antiguedad < 0 || antiguedad > tarifa.antiguedadMaxima) return null;
+  // D-48: un modelo del año siguiente (se valida hasta año actual + 1) cuenta como 0 años
+  const antiguedad = Math.max(0, anioActual - anio);
+  if (factorPlan === undefined || antiguedad > tarifa.antiguedadMaxima) return null;
   return redondear2(
     tarifa.tarifaBase * factorPlan * FACTOR_USO[uso] * factorAntiguedad(antiguedad) * recargoPropio,
   );

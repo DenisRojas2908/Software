@@ -37,7 +37,11 @@ export class GeneradorPdfKit implements GeneradorPdf {
       const margenInferior = doc.page.margins.bottom;
       doc.page.margins.bottom = 0;
       doc.save();
-      doc.rotate(-35, { origin: [300, 420] }).fontSize(34).fillColor('#dc2626').opacity(0.15);
+      doc
+        .rotate(-35, { origin: [300, 420] })
+        .fontSize(34)
+        .fillColor('#dc2626')
+        .opacity(0.15);
       doc.text(LEYENDA_DEMO.toUpperCase(), 40, 400, { width: 560, align: 'center', lineBreak: false });
       doc.restore();
       doc.opacity(1).fillColor('#475569').fontSize(9);
