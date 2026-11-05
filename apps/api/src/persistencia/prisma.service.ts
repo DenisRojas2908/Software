@@ -1,0 +1,15 @@
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { opcionesPrisma } from './crear-prisma';
+
+// Única puerta a la BD. Los servicios la reciben por inyección de dependencias.
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleDestroy {
+  constructor() {
+    super(opcionesPrisma());
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+}
