@@ -36,4 +36,11 @@ export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/prima`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/descuento`, permitidos: ASESOR },
   { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/resultado`, permitidos: ASESOR },
+  // F6 · seguimiento (CU-04)
+  { metodo: 'get', ruta: '/api/asesor/seguimientos', permitidos: ASESOR },
+  { metodo: 'get', ruta: `/api/asesor/seguimientos/${X}`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/intentos`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/aceptar`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/cerrar`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/seguimientos/${X}/reenviar-mensaje`, permitidos: ASESOR },
 ];
