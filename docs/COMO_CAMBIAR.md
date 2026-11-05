@@ -21,5 +21,5 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 | Recargos propios (ubicación, clase/tipo) | ver 02 §10 | **Código** | `estrategia-pacifico.ts`, `estrategia-la-positiva.ts` | F3 |
 | Minutos para considerar abandono (D-12) | 30 | Variable de entorno `MINUTOS_ABANDONO` en `apps/api/.env` | `.env.example` | F6 |
 | Tiempo estimado de contacto (N13) | 30 min | Variable de entorno `MINUTOS_CONTACTO_ESTIMADO` | `.env.example` | F5 |
-| Aviso «Simulación académica» en la UI | texto fijo | **Código** | `apps/web/src/componentes/AvisoSimulacion.tsx` | F0 |
+| Aviso «Simulación académica» en la UI | texto fijo | **Código** | `apps/web/src/componentes/AvisoSimulacion.tsx:5` | F0 |
 | Leyenda del PDF «Documento de demostración sin validez legal» (RNF-20) | texto fijo | **Código** | generador de PDF simulado | F4 |
