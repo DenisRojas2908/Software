@@ -77,3 +77,8 @@ Se actualiza en cada fase. Una fila por requisito o regla implementada.
 | RF-30 | Reporte de ventas por canal, aseguradora y plan con rango de fechas | `administracion/dominio/reportes.ts`, `Reportes.tsx` | `reportes.spec.ts` (×3), `administracion.e2e-spec.ts` (RF-30), `panel-admin.test.tsx` (RF-30) | F7 |
 | RNF-12 | Cada cambio de catálogo/parámetros + RegistroActividad en una transacción; vista de actividad | `administracion.service.ts` (`cambio`), `Actividad.tsx` | `administracion.e2e-spec.ts` (RF-27 actividad, RNF-12) | F7 |
 | RF-32 (admin) | Un ASESOR no toca `/api/admin/*` | `administracion.controller.ts` (`@Roles('ADMINISTRADOR')`) | `administracion.e2e-spec.ts` (RF-32), `permisos.e2e-spec.ts` (12 endpoints nuevos) | F7 |
+| CU-04 3b | En seguimiento el cliente quiere negociar → solicitud CU-03 | `asesoria/asesoria.service.ts` (`desdeSeguimiento`), `ColaSeguimiento.tsx` | `seguimiento.e2e-spec.ts` (CU-04 3b) | F7 (auditoría) |
+| D-51 | Caso aceptado no se descarta ni pierde su enlace | `retencion/dominio/seguimiento.ts` (`debeCerrarseAutomaticamente`, `enlaceParaCierre`) | `seguimiento.spec.ts` (D-51, RN-12), `seguimiento.e2e-spec.ts` (D-51) | F7 (auditoría) |
+| D-52 / RN-06 | Prima manual solo en derivados y sin prima publicada | `asesoria.service.ts` (`registrarPrima`) | `asesoria.e2e-spec.ts` (D-52) | F7 (auditoría) |
+| RF-16 (reapertura) | Un seguimiento cerrado vuelve a la cola si una asesoría posterior no termina en compra | `retencion/seguimiento-apertura.ts` | `seguimiento.e2e-spec.ts` (RF-16 reapertura) | F7 (auditoría) |
+| D-54 | El admin no se desactiva a sí mismo | `administracion/usuarios.controller.ts` | `administracion.e2e-spec.ts` (RF-31) | F7 (auditoría) |

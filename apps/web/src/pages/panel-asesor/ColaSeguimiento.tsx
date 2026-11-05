@@ -71,6 +71,15 @@ function DetalleSeguimiento({ id, volver }: { id: string; volver: () => void }) 
   const q = useQuery({ queryKey: clave, queryFn: () => api<Seguimiento>(`/asesor/seguimientos/${id}`) });
   const [resultado, setResultado] = useState('NO_RESPONDE');
   const [motivo, setMotivo] = useState('');
+  const [derivado, setDerivado] = useState<string | null>(null);
+  // CU-04 3b: el cliente quiere negociar → solicitud de asesoría (CU-03)
+  const negociar = useMutation({
+    mutationFn: () => api<{ id: string }>(`/asesor/seguimientos/${id}/asesoria`, { cuerpo: {} }),
+    onSuccess: () => {
+      setDerivado('Se creó la solicitud de asesoría (motivo: negociación). Aparece en la pestaña Asesoría.');
+      qc.invalidateQueries({ queryKey: ['cola-asesoria'] });
+    },
+  });
   const accion = useMutation({
     mutationFn: ({ ruta, cuerpo }: { ruta: string; cuerpo?: unknown }) =>
       api<Seguimiento>(`/asesor/seguimientos/${id}/${ruta}`, { cuerpo: cuerpo ?? {} }),
@@ -192,6 +201,14 @@ function DetalleSeguimiento({ id, volver }: { id: string; volver: () => void }) 
               Cerrar caso
             </button>
           </div>
+          <button className="self-start text-indigo-700 underline" onClick={() => negociar.mutate()}>
+            El cliente quiere negociar → crear solicitud de asesoría
+          </button>
+          {derivado && (
+            <p role="status" className="text-green-800">
+              {derivado}
+            </p>
+          )}
         </div>
       )}
       {s.mensajeFinal === 'FALLIDO' && (
