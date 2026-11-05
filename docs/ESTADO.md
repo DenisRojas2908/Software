@@ -1,26 +1,25 @@
 # Estado actual del SVAS
 
 ## Último checkpoint
-2026-11-04 21:15 (Lima) · rama `feat/f4-compra` · último commit `3738e33`
+2026-11-04 21:19 (Lima) · rama `feat/f5-asesoria` · último commit `48a4c92`
 
 ## Fase y paso actual
-**F4 · Compra autónoma (CU-02)**: lista y auditada (auditor: 0 bloquea, 8 corregir → corregidos, 13 menores → 11 corregidos). En `cerrar-fase` (PR #5 + CI). F0–F3 mergeadas. Alcance: F0 → F9.
-En el árbol de trabajo (sin commit) hay avances de F5/F6: `apps/api/src/asesoria-retencion/`, `integracion/notificador/`, `test/asesoria.e2e-spec.ts`, panel del asesor y selección de canal.
+**F5 · Asesoría (CU-03)**: lista; en `cerrar-fase` (PR #6 + CI). F0–F4 mergeadas (#1–#5). Alcance: F0 → F9.
+Sin commit (adelanto de F6): `retencion/dominio/seguimiento.ts` (+spec), `retencion/retencion.service.ts`, `integracion/notificador/`.
 
 ## Qué funciona y cómo verlo
-- `npm run dev` → /cotizar → «Comprar ahora» → crear cuenta → DNI → cuotas → «Pagar (simulado)» → descargar PDF; /mis-tramites.
-- cliente@svas.demo/Cliente123! no recibe el 5 % (DNI con póliza previa). Rechazo y emisión fallida se fuerzan con `SimuladorFallos` (panel de demo en F8).
-- `npm test`: api 148 (+12 unitarias de F5/F6 sin commit) · web 19.
+- Taxi en /cotizar → asesor1@svas.demo/Asesor123! en /asesor: aparece primero con «Derivado»; tomar → descuento (12 % rechazado, 8 % ok) → «Cliente acepta» → el cliente compra con canal ASESORIA.
+- «Prefiero que me asesoren» en el comparativo → /asesoria/:id (confirmación con tiempo estimado).
+- `npm test`: api 184 en git (+10 de F6 sin commit) · web 23.
 
 ## Siguiente paso exacto
-Cerrar F4 (PR → CI → merge) y crear `feat/f5-asesoria`: commitear el trabajo adelantado de F5 (quitar `DerivadorCasosTemporal` de `cotizacion.module.ts`, registrar `AsesoriaRetencionModule` en `app.module.ts`, endpoints en `test/soporte/endpoints.ts`).
+Cerrar F5 y crear `feat/f6-seguimiento`: registrar `RetencionService` y `NOTIFICADOR` en los módulos, controller `/api/asesor/seguimientos` + `/api/retoma/:token`, tests e2e con reloj adelantado, web pestaña Seguimiento y `retomar/:token`.
 
 ## Decisiones Propuesta que esperan visto bueno
-Ninguna. Nuevas Tomadas: D-48 (modelo del año siguiente), D-49 (usuario inactivo pierde acceso), D-50 (reloj fijo en pruebas).
+Ninguna.
 
 ## Riesgos o deudas
-- Menores del auditor pendientes: cobertura con `it('RN-xx')` de RN-15 es indirecta vía e2e (aceptable).
 - Windows real de Denis no verificado a mano (CI windows verde).
 
 ## Estado del CI
-F0–F3 ✅ ubuntu / ✅ windows. F4: pendiente.
+F0–F4 ✅ ubuntu / ✅ windows. F5: pendiente.

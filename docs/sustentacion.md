@@ -93,3 +93,20 @@ La compra depende del puerto `PasarelaPago`; hoy lo implementa `PasarelaSimulada
 **¿Por qué el PDF dice "sin validez legal"?**
 RNF-20 y D-19: es una simulación académica. La marca de agua y el pie se dibujan en todas las páginas.
 → `integracion/pdf/generador-pdfkit.ts`.
+
+## F5 · Asesoría y descuento (CU-03)
+**¿Por qué el taxi aparece primero en la cola?**
+RN-13: primero los casos que derivó el sistema (inspección, no asegurable) y luego los del cliente; dentro de cada grupo, por llegada. Es la función pura `ordenarCola()`.
+→ `asesoria-retencion/asesoria/dominio/cola.ts`, `cola.spec.ts`.
+
+**¿Qué impide que el asesor dé 12 %?**
+Dos barreras: `validarDescuentoNegociado()` rechaza el 12 % con un mensaje claro (422), y el trigger T2 de la BD rechazaría la fila igual. El máximo (10 %) se lee de `parametros_comerciales`.
+→ `compra/dominio/descuentos.ts`, migración `restricciones`, `asesoria.e2e-spec.ts`.
+
+**¿Cómo cotización deriva a asesoría sin depender de ese módulo?**
+Cotización define el puerto `DerivadorCasos`; `asesoria-retencion` lo implementa (`DerivadorCasosAsesoria`) y lo publica con el token `DERIVADOR_CASOS` desde un módulo global. La dependencia va de asesoría hacia cotización, nunca al revés.
+→ `cotizacion/derivador-casos.ts`, `asesoria-retencion.module.ts`.
+
+**Si el cliente no acepta, ¿qué pasa?**
+La solicitud se cierra con NO_ACEPTA, la cotización queda NO_CONCRETADA y entra a la cola de seguimiento (CU-04), todo en una transacción.
+→ `asesoria.service.ts` (`registrarResultado`), `retencion/seguimiento-apertura.ts`.

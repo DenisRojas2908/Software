@@ -54,3 +54,12 @@ Se actualiza en cada fase. Una fila por requisito o regla implementada.
 | D-30 | Compra habilitada por asesoría: solicitud ACEPTA o negociado aceptado del MISMO plan | `compra/dominio/habilitada-por-asesoria.ts` | `habilitada-por-asesoria.spec.ts` (×4) | F4 (auditoría) |
 | D-48 | Modelo del año siguiente cotiza con antigüedad 0 | `cotizacion/estrategia/tarifa-prueba.ts` | `estrategias.spec.ts` (D-48) | F4 (auditoría) |
 | D-49 | Usuario desactivado pierde el acceso al instante | `seguridad/autenticacion.guard.ts` | `seguridad.e2e-spec.ts` (RF-31 corte, 404/400) | F4 (auditoría) |
+| RF-06 (F5) | Derivación automática crea la solicitud en la cola (origen SISTEMA) | `asesoria/derivador-asesoria.ts` | `cotizacion.e2e-spec.ts` (RN-04/RF-06), `asesoria.e2e-spec.ts` (RF-06 / RN-13) | F5 |
+| RF-11 | Solicitar asesoría con motivo y canal; registro mínimo | `asesoria/asesoria.service.ts` (`solicitar`), `web/pages/seleccion-canal/SeleccionCanal.tsx` | `asesoria.e2e-spec.ts` (RF-12, 2a), `seleccion-canal.test.tsx` (RF-11) | F5 |
+| RF-12 | Solicitud PENDIENTE + confirmación con tiempo estimado | `asesoria.service.ts`, `.env` `MINUTOS_CONTACTO_ESTIMADO` | `asesoria.e2e-spec.ts` (RF-12), `seleccion-canal.test.tsx` (RF-12) | F5 |
+| RF-13 / RN-13 | Cola con derivados primero y por llegada | `asesoria/dominio/cola.ts`, `ColaAsesoria.tsx` | `cola.spec.ts` (RN-13 ×2), `asesoria.e2e-spec.ts` (RN-13), `panel-asesor.test.tsx` (RN-13) | F5 |
+| RF-14 / RN-07 | Descuento ≤ máximo; registrado con asesor, plan y % | `asesoria.service.ts` (`registrarDescuento`), `descuentos.ts`, trigger T2 | `asesoria.e2e-spec.ts` (CU-03 completo: 12 % → 422), `panel-asesor.test.tsx` (RN-07) | F5 |
+| RF-15 | Resultado: ACEPTA habilita la compra con prima negociada; NO_ACEPTA → seguimiento | `asesoria.service.ts` (`registrarResultado`) | `asesoria.e2e-spec.ts` (CU-03 completo, 6a) | F5 |
+| RN-27 (ASESORIA) / D-30 | Compra tras asesoría → canal ASESORIA (con o sin descuento) | `compra/dominio/habilitada-por-asesoria.ts`, `atribuir-canal.ts` | `asesoria.e2e-spec.ts` (CU-03 completo, D-30, D-32) | F5 |
+| D-32 | Prima manual del asesor en no asegurables | `asesoria.service.ts` (`registrarPrima`) | `asesoria.e2e-spec.ts` (CU-03 1a / D-32) | F5 |
+| RNF-10 (F5) | 7 endpoints nuevos × roles | `test/soporte/endpoints.ts` | `permisos.e2e-spec.ts` | F5 |
