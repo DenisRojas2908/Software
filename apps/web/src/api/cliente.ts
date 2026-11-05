@@ -46,3 +46,16 @@ export async function api<T>(ruta: string, opciones: { metodo?: string; cuerpo?:
   }
   return datos as T;
 }
+
+// Descarga un archivo protegido (p. ej. el PDF de la póliza): pide el blob con el token y lo guarda.
+export async function descargarArchivo(ruta: string, nombre: string) {
+  const token = almacenSesion.leer();
+  const res = await fetch(`/api${ruta}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) throw new ErrorApi(res.status, 'No se pudo descargar el archivo');
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  a.click();
+  URL.revokeObjectURL(url);
+}

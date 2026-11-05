@@ -42,3 +42,55 @@ export interface Cotizacion {
   solicitudAbierta: { id: string; motivo: string; estado: string } | null;
   aseguradoras: AseguradoraCotizada[];
 }
+
+export interface ResumenOrden {
+  id: string;
+  cotizacionId: string;
+  estado: 'PENDIENTE_DATOS' | 'LISTA_PARA_PAGAR' | 'PAGADA';
+  vehiculo: string;
+  uso: UsoVehiculo;
+  aseguradora: string;
+  plan: string;
+  coberturas: string;
+  prima: number;
+  descuento: { tipo: 'PRIMERA_COMPRA' | 'NEGOCIADO' | null; porcentaje: number };
+  primeraCompraEvaluada: boolean;
+  primaFinal: number;
+  canalVenta: string;
+  datosFaltantes: string[];
+  cliente: { nombres: string; apellidos: string | null; numeroDocumento: string | null };
+  aceptaCondiciones: boolean;
+  firmaSimulada: boolean;
+  maxCuotas: number;
+  pagos: { id: string; estado: string; modo: string; monto: number; numeroCuotas: number | null }[];
+  poliza: { id: string; numero: string; fechaEmision: string } | null;
+  cronograma?: number[];
+  polizaId?: string;
+}
+
+export interface Tramite {
+  cotizacionId: string;
+  fecha: string;
+  vehiculo: string;
+  estado: string;
+  motivoDerivacion: string | null;
+  solicitud: { estado: string; motivo: string } | null;
+  orden: {
+    id: string;
+    aseguradora: string;
+    plan: string;
+    primaFinal: number;
+    pago: {
+      estado: string;
+      modo: string;
+      cuotas: { numero: number; monto: number; estado: string }[];
+    } | null;
+  } | null;
+  poliza: {
+    id: string;
+    numero: string;
+    fechaEmision: string;
+    vigenciaHasta: string;
+    canalVenta: string;
+  } | null;
+}

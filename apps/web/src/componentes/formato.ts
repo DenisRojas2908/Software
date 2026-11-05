@@ -25,6 +25,16 @@ export const ETIQUETA_VALOR: Record<string, string> = {
   AUTONOMO: 'Autónomo',
   ASESORIA: 'Asesoría',
   TELEMARKETING: 'Telemarketing',
+  PENDIENTE: 'Pendiente',
+  CONFIRMADO: 'Confirmado',
+  RECHAZADO: 'Rechazado',
+  EN_ATENCION: 'En atención',
+  CERRADA: 'Cerrada',
+  DUDA: 'Duda',
+  NEGOCIACION: 'Negociación',
+  DESCUENTO: 'Descuento',
+  INSPECCION: 'Inspección',
+  NO_ASEGURABLE: 'No asegurable en línea',
 };
 export const etiquetaValor = (v: string) => ETIQUETA_VALOR[v] ?? v.replace(/_/g, ' ');
 
