@@ -79,7 +79,7 @@ export function Comparativo() {
             <p className="text-xs text-slate-500">prima anual</p>
             <p className="mt-2 flex-1 text-sm text-slate-600">{f.descripcion}</p>
             <div className="mt-3 flex flex-col gap-2">
-              {f.compraInmediata ? (
+              {f.compraInmediata || f.habilitadaPorAsesoria ? (
                 <Link to={`/comprar/${c.id}/${f.primaCotizadaId}`} className={`${claseBoton} text-center`}>
                   Comprar ahora
                 </Link>

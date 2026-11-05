@@ -8,8 +8,8 @@ export function Inicio() {
         Sistema de Venta Autónoma de Seguros vehiculares — simulación académica.
       </p>
       <p className="mt-4 text-slate-700">
-        Cotiza tu seguro vehicular en varias aseguradoras a la vez y compra en línea sin esperar la llamada de un asesor, o
-        pide asesoría si la prefieres.
+        Cotiza tu seguro vehicular en varias aseguradoras a la vez y compra en línea sin esperar la llamada de
+        un asesor, o pide asesoría si la prefieres.
       </p>
       <Link
         to="/cotizar"
