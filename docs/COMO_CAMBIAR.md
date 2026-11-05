@@ -31,3 +31,5 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 | Texto «Pago simulado: no se solicitan datos de tarjeta…» | texto fijo | **Código** | `apps/web/src/pages/pago-poliza/PagoPoliza.tsx` | F4 |
 | Vigencia mostrada de la póliza (12 meses) | 12 meses (02 §7) | **Código** | `apps/api/src/polizas/poliza.service.ts` (`vigenciaHasta`) | F4 |
 | Carpeta donde se guardan los PDF | `apps/api/storage/` | Variable de entorno `STORAGE_DIR` | `apps/api/src/integracion/pdf/generador-pdfkit.ts` | F4 |
+| Textos del mensaje final y del enlace de retoma | texto | **Código** | `apps/api/src/asesoria-retencion/retencion/retencion.service.ts` (`avisar`) | F6 |
+| Frecuencia del job de abandonos/cierres (1 min) y apagarlo | 60 s | Variable `JOB_SEGUIMIENTO=false` lo apaga; el intervalo está en código | `retencion.service.ts` (`onModuleInit`) | F6 |

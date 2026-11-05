@@ -110,3 +110,20 @@ Cotización define el puerto `DerivadorCasos`; `asesoria-retencion` lo implement
 **Si el cliente no acepta, ¿qué pasa?**
 La solicitud se cierra con NO_ACEPTA, la cotización queda NO_CONCRETADA y entra a la cola de seguimiento (CU-04), todo en una transacción.
 → `asesoria.service.ts` (`registrarResultado`), `retencion/seguimiento-apertura.ts`.
+
+## F6 · Seguimiento de telemarketing (CU-04)
+**¿Cómo impiden un 5.º intento o llamar por WhatsApp a quien prefiere llamada?**
+La clase de dominio `Seguimiento.puedeContactar()` revisa el estado, el canal preferido, el máximo de intentos y los días (todo leído de `parametros_comerciales`). Además el trigger T6 rechaza más intentos en la BD.
+→ `retencion/dominio/seguimiento.ts` (10 pruebas sin BD).
+
+**¿Cómo muestran en la demo que el enlace vence a los 7 días sin esperar una semana?**
+Con el puerto `Reloj`: el modo demo adelanta los días y las pruebas usan un reloj fijo. Adelantando 8 días, `/api/retoma/:token` responde 410 «enlace vencido».
+→ `comun/reloj.ts`, `test/seguimiento.e2e-spec.ts`.
+
+**¿Cómo saben que una venta es de telemarketing?**
+Si la compra empezó desde el enlace de retoma (queda registrado `COMPRA_DESDE_ENLACE`) o si el cliente aceptó en un intento de seguimiento. Lo decide `atribuirCanal()` dentro de la transacción de pago.
+→ `compra/dominio/atribuir-canal.ts`, `compra.service.ts`.
+
+**¿Qué garantiza que se envíe un solo mensaje final?**
+Cada envío queda en `registro_actividad` (`MENSAJE_FINAL_ENVIADO` / `_FALLIDO`); si ya hay uno enviado, el sistema rechaza otro. Si falló, se puede reenviar.
+→ `retencion.service.ts` (`avisar`), D-34.
