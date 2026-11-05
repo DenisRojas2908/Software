@@ -12,6 +12,7 @@ export interface EndpointProtegido {
 const TODOS: Rol[] = ['CLIENTE', 'ASESOR', 'ADMINISTRADOR'];
 const ADMIN: Rol[] = ['ADMINISTRADOR'];
 const CLIENTE: Rol[] = ['CLIENTE'];
+const ASESOR: Rol[] = ['ASESOR'];
 
 export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   // F2 · seguridad y usuarios
@@ -27,4 +28,12 @@ export const ENDPOINTS_PROTEGIDOS: EndpointProtegido[] = [
   { metodo: 'post', ruta: `/api/compras/${X}/pagar`, permitidos: CLIENTE },
   { metodo: 'get', ruta: '/api/polizas/mias', permitidos: CLIENTE },
   { metodo: 'get', ruta: `/api/polizas/${X}/pdf`, permitidos: CLIENTE },
+  // F5 · asesoría (CU-03)
+  { metodo: 'post', ruta: '/api/asesoria/solicitudes', permitidos: CLIENTE },
+  { metodo: 'get', ruta: '/api/asesor/cola', permitidos: ASESOR },
+  { metodo: 'get', ruta: `/api/asesor/solicitudes/${X}`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/tomar`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/prima`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/descuento`, permitidos: ASESOR },
+  { metodo: 'post', ruta: `/api/asesor/solicitudes/${X}/resultado`, permitidos: ASESOR },
 ];

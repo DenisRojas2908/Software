@@ -73,9 +73,11 @@ describe('CU-01 Cotizar y comparar (F3)', () => {
     expect(res.body.cotizacion.opciones).toEqual(['ASESORIA']);
     // el caso se deriva por el puerto DerivadorCasos (02 §5 paso 5)
     const prisma = app.get((await import('../src/persistencia/prisma.service')).PrismaService);
-    expect(
-      await prisma.registroActividad.count({ where: { accion: 'DERIVAR_NO_ASEGURABLE' } }),
-    ).toBeGreaterThan(0);
+    // F5: el derivador real crea la solicitud en la cola de asesoría (origen SISTEMA, PENDIENTE)
+    const solicitud = await prisma.solicitudAsesoria.findFirstOrThrow({
+      where: { cotizacionId: res.body.cotizacion.id },
+    });
+    expect(solicitud).toMatchObject({ origen: 'SISTEMA', motivo: 'NO_ASEGURABLE', estado: 'PENDIENTE' });
   });
 
   it('RN-03 / RN-25: taxi → todas exigen inspección: solo Opción 2 y derivación INSPECCION', async () => {
