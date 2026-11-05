@@ -15,11 +15,15 @@ Para cada valor de negocio o texto visible: ¿se cambia **desde el panel de admi
 | Inspección por aseguradora × uso (RN-25) | TRANSPORTE_PASAJEROS = sí | Admin → Reglas de inspección | `apps/api/prisma/seed.ts:157` | F1 · F7 |
 | Campos requeridos y valores permitidos (RN-17…RN-23) | ver 02 §10 | Admin → Campos | `apps/api/prisma/seed.ts:92` (campos) y `:44-60` (valores) | F1 · F7 |
 | Activar/desactivar aseguradora o plan (RN-16) | todas activas | Admin → Aseguradoras / Planes | `apps/api/prisma/seed.ts:16` y `:24` | F1 · F7 |
-| Tarifa base y antigüedad máxima por aseguradora (RN-26) | ver 02 §10 | **Código** (tarifa de prueba en cada estrategia) | `apps/api/src/cotizacion/estrategia/estrategia-*.ts` | F3 |
-| Factor por plan (Básico/Intermedio/Full) (D-10) | 0,75 / 1,00 / 1,35 | **Código** | función común de tarifa de prueba | F3 |
-| Factor por uso y por antigüedad | ver 02 §10 | **Código** | función común de tarifa de prueba | F3 |
-| Recargos propios (ubicación, clase/tipo) | ver 02 §10 | **Código** | `estrategia-pacifico.ts`, `estrategia-la-positiva.ts` | F3 |
+| Tarifa base y antigüedad máxima por aseguradora (RN-26) | ver 02 §10 | **Código** (tarifa de prueba de la aseguradora simulada) | `apps/api/src/cotizacion/estrategia/estrategias.ts:28` (Rímac), `:35` (Pacífico), `:45` (La Positiva), `:57` (Mapfre), `:64` (Quálitas) | F3 |
+| Factor por plan (Básico/Intermedio/Full) (D-10) | 0,75 / 1,00 / 1,35 | **Código** | `apps/api/src/cotizacion/estrategia/tarifa-prueba.ts:9` | F3 |
+| Factor por uso y por antigüedad | ver 02 §10 | **Código** | `apps/api/src/cotizacion/estrategia/tarifa-prueba.ts:11` (uso) y `:17` (antigüedad) | F3 |
+| Recargos propios (ubicación, clase/tipo) | ver 02 §10 | **Código** | `apps/api/src/cotizacion/estrategia/estrategias.ts:37` (Pacífico), `:47` (La Positiva) | F3 |
 | Minutos para considerar abandono (D-12) | 30 | Variable de entorno `MINUTOS_ABANDONO` en `apps/api/.env` | `.env.example` | F6 |
 | Tiempo estimado de contacto (N13) | 30 min | Variable de entorno `MINUTOS_CONTACTO_ESTIMADO` | `.env.example` | F5 |
 | Aviso «Simulación académica» en la UI | texto fijo | **Código** | `apps/web/src/componentes/AvisoSimulacion.tsx:5` | F0 |
 | Leyenda del PDF «Documento de demostración sin validez legal» (RNF-20) | texto fijo | **Código** | generador de PDF simulado | F4 |
+| Límites de nicho (RN-05): 2 particulares, 5 comerciales/pasajeros; clases fuera (camión, bus, remolcador) | ver RN-05, D-39 | **Código** (definen el alcance del producto, no son parámetros comerciales) | `apps/api/src/cotizacion/dominio/evaluar-nicho.ts:5-6` | F3 |
+| Mensajes de derivación (inspección / no asegurable) | texto | **Código** | `apps/api/src/cotizacion/cotizacion.service.ts` (`MENSAJE_DERIVACION`) | F3 |
+| Etiquetas de campos y valores en la UI | texto | **Código** | `apps/web/src/componentes/formato.ts` | F3 |
+| Aseguradoras y planes que aparecen en el comparativo | catálogo | Admin → activar/desactivar (sin código) | BD | F7 |
