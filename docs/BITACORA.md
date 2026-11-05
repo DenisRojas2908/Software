@@ -4,6 +4,16 @@ Solo se agrega; la entrada más reciente va arriba. Formato por checkpoint: fech
 
 ---
 
+## 2026-11-04 20:47 (Lima) · F2 · Seguridad
+- **Qué se hizo**: F1 mergeada (PR #2, CI verde). Módulo `seguridad` (registro, login, `yo`, JWT con expiración, guard global de autenticación + rol, `verificarPropiedad`), `administracion/usuarios` (crear asesores, activar/desactivar), Reloj y RegistroActividad en `comun` (adelantado de F3 porque la actividad necesita la fecha), validación por campo con zod. Web: router, contexto de sesión, login/registro, rutas protegidas, menú por rol, pantallas base de mis-trámites/asesor/admin.
+- **Archivos tocados**: `apps/api/src/{seguridad,administracion,comun}/*`, `apps/api/test/{seguridad,permisos}.e2e-spec.ts`, `apps/api/test/soporte/*`, `apps/web/src/{api,sesion,componentes,pages,test}/*`.
+- **Decisiones**: sin decisiones nuevas de negocio; el Reloj se creó en F2 (D-38 decía F3).
+- **Pruebas**: api 41/41, web 6/6. Cubren RF-31, RF-32, RNF-09, RNF-10, RF-11 (registro), D-36, D-07.
+- **Para defender**:
+  1. *Guard global + `@Roles`* (`seguridad/autenticacion.guard.ts`): «¿qué pasa si alguien llama a la API sin pasar por la web?» → La API responde 401/403; la UI no es la barrera.
+  2. *Tabla endpoints × roles* (`test/soporte/endpoints.ts`): «¿cómo prueban el 100 % de RNF-10?» → Cada endpoint protegido nuevo se agrega a la tabla y la prueba lo recorre con los 3 roles y sin token.
+- **Siguiente paso**: cerrar F2 y empezar F3 (cotización).
+
 ## 2026-11-04 20:41 (Lima) · F1 · Modelo de datos, restricciones y seed
 - **Qué se hizo**: F0 mergeada (PR #1, CI verde en ubuntu y windows). Esquema Prisma con 22 tablas, 16 enums y 25 FK (verificado en el SQL). Migración de restricciones: CHECK, índice parcial, T1–T6 y RLS. PrismaService con adapter pg. Seed completo con historial de 80 pólizas. Jest de la api con BD de pruebas.
 - **Archivos tocados**: `apps/api/prisma/{schema.prisma,seed.ts,migrations/*}`, `apps/api/prisma.config.ts`, `apps/api/src/persistencia/*`, `apps/api/jest.config.js`, `apps/api/test/soporte/*`, `apps/api/test/restricciones-bd.e2e-spec.ts`, `eslint.config.mjs`.
